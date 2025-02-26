@@ -86,15 +86,6 @@ void TriangleComponent::Initialize()
 	rastDesc.FillMode = D3D11_FILL_SOLID;
 
 	res = game.Device->CreateRasterizerState(&rastDesc, &rastState);
-
-	points[0] = DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
-	points[1] = DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
-	points[2] = DirectX::XMFLOAT4(-0.5f, -0.5f, 0.5f, 1.0f);
-	points[3] = DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
-	points[4] = DirectX::XMFLOAT4(0.5f, -0.5f, 0.5f, 1.0f);
-	points[5] = DirectX::XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
-	points[6] = DirectX::XMFLOAT4(-0.5f, 0.5f, 0.5f, 1.0f);
-	points[7] = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void TriangleComponent::Draw() {
@@ -115,7 +106,7 @@ void TriangleComponent::Draw() {
 	ID3D11Buffer* vb;
 	game.Device->CreateBuffer(&vertexBufDesc, &vertexData, &vb);
 
-	int indeces[] = { 0,1,2, 1,0,3 };
+	int indeces[] = { 0,1,2 };
 	D3D11_BUFFER_DESC indexBufDesc = {};
 	indexBufDesc.Usage = D3D11_USAGE_DEFAULT;
 	indexBufDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
@@ -143,4 +134,19 @@ void TriangleComponent::Draw() {
 	game.Context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
 	game.Context->VSSetShader(vertexShader, nullptr, 0);
 	game.Context->PSSetShader(pixelShader, nullptr, 0);
+	game.Context->DrawIndexed(3, 0, 0);
+}
+
+void TriangleComponent::SetColors(float r1, float g1, float b1, float r2, float g2, float b2, float r3, float g3, float b3)
+{
+	points[1] = DirectX::XMFLOAT4(r1, g1, b1, 1.0f);
+	points[3] = DirectX::XMFLOAT4(r2, g2, b2, 1.0f);
+	points[5] = DirectX::XMFLOAT4(r3, g3, b3, 1.0f);
+}
+
+void TriangleComponent::SetPositions(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3)
+{
+	points[0] = DirectX::XMFLOAT4(x1, y1, z1, 1.0f);
+	points[2] = DirectX::XMFLOAT4(x2, y2, z2, 1.0f);
+	points[4] = DirectX::XMFLOAT4(x3, y3, z3, 1.0f);
 }

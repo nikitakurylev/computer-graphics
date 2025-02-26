@@ -33,24 +33,6 @@ void Game::Run()
 			isExitRequested = true;
 		}
 
-		Context->ClearState();
-
-
-		D3D11_VIEWPORT viewport = {};
-		viewport.Width = static_cast<float>(Display.ClientWidth);
-		viewport.Height = static_cast<float>(Display.ClientHeight);
-		viewport.TopLeftX = 0;
-		viewport.TopLeftY = 0;
-		viewport.MinDepth = 0;
-		viewport.MaxDepth = 1.0f;
-
-		Context->RSSetViewports(1, &viewport);
-
-		for (GameComponent* gameComponent : Components)
-		{
-			gameComponent->Draw();
-		}
-
 		auto	curTime = std::chrono::steady_clock::now();
 		float	deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(curTime - PrevTime).count() / 1000000.0f;
 		PrevTime = curTime;
@@ -70,19 +52,40 @@ void Game::Run()
 			frameCount = 0;
 		}
 
-		Context->OMSetRenderTargets(1, &RenderView, nullptr);
-
-		float color[] = { TotalTime, 0.1f, 0.1f, 1.0f };
-		Context->ClearRenderTargetView(RenderView, color);
-
-		Context->DrawIndexed(6, 0, 0);
-
-		Context->OMSetRenderTargets(0, nullptr, nullptr);
-
-		SwapChain->Present(1, /*DXGI_PRESENT_DO_NOT_WAIT*/ 0);
+		Draw();
 	}
 
 	std::cout << "Hello World!\n";
+}
+
+void Game::Draw()
+{
+	Context->ClearState();
+
+
+	D3D11_VIEWPORT viewport = {};
+	viewport.Width = static_cast<float>(Display.ClientWidth);
+	viewport.Height = static_cast<float>(Display.ClientHeight);
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.MinDepth = 0;
+	viewport.MaxDepth = 1.0f;
+
+	Context->RSSetViewports(1, &viewport);
+
+	Context->OMSetRenderTargets(1, &RenderView, nullptr);
+
+	float color[] = { TotalTime, 0.1f, 0.1f, 1.0f };
+	Context->ClearRenderTargetView(RenderView, color);
+
+	for (GameComponent* gameComponent : Components)
+	{
+		gameComponent->Draw();
+	}
+
+	Context->OMSetRenderTargets(0, nullptr, nullptr);
+
+	SwapChain->Present(1, /*DXGI_PRESENT_DO_NOT_WAIT*/ 0);
 }
 
 void Game::Initialize()

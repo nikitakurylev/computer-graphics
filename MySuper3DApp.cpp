@@ -15,8 +15,36 @@
 int main()
 {
 	auto game = Game();
-	TriangleComponent tri = TriangleComponent(game);
-	game.Components.push_back(&tri);
+	TriangleComponent triangle1 = TriangleComponent(game);
+
+	triangle1.SetPositions(
+		0.6f, 0.5f, 0.0f,
+		-0.4f, -0.5f, 0.5f,
+		0.6f, -0.5f, 0.5f
+	);
+
+	triangle1.SetColors(
+		0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f,
+		1.0f, 0.0f, 0.0f
+	);
+
+	TriangleComponent triangle2 = TriangleComponent(game);
+
+	triangle2.SetPositions(
+		0.4f, 0.5f, 0.0f,
+		-0.6f, -0.5f, 0.5f,
+		-0.6f, 0.5f, 0.5f
+	);
+
+	triangle2.SetColors(
+		1.0f, 1.0f, 0.0f,
+		0.0f, 1.0f, 1.0f,
+		1.0f, 0.0f, 1.0f
+	);
+
+	game.Components.push_back(&triangle1);
+	game.Components.push_back(&triangle2);
 	game.Run();
 }
 
