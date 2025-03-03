@@ -5,7 +5,7 @@
 #include "GameComponent.h"
 #include "Game.h"
 
-TriangleComponent::TriangleComponent(Game game) : GameComponent(game)
+TriangleComponent::TriangleComponent(Game* game) : GameComponent(game)
 {
 	Initialize();
 }
@@ -34,7 +34,7 @@ void TriangleComponent::Initialize()
 		// If there was  nothing in the error message then it simply could not find the shader file itself.
 		else
 		{
-			MessageBox(game.Display.hWnd, L"MyVeryFirstShader.hlsl", L"Missing Shader File", MB_OK);
+			MessageBox(game->Display.hWnd, L"MyVeryFirstShader.hlsl", L"Missing Shader File", MB_OK);
 		}
 
 		return;
@@ -45,12 +45,12 @@ void TriangleComponent::Initialize()
 	ID3DBlob* errorPixelCode;
 	res = D3DCompileFromFile(L"./Shaders/MyVeryFirstShader.hlsl", Shader_Macros /*macros*/, nullptr /*include*/, "PSMain", "ps_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &pixelShaderByteCode, &errorPixelCode);
 
-	game.Device->CreateVertexShader(
+	game->Device->CreateVertexShader(
 		vertexShaderByteCode->GetBufferPointer(),
 		vertexShaderByteCode->GetBufferSize(),
 		nullptr, &vertexShader);
 
-	game.Device->CreatePixelShader(
+	game->Device->CreatePixelShader(
 		pixelShaderByteCode->GetBufferPointer(),
 		pixelShaderByteCode->GetBufferSize(),
 		nullptr, &pixelShader);
@@ -74,7 +74,7 @@ void TriangleComponent::Initialize()
 			0}
 	};
 
-	game.Device->CreateInputLayout(
+	game->Device->CreateInputLayout(
 		inputElements,
 		2,
 		vertexShaderByteCode->GetBufferPointer(),
@@ -85,7 +85,17 @@ void TriangleComponent::Initialize()
 	rastDesc.CullMode = D3D11_CULL_NONE;
 	rastDesc.FillMode = D3D11_FILL_SOLID;
 
-	res = game.Device->CreateRasterizerState(&rastDesc, &rastState);
+	res = game->Device->CreateRasterizerState(&rastDesc, &rastState);
+
+	D3D11_BUFFER_DESC constBufDesc = {};
+	constBufDesc.ByteWidth = sizeof(ConstData);
+	constBufDesc.Usage = D3D11_USAGE_DYNAMIC;
+	constBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	constBufDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	constBufDesc.MiscFlags = 0;
+	constBufDesc.StructureByteStride = 0;
+
+	game->Device->CreateBuffer(&constBufDesc, nullptr, &constantBuffer);
 }
 
 void TriangleComponent::Draw() {
@@ -104,7 +114,7 @@ void TriangleComponent::Draw() {
 	vertexData.SysMemSlicePitch = 0;
 
 	ID3D11Buffer* vb;
-	game.Device->CreateBuffer(&vertexBufDesc, &vertexData, &vb);
+	game->Device->CreateBuffer(&vertexBufDesc, &vertexData, &vb);
 
 	int indeces[] = { 0,1,2 };
 	D3D11_BUFFER_DESC indexBufDesc = {};
@@ -121,20 +131,66 @@ void TriangleComponent::Draw() {
 	indexData.SysMemSlicePitch = 0;
 
 	ID3D11Buffer* ib;
-	game.Device->CreateBuffer(&indexBufDesc, &indexData, &ib);
+	game->Device->CreateBuffer(&indexBufDesc, &indexData, &ib);
 
 	UINT strides[] = { 32 };
 	UINT offsets[] = { 0 };
 	
-	game.Context->RSSetState(rastState);
+	game->Context->RSSetState(rastState);
 
-	game.Context->IASetInputLayout(layout);
-	game.Context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	game.Context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
-	game.Context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
-	game.Context->VSSetShader(vertexShader, nullptr, 0);
-	game.Context->PSSetShader(pixelShader, nullptr, 0);
-	game.Context->DrawIndexed(3, 0, 0);
+	game->Context->IASetInputLayout(layout);
+	game->Context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	game->Context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
+	game->Context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
+	game->Context->VSSetShader(vertexShader, nullptr, 0);
+	game->Context->PSSetShader(pixelShader, nullptr, 0);
+	game->Context->VSSetConstantBuffers(0, 1, &constantBuffer);
+	game->Context->DrawIndexed(3, 0, 0);
+
+}
+
+void TriangleComponent::Update()
+{
+	// If windows signals to end the application then exit out.
+	if (game->msg.message == WM_KEYDOWN) {
+		auto key = static_cast<unsigned int>(game->msg.wParam);
+		switch (key) {
+		case 39:
+			offsetColor.offset.x += 0.05f;
+			break;
+		case 37:
+			offsetColor.offset.x -= 0.05f;
+			break;
+		case 40:
+			offsetColor.offset.y -= 0.05f;
+			break;
+		case 38:
+			offsetColor.offset.y += 0.05f;
+			break;
+		case 49:
+			offsetColor.color = DirectX::XMFLOAT4(1.0f, 0, 0, 0);
+			break;
+		case 50:
+			offsetColor.color = DirectX::XMFLOAT4(0, 1.0f, 0, 0);
+			break;
+		case 51:
+			offsetColor.color = DirectX::XMFLOAT4(0, 0, 1.0f, 0);
+			break;
+		case 52:
+			offsetColor.color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 0);
+			break;
+		case 53:
+			offsetColor.color = DirectX::XMFLOAT4(0, 0, 0, 0);
+			break;
+		}
+
+		D3D11_MAPPED_SUBRESOURCE res = {};
+		game->Context->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &res);
+
+		auto dataPtr = reinterpret_cast<float*>(res.pData);
+		memcpy(dataPtr, &offsetColor, sizeof(ConstData));
+		game->Context->Unmap(constantBuffer, 0);
+	}
 }
 
 void TriangleComponent::SetColors(float r1, float g1, float b1, float r2, float g2, float b2, float r3, float g3, float b3)

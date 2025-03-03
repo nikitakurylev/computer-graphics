@@ -19,7 +19,7 @@ void Game::Run()
 	unsigned int frameCount = 0;
 
 
-	MSG msg = {};
+	msg = {};
 	bool isExitRequested = false;
 	while (!isExitRequested) {
 		// Handle the windows messages.
@@ -52,10 +52,19 @@ void Game::Run()
 			frameCount = 0;
 		}
 
+		Update();
 		Draw();
 	}
 
 	std::cout << "Hello World!\n";
+}
+
+void Game::Update()
+{
+	for (GameComponent* gameComponent : Components)
+	{
+		gameComponent->Update();
+	}
 }
 
 void Game::Draw()

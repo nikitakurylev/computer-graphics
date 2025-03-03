@@ -3,14 +3,14 @@
 class GameComponent
 {
 public:
-	GameComponent(Game game);
+	GameComponent(Game* game);
 	virtual void Draw();
+	virtual void Update();
 protected:
-	Game game;
+	Game* game;
 private:
 	virtual void Initialize();
 	void Reload();
-	void Update();
 	void DestroyResources();
 };
 

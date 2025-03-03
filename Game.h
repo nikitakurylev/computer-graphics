@@ -16,6 +16,7 @@ public:
 	DisplayWin32 Display;
 	Microsoft::WRL::ComPtr<ID3D11Device> Device;
 	ID3D11DeviceContext* Context;
+	MSG msg;
 	void Run();
 	void Update();
 	void Draw();

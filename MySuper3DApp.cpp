@@ -15,7 +15,7 @@
 int main()
 {
 	auto game = Game();
-	TriangleComponent triangle1 = TriangleComponent(game);
+	TriangleComponent triangle1 = TriangleComponent(&game);
 
 	triangle1.SetPositions(
 		0.6f, 0.5f, 0.0f,
@@ -29,7 +29,7 @@ int main()
 		1.0f, 0.0f, 0.0f
 	);
 
-	TriangleComponent triangle2 = TriangleComponent(game);
+	TriangleComponent triangle2 = TriangleComponent(&game);
 
 	triangle2.SetPositions(
 		0.4f, 0.5f, 0.0f,

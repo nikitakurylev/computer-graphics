@@ -1,7 +1,7 @@
 #include "GameComponent.h"
 #include "Game.h"
 
-GameComponent::GameComponent(Game game) : game(game)
+GameComponent::GameComponent(Game* game) : game(game)
 {
 }
 
