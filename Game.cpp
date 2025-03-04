@@ -3,14 +3,8 @@
 #include <iostream>
 #include "GameComponent.h"
 
-Game::Game() : Game(DisplayWin32(800, 800))
+Game::Game(DisplayWin32* display, InputDevice* input) : Display(display), Input(input)
 {
-
-}
-
-Game::Game(DisplayWin32 display) : Display(display)
-{
-	Display = display;
 	Initialize();
 }
 
@@ -19,7 +13,7 @@ void Game::Run()
 	unsigned int frameCount = 0;
 
 
-	msg = {};
+	MSG msg = {};
 	bool isExitRequested = false;
 	while (!isExitRequested) {
 		// Handle the windows messages.
@@ -47,7 +41,7 @@ void Game::Run()
 
 			WCHAR text[256];
 			swprintf_s(text, TEXT("FPS: %f"), fps);
-			SetWindowText(Display.hWnd, text);
+			SetWindowText(Display->hWnd, text);
 
 			frameCount = 0;
 		}
@@ -73,8 +67,8 @@ void Game::Draw()
 
 
 	D3D11_VIEWPORT viewport = {};
-	viewport.Width = static_cast<float>(Display.ClientWidth);
-	viewport.Height = static_cast<float>(Display.ClientHeight);
+	viewport.Width = static_cast<float>(Display->ClientWidth);
+	viewport.Height = static_cast<float>(Display->ClientHeight);
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
 	viewport.MinDepth = 0;
@@ -103,15 +97,15 @@ void Game::Initialize()
 
 	DXGI_SWAP_CHAIN_DESC swapDesc = {};
 	swapDesc.BufferCount = 2;
-	swapDesc.BufferDesc.Width = Display.ClientWidth;
-	swapDesc.BufferDesc.Height = Display.ClientHeight;
+	swapDesc.BufferDesc.Width = Display->ClientWidth;
+	swapDesc.BufferDesc.Height = Display->ClientHeight;
 	swapDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	swapDesc.BufferDesc.RefreshRate.Numerator = 60;
 	swapDesc.BufferDesc.RefreshRate.Denominator = 1;
 	swapDesc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 	swapDesc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 	swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapDesc.OutputWindow = Display.hWnd;
+	swapDesc.OutputWindow = Display->hWnd;
 	swapDesc.Windowed = true;
 	swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;

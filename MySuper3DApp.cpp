@@ -14,7 +14,9 @@
 
 int main()
 {
-	auto game = Game();
+	auto window = DisplayWin32::Instance();
+	auto inputDevice = InputDevice();
+	auto game = Game(&window, &inputDevice);
 	TriangleComponent triangle1 = TriangleComponent(&game);
 
 	triangle1.SetPositions(

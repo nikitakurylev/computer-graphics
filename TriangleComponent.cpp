@@ -34,7 +34,7 @@ void TriangleComponent::Initialize()
 		// If there was  nothing in the error message then it simply could not find the shader file itself.
 		else
 		{
-			MessageBox(game->Display.hWnd, L"MyVeryFirstShader.hlsl", L"Missing Shader File", MB_OK);
+			MessageBox(game->Display->hWnd, L"MyVeryFirstShader.hlsl", L"Missing Shader File", MB_OK);
 		}
 
 		return;
@@ -135,7 +135,7 @@ void TriangleComponent::Draw() {
 
 	UINT strides[] = { 32 };
 	UINT offsets[] = { 0 };
-	
+
 	game->Context->RSSetState(rastState);
 
 	game->Context->IASetInputLayout(layout);
@@ -152,45 +152,23 @@ void TriangleComponent::Draw() {
 void TriangleComponent::Update()
 {
 	// If windows signals to end the application then exit out.
-	if (game->msg.message == WM_KEYDOWN) {
-		auto key = static_cast<unsigned int>(game->msg.wParam);
-		switch (key) {
-		case 39:
-			offsetColor.offset.x += 0.05f;
-			break;
-		case 37:
-			offsetColor.offset.x -= 0.05f;
-			break;
-		case 40:
-			offsetColor.offset.y -= 0.05f;
-			break;
-		case 38:
-			offsetColor.offset.y += 0.05f;
-			break;
-		case 49:
-			offsetColor.color = DirectX::XMFLOAT4(1.0f, 0, 0, 0);
-			break;
-		case 50:
-			offsetColor.color = DirectX::XMFLOAT4(0, 1.0f, 0, 0);
-			break;
-		case 51:
-			offsetColor.color = DirectX::XMFLOAT4(0, 0, 1.0f, 0);
-			break;
-		case 52:
-			offsetColor.color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 0);
-			break;
-		case 53:
-			offsetColor.color = DirectX::XMFLOAT4(0, 0, 0, 0);
-			break;
-		}
+	if (game->Input->IsKeyDown(Keys::Right))
+		offsetColor.offset.x += 0.05f;
+	if (game->Input->IsKeyDown(Keys::Left))
+		offsetColor.offset.x -= 0.05f;
+	if (game->Input->IsKeyDown(Keys::Up))
+		offsetColor.offset.y += 0.05f;
+	if (game->Input->IsKeyDown(Keys::Down))
+		offsetColor.offset.y -= 0.05f;
+	if (game->Input->IsKeyDown(Keys::Down))
+		offsetColor.color = DirectX::XMFLOAT4(1.0f, 0, 0, 0);
 
-		D3D11_MAPPED_SUBRESOURCE res = {};
-		game->Context->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &res);
+	D3D11_MAPPED_SUBRESOURCE res = {};
+	game->Context->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &res);
 
-		auto dataPtr = reinterpret_cast<float*>(res.pData);
-		memcpy(dataPtr, &offsetColor, sizeof(ConstData));
-		game->Context->Unmap(constantBuffer, 0);
-	}
+	auto dataPtr = reinterpret_cast<float*>(res.pData);
+	memcpy(dataPtr, &offsetColor, sizeof(ConstData));
+	game->Context->Unmap(constantBuffer, 0);
 }
 
 void TriangleComponent::SetColors(float r1, float g1, float b1, float r2, float g2, float b2, float r3, float g3, float b3)
