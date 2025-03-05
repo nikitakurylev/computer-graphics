@@ -1,16 +1,16 @@
-#include "TriangleComponent.h"
+#include "QuadComponent.h"
 #include <directxmath.h>
 #include <d3dcompiler.h>
 #include <iostream>
 #include "GameComponent.h"
 #include "Game.h"
 
-TriangleComponent::TriangleComponent(Game* game) : GameComponent(game)
+QuadComponent::QuadComponent(Game* game) : GameComponent(game)
 {
 	Initialize();
 }
 
-void TriangleComponent::Initialize()
+void QuadComponent::Initialize()
 {
 	vertexShaderByteCode = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;
@@ -98,7 +98,7 @@ void TriangleComponent::Initialize()
 	game->Device->CreateBuffer(&constBufDesc, nullptr, &constantBuffer);
 }
 
-void TriangleComponent::Draw() {
+void QuadComponent::Draw() {
 
 	D3D11_BUFFER_DESC vertexBufDesc = {};
 	vertexBufDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -116,7 +116,7 @@ void TriangleComponent::Draw() {
 	ID3D11Buffer* vb;
 	game->Device->CreateBuffer(&vertexBufDesc, &vertexData, &vb);
 
-	int indeces[] = { 0,1,2 };
+	int indeces[] = { 0,1,2, 1,0,3 };
 	D3D11_BUFFER_DESC indexBufDesc = {};
 	indexBufDesc.Usage = D3D11_USAGE_DEFAULT;
 	indexBufDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
@@ -145,11 +145,11 @@ void TriangleComponent::Draw() {
 	game->Context->VSSetShader(vertexShader, nullptr, 0);
 	game->Context->PSSetShader(pixelShader, nullptr, 0);
 	game->Context->VSSetConstantBuffers(0, 1, &constantBuffer);
-	game->Context->DrawIndexed(3, 0, 0);
-
+	game->Context->PSSetConstantBuffers(1, 1, &constantBuffer);
+	game->Context->DrawIndexed(6, 0, 0);
 }
 
-void TriangleComponent::Update()
+void QuadComponent::Update()
 {
 	// If windows signals to end the application then exit out.
 	if (game->Input->IsKeyDown(Keys::Right))
@@ -163,6 +163,12 @@ void TriangleComponent::Update()
 	if (game->Input->IsKeyDown(Keys::Down))
 		offsetColor.color = DirectX::XMFLOAT4(1.0f, 0, 0, 0);
 
+}
+
+void QuadComponent::SetOffset(float x, float y, float z)
+{
+	offsetColor.offset = DirectX::XMFLOAT4(x, y, z, 0.0f);
+
 	D3D11_MAPPED_SUBRESOURCE res = {};
 	game->Context->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &res);
 
@@ -171,16 +177,18 @@ void TriangleComponent::Update()
 	game->Context->Unmap(constantBuffer, 0);
 }
 
-void TriangleComponent::SetColors(float r1, float g1, float b1, float r2, float g2, float b2, float r3, float g3, float b3)
+void QuadComponent::SetColors(float r1, float g1, float b1, float r2, float g2, float b2, float r3, float g3, float b3, float r4, float g4, float b4)
 {
-	points[1] = DirectX::XMFLOAT4(r1, g1, b1, 1.0f);
-	points[3] = DirectX::XMFLOAT4(r2, g2, b2, 1.0f);
-	points[5] = DirectX::XMFLOAT4(r3, g3, b3, 1.0f);
+	points[1] = DirectX::XMFLOAT4(r1, g1, b1, 0);
+	points[3] = DirectX::XMFLOAT4(r2, g2, b2, 0);
+	points[5] = DirectX::XMFLOAT4(r3, g3, b3, 0);
+	points[7] = DirectX::XMFLOAT4(r4, g4, b4, 0);
 }
 
-void TriangleComponent::SetPositions(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3)
+void QuadComponent::SetPositions(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float x4, float y4, float z4)
 {
-	points[0] = DirectX::XMFLOAT4(x1, y1, z1, 1.0f);
-	points[2] = DirectX::XMFLOAT4(x2, y2, z2, 1.0f);
-	points[4] = DirectX::XMFLOAT4(x3, y3, z3, 1.0f);
+	points[0] = DirectX::XMFLOAT4(x1, y1, z1, 0);
+	points[2] = DirectX::XMFLOAT4(x2, y2, z2, 0);
+	points[4] = DirectX::XMFLOAT4(x3, y3, z3, 0);
+	points[6] = DirectX::XMFLOAT4(x4, y4, z4, 0);
 }

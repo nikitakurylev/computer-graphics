@@ -31,6 +31,8 @@ PS_IN VSMain( VS_IN input )
 
 float4 PSMain(PS_IN input) : SV_Target
 {
-	float4 col = input.col; //* ConstData.color;
+    float x = input.pos.x - ConstData.offset.x;
+    float y = input.pos.y - ConstData.offset.y;
+    float4 col = (x * x + y * y)/1000000.0f; //* ConstData.color;
 	return col;
 }

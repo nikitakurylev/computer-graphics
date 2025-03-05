@@ -2,11 +2,7 @@
 #include <d3d11.h>
 #include <directxmath.h>
 #include "GameComponent.h"
-
-struct ConstData {
-	DirectX::XMFLOAT4 offset;
-	DirectX::XMFLOAT4 color;
-};
+#include "OffsetColor.h"
 
 class TriangleComponent : public GameComponent
 {
@@ -26,6 +22,6 @@ private:
 	ID3D11RasterizerState* rastState;
 	void Initialize() override;
 	ID3D11Buffer* constantBuffer;
-	ConstData offsetColor;
+	OffsetColor offsetColor;
 };
 

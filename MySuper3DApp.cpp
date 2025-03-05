@@ -4,6 +4,9 @@
 
 #include "Game.h"
 #include "TriangleComponent.h"
+#include "QuadComponent.h"
+#include "BoxComponent.h"
+#include "BallComponent.h"
 
 
 #pragma comment(lib, "d3d11.lib")
@@ -17,36 +20,62 @@ int main()
 	auto window = DisplayWin32::Instance();
 	auto inputDevice = InputDevice();
 	auto game = Game(&window, &inputDevice);
-	TriangleComponent triangle1 = TriangleComponent(&game);
 
-	triangle1.SetPositions(
-		0.6f, 0.5f, 0.0f,
-		-0.4f, -0.5f, 0.5f,
-		0.6f, -0.5f, 0.5f
+	BoxComponent quad1 = BoxComponent(&game);
+
+	quad1.SetPositions(
+		0.5f, 0.5f, 0.5f,
+		-0.5f, -0.5f, 0.5f,
+		-0.5f, 0.5f, 0.5f,
+		0.5f, -0.5f, 0.5f
 	);
 
-	triangle1.SetColors(
-		0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 1.0f,
-		1.0f, 0.0f, 0.0f
-	);
-
-	TriangleComponent triangle2 = TriangleComponent(&game);
-
-	triangle2.SetPositions(
-		0.4f, 0.5f, 0.0f,
-		-0.6f, -0.5f, 0.5f,
-		-0.6f, 0.5f, 0.5f
-	);
-
-	triangle2.SetColors(
+	quad1.SetColors(
 		1.0f, 1.0f, 0.0f,
 		0.0f, 1.0f, 1.0f,
-		1.0f, 0.0f, 1.0f
+		1.0f, 0.0f, 1.0f,
+		1.0f, 0.0f, 0.0f
+	);
+	quad1.SetPosition(1.4f, 0, 0);
+
+	BoxComponent quad2 = BoxComponent(&game);
+
+	quad2.SetPositions(
+		0.5f, 0.5f, 0.5f,
+		-0.5f, -0.5f, 0.5f,
+		-0.5f, 0.5f, 0.5f,
+		0.5f, -0.5f, 0.5f
 	);
 
-	game.Components.push_back(&triangle1);
-	game.Components.push_back(&triangle2);
+	quad2.SetColors(
+		1.0f, 1.0f, 0.0f,
+		0.0f, 1.0f, 1.0f,
+		1.0f, 0.0f, 1.0f,
+		1.0f, 0.0f, 0.0f
+	);
+	quad2.SetPosition(-1.4f, 0, 0);
+
+	BallComponent ball = BallComponent(&game);
+
+	ball.SetPositions(
+		0.5f, 0.5f, 0.5f,
+		-0.5f, -0.5f, 0.5f,
+		-0.5f, 0.5f, 0.5f,
+		0.5f, -0.5f, 0.5f
+	);
+
+	ball.SetColors(
+		1.0f, 1.0f, 0.0f,
+		0.0f, 1.0f, 1.0f,
+		1.0f, 0.0f, 1.0f,
+		1.0f, 0.0f, 0.0f
+	);
+	ball.SetPosition(0, 0, 0);
+	ball.Velocity.x = 0.01f;
+
+	game.Components.push_back(&quad1);
+	game.Components.push_back(&quad2);
+	game.Components.push_back(&ball);
 	game.Run();
 }
 
