@@ -71,12 +71,20 @@ void QuadComponent::Initialize()
 			0,
 			D3D11_APPEND_ALIGNED_ELEMENT,
 			D3D11_INPUT_PER_VERTEX_DATA,
+			0},
+		D3D11_INPUT_ELEMENT_DESC {
+			"TEXCOORD",
+			0,
+			DXGI_FORMAT_R32G32_FLOAT,
+			0,
+			D3D11_APPEND_ALIGNED_ELEMENT,
+			D3D11_INPUT_PER_VERTEX_DATA,
 			0}
 	};
 
 	game->Device->CreateInputLayout(
 		inputElements,
-		2,
+		3,
 		vertexShaderByteCode->GetBufferPointer(),
 		vertexShaderByteCode->GetBufferSize(),
 		&layout);
@@ -96,6 +104,13 @@ void QuadComponent::Initialize()
 	constBufDesc.StructureByteStride = 0;
 
 	game->Device->CreateBuffer(&constBufDesc, nullptr, &constantBuffer);
+
+	points[0].texCoord = DirectX::XMFLOAT2(1, 1);
+	points[1].texCoord = DirectX::XMFLOAT2(-1, -1);
+	points[2].texCoord = DirectX::XMFLOAT2(-1, 1);
+	points[3].texCoord = DirectX::XMFLOAT2(1, -1);
+
+	SetColors(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 }
 
 void QuadComponent::Draw() {
@@ -106,7 +121,7 @@ void QuadComponent::Draw() {
 	vertexBufDesc.CPUAccessFlags = 0;
 	vertexBufDesc.MiscFlags = 0;
 	vertexBufDesc.StructureByteStride = 0;
-	vertexBufDesc.ByteWidth = sizeof(DirectX::XMFLOAT4) * std::size(points);
+	vertexBufDesc.ByteWidth = sizeof(Vertex) * std::size(points);
 
 	D3D11_SUBRESOURCE_DATA vertexData = {};
 	vertexData.pSysMem = points;
@@ -133,7 +148,7 @@ void QuadComponent::Draw() {
 	ID3D11Buffer* ib;
 	game->Device->CreateBuffer(&indexBufDesc, &indexData, &ib);
 
-	UINT strides[] = { 32 };
+	UINT strides[] = { 40 };
 	UINT offsets[] = { 0 };
 
 	game->Context->RSSetState(rastState);
@@ -145,7 +160,7 @@ void QuadComponent::Draw() {
 	game->Context->VSSetShader(vertexShader, nullptr, 0);
 	game->Context->PSSetShader(pixelShader, nullptr, 0);
 	game->Context->VSSetConstantBuffers(0, 1, &constantBuffer);
-	game->Context->PSSetConstantBuffers(1, 1, &constantBuffer);
+	game->Context->PSSetConstantBuffers(0, 1, &constantBuffer);
 	game->Context->DrawIndexed(6, 0, 0);
 }
 
@@ -179,16 +194,16 @@ void QuadComponent::SetOffset(float x, float y, float z)
 
 void QuadComponent::SetColors(float r1, float g1, float b1, float r2, float g2, float b2, float r3, float g3, float b3, float r4, float g4, float b4)
 {
-	points[1] = DirectX::XMFLOAT4(r1, g1, b1, 0);
-	points[3] = DirectX::XMFLOAT4(r2, g2, b2, 0);
-	points[5] = DirectX::XMFLOAT4(r3, g3, b3, 0);
-	points[7] = DirectX::XMFLOAT4(r4, g4, b4, 0);
+	points[0].color = DirectX::XMFLOAT4(r1, g1, b1, 0);
+	points[1].color = DirectX::XMFLOAT4(r2, g2, b2, 0);
+	points[2].color = DirectX::XMFLOAT4(r3, g3, b3, 0);
+	points[3].color = DirectX::XMFLOAT4(r4, g4, b4, 0);
 }
 
 void QuadComponent::SetPositions(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float x4, float y4, float z4)
 {
-	points[0] = DirectX::XMFLOAT4(x1, y1, z1, 0);
-	points[2] = DirectX::XMFLOAT4(x2, y2, z2, 0);
-	points[4] = DirectX::XMFLOAT4(x3, y3, z3, 0);
-	points[6] = DirectX::XMFLOAT4(x4, y4, z4, 0);
+	points[0].position = DirectX::XMFLOAT4(x1, y1, z1, 0);
+	points[1].position = DirectX::XMFLOAT4(x2, y2, z2, 0);
+	points[2].position = DirectX::XMFLOAT4(x3, y3, z3, 0);
+	points[3].position = DirectX::XMFLOAT4(x4, y4, z4, 0);
 }

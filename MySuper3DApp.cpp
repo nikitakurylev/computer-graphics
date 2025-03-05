@@ -7,6 +7,9 @@
 #include "QuadComponent.h"
 #include "BoxComponent.h"
 #include "BallComponent.h"
+#include "PaddleComponent.h"
+#include "PlayerPaddleComponent.h"
+#include "EnemyPaddleComponent.h"
 
 
 #pragma comment(lib, "d3d11.lib")
@@ -21,61 +24,33 @@ int main()
 	auto inputDevice = InputDevice();
 	auto game = Game(&window, &inputDevice);
 
-	BoxComponent quad1 = BoxComponent(&game);
+	BoxComponent wall1 = BoxComponent(&game);
+	wall1.SetPosition(0, 0.55f, 0);
+	wall1.SetSize(2, 0.05f);
+	BoxComponent wall2 = BoxComponent(&game);
+	wall2.SetPosition(0, -0.55f, 0);
+	wall2.SetSize(2, 0.05f);
 
-	quad1.SetPositions(
-		0.5f, 0.5f, 0.5f,
-		-0.5f, -0.5f, 0.5f,
-		-0.5f, 0.5f, 0.5f,
-		0.5f, -0.5f, 0.5f
-	);
+	PlayerPaddleComponent paddle = PlayerPaddleComponent(&game);
 
-	quad1.SetColors(
-		1.0f, 1.0f, 0.0f,
-		0.0f, 1.0f, 1.0f,
-		1.0f, 0.0f, 1.0f,
-		1.0f, 0.0f, 0.0f
-	);
-	quad1.SetPosition(1.4f, 0, 0);
-
-	BoxComponent quad2 = BoxComponent(&game);
-
-	quad2.SetPositions(
-		0.5f, 0.5f, 0.5f,
-		-0.5f, -0.5f, 0.5f,
-		-0.5f, 0.5f, 0.5f,
-		0.5f, -0.5f, 0.5f
-	);
-
-	quad2.SetColors(
-		1.0f, 1.0f, 0.0f,
-		0.0f, 1.0f, 1.0f,
-		1.0f, 0.0f, 1.0f,
-		1.0f, 0.0f, 0.0f
-	);
-	quad2.SetPosition(-1.4f, 0, 0);
+	paddle.SetPosition(-0.9, 0, 0);
 
 	BallComponent ball = BallComponent(&game);
 
-	ball.SetPositions(
-		0.5f, 0.5f, 0.5f,
-		-0.5f, -0.5f, 0.5f,
-		-0.5f, 0.5f, 0.5f,
-		0.5f, -0.5f, 0.5f
-	);
+	ball.SetSize(0.05, 0.05);
 
-	ball.SetColors(
-		1.0f, 1.0f, 0.0f,
-		0.0f, 1.0f, 1.0f,
-		1.0f, 0.0f, 1.0f,
-		1.0f, 0.0f, 0.0f
-	);
-	ball.SetPosition(0, 0, 0);
 	ball.Velocity.x = 0.01f;
+	ball.Velocity.y = 0.01f;
+	
+	EnemyPaddleComponent enemy = EnemyPaddleComponent(&game, &ball);
+	enemy.SetPosition(0.9f, 0, 0);
 
-	game.Components.push_back(&quad1);
-	game.Components.push_back(&quad2);
+
+	game.Components.push_back(&wall1);
+	game.Components.push_back(&wall2);
+	game.Components.push_back(&paddle);
 	game.Components.push_back(&ball);
+	game.Components.push_back(&enemy);
 	game.Run();
 }
 

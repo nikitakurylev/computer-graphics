@@ -11,3 +11,18 @@ void BoxComponent::SetPosition(float x, float y, float z)
 	SetOffset(x, y, z);
 	collider.Center = DirectX::XMFLOAT3(x, y, z);
 }
+
+void BoxComponent::SetSize(float width, float height)
+{
+	auto halfWidth = width * 0.5f;
+	auto halfHeight = height * 0.5f;
+
+	SetPositions(
+		halfWidth, halfHeight, 0.5f,
+		-halfWidth, -halfHeight, 0.5f,
+		-halfWidth, halfHeight, 0.5f,
+		halfWidth, -halfHeight, 0.5f
+	);
+	collider.Extents.x = halfWidth;
+	collider.Extents.y = halfHeight;
+}

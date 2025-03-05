@@ -68,9 +68,9 @@ void Game::Draw()
 
 	D3D11_VIEWPORT viewport = {};
 	viewport.Width = static_cast<float>(Display->ClientWidth);
-	viewport.Height = static_cast<float>(Display->ClientHeight);
+	viewport.Height = static_cast<float>(Display->ClientWidth);
 	viewport.TopLeftX = 0;
-	viewport.TopLeftY = 0;
+	viewport.TopLeftY = -(static_cast<float>(Display->ClientWidth - Display->ClientHeight)) / 2;
 	viewport.MinDepth = 0;
 	viewport.MaxDepth = 1.0f;
 
@@ -78,7 +78,7 @@ void Game::Draw()
 
 	Context->OMSetRenderTargets(1, &RenderView, nullptr);
 
-	float color[] = { TotalTime, 0.1f, 0.1f, 1.0f };
+	float color[] = { 0, 0, 0, 0 };
 	Context->ClearRenderTargetView(RenderView, color);
 
 	for (GameComponent* gameComponent : Components)
