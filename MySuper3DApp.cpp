@@ -40,7 +40,7 @@ int main()
 	ball.SetSize(0.05, 0.05);
 
 	ball.Velocity.x = 0.01f;
-	ball.Velocity.y = 0.01f;
+	//ball.Velocity.y = 0.01f;
 	
 	EnemyPaddleComponent enemy = EnemyPaddleComponent(&game, &ball);
 	enemy.SetPosition(0.9f, 0, 0);
