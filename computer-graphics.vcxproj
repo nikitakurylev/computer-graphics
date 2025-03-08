@@ -34,6 +34,7 @@
     <ClCompile Include="TriangleComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="Shaders\Ball.hlsl" />
     <FxCompile Include="Shaders\MyVeryFirstShader.hlsl" />
   </ItemGroup>
   <ItemGroup>

@@ -26,3 +26,12 @@ void BoxComponent::SetSize(float width, float height)
 	collider.Extents.x = halfWidth;
 	collider.Extents.y = halfHeight;
 }
+
+void BoxComponent::SetBoxRotation(float rot)
+{
+	SetRotation(rot);
+	DirectX::XMVECTORF32 axis = { 0, 0, 1 };
+	DirectX::XMFLOAT4 result;
+	DirectX::XMStoreFloat4(&result, DirectX::XMQuaternionRotationAxis(axis, rot));
+	collider.Orientation = result;
+}

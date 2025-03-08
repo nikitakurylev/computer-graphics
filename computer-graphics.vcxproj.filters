@@ -59,6 +59,9 @@
     <FxCompile Include="Shaders\MyVeryFirstShader.hlsl">
       <Filter>Исходные файлы</Filter>
     </FxCompile>
+    <FxCompile Include="Shaders\Ball.hlsl">
+      <Filter>Исходные файлы</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameComponent.h">

@@ -7,6 +7,7 @@
 
 BallComponent::BallComponent(Game* game) : BoxComponent(game)
 {
+	ShaderPath = L"./Shaders/Ball.hlsl";
 }
 
 void BallComponent::Update()

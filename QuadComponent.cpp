@@ -7,6 +7,7 @@
 
 QuadComponent::QuadComponent(Game* game) : GameComponent(game)
 {
+	ShaderPath = L"./Shaders/MyVeryFirstShader.hlsl";
 	Initialize();
 }
 
@@ -43,7 +44,7 @@ void QuadComponent::Initialize()
 	D3D_SHADER_MACRO Shader_Macros[] = { "TEST", "1", "TCOLOR", "float4(0.0f, 1.0f, 0.0f, 1.0f)", nullptr, nullptr };
 
 	ID3DBlob* errorPixelCode;
-	res = D3DCompileFromFile(L"./Shaders/MyVeryFirstShader.hlsl", Shader_Macros /*macros*/, nullptr /*include*/, "PSMain", "ps_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &pixelShaderByteCode, &errorPixelCode);
+	res = D3DCompileFromFile(ShaderPath, Shader_Macros /*macros*/, nullptr /*include*/, "PSMain", "ps_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &pixelShaderByteCode, &errorPixelCode);
 
 	game->Device->CreateVertexShader(
 		vertexShaderByteCode->GetBufferPointer(),
@@ -183,6 +184,18 @@ void QuadComponent::Update()
 void QuadComponent::SetOffset(float x, float y, float z)
 {
 	offsetColor.offset = DirectX::XMFLOAT4(x, y, z, 0.0f);
+
+	D3D11_MAPPED_SUBRESOURCE res = {};
+	game->Context->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &res);
+
+	auto dataPtr = reinterpret_cast<float*>(res.pData);
+	memcpy(dataPtr, &offsetColor, sizeof(OffsetColor));
+	game->Context->Unmap(constantBuffer, 0);
+}
+
+void QuadComponent::SetRotation(float rot)
+{
+	offsetColor.rotation.w = rot;
 
 	D3D11_MAPPED_SUBRESOURCE res = {};
 	game->Context->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &res);
