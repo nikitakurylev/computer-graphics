@@ -27,8 +27,8 @@ DisplayWin32::DisplayWin32()
 
 	// Register the window class.
 	RegisterClassEx(&wc);
-	ClientWidth =  800;
-	ClientHeight = 800;
+	ClientWidth =  1280;
+	ClientHeight = 720;
 
 	RECT windowRect = { 0, 0, static_cast<LONG>(ClientWidth), static_cast<LONG>(ClientHeight) };
 	AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);

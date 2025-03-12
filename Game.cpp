@@ -56,6 +56,17 @@ void Game::Run()
 		else if (Input->IsKeyDown(Keys::D2))
 			fps = false;
 
+		if (Input->IsKeyDown(Keys::D3)) {
+			ortho = false;
+			projection_matrix = Matrix::CreatePerspectiveFieldOfView(
+				DirectX::XM_PIDIV2, Display->ClientWidth / (FLOAT)Display->ClientHeight,
+				0.01f, 1000);
+		}
+		else if (Input->IsKeyDown(Keys::D4)) {
+			ortho = true;
+			projection_matrix = Matrix::CreateOrthographic(Display->ClientWidth * distance * 0.001f, Display->ClientHeight * distance * 0.001f, 0.01f, 1000);
+		}
+
 		cam_rot.y -= Input->MouseOffset.x * 0.01f;
 		cam_rot.x -= Input->MouseOffset.y * 0.01f;
 		Input->MouseOffset = Vector2();
@@ -84,6 +95,8 @@ void Game::Run()
 		}
 		else {
 			distance = max(1.0f, distance - Input->MouseWheelDelta * 0.01f);
+			if(ortho && Input-> MouseWheelDelta != 0)
+				projection_matrix = Matrix::CreateOrthographic(Display->ClientWidth * distance * 0.001f, Display->ClientHeight * distance * 0.001f, 0.01f, 1000);
 			Input->MouseWheelDelta = 0;
 			auto lookAtPoint = Vector3(0, 0, 0);
 			Vector3 camPos = Vector3(distance, 0, 0); // distance - расстояние от камеры
@@ -215,10 +228,6 @@ void Game::Initialize()
 	Context->OMSetRenderTargets(1, &RenderView, depth_stencil_view_);
 
 
-	const auto rotation = Matrix::CreateFromYawPitchRoll(0, 0, 0);
-	const auto target = Vector3::Transform(Vector3::Forward, rotation) + Vector3(0,0,0);
-	const auto up_direction = Vector3::Transform(Vector3::Up, rotation);
-	view_matrix = Matrix::CreateLookAt(Vector3(0, 0, 0), target, up_direction);
 	projection_matrix = Matrix::CreatePerspectiveFieldOfView(
 		DirectX::XM_PIDIV2, Display->ClientWidth/(FLOAT)Display->ClientHeight,
 		0.01f, 1000);

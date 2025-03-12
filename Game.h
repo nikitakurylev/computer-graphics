@@ -49,6 +49,7 @@ private:
 	ID3D11DepthStencilView* depth_stencil_view_ = nullptr;
 	ID3D11Texture2D* depth_stencil_buffer_ = nullptr;
 	bool fps;
+	bool ortho;
 	float distance;
 };
 
