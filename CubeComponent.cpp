@@ -7,6 +7,8 @@
 CubeComponent::CubeComponent(Game* game) : GameComponent(game)
 {
 	SetSize(0.5f, 0.5f, 0.5f);
+	for (int i = 0; i < 8; i++)
+		points[i].color = color * (16 - i) / 16.0f;
 }
 
 void CubeComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader)
@@ -18,7 +20,6 @@ void CubeComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShad
 	points[1].texCoord = DirectX::XMFLOAT2(-1, -1);
 	points[2].texCoord = DirectX::XMFLOAT2(-1, 1);
 	points[3].texCoord = DirectX::XMFLOAT2(1, -1);
-
 }
 
 void CubeComponent::Draw() {
@@ -84,12 +85,6 @@ void CubeComponent::Draw() {
 	game->Context->VSSetShader(VertexShader, nullptr, 0);
 	game->Context->PSSetShader(PixelShader, nullptr, 0);
 	game->Context->DrawIndexed(indexCount, 0, 0);
-}
-
-void CubeComponent::Update()
-{
-	rotation.y += 0.01f;
-	UpdateWorldMatrix();
 }
 
 void CubeComponent::Translate(float x, float y, float z)

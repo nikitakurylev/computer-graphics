@@ -15,40 +15,66 @@
 
 int main()
 {
+	srand(1);
+
 	auto window = DisplayWin32::Instance();
 	auto inputDevice = InputDevice();
 	auto game = Game(&window, &inputDevice);
 
-	auto cube = SphereComponent(&game);
+	auto sun = SphereComponent(&game);
+	auto sunOrbit2 = GameComponent(&game);
+	auto sunOrbit3 = GameComponent(&game);
 
-	cube.SetColors(0, 1, 0, 0);
-	cube.SetColors(1, 1, 0, 0);
-	cube.SetColors(2, 1, 0, 0);
-	cube.UpdateWorldMatrix();
+	sun.SetPosition(0, 0, 0);
+	sun.scale = Vector3(0.7f, 0.7f, 0.7f);
+	sunOrbit2.SetPosition(0, 0, 0);
+	sunOrbit2.scale = Vector3(1, 1, 1);
+	sunOrbit3.SetPosition(0, 0, 0);
+	sunOrbit3.scale = Vector3(1, 1, 1);
 
-	auto cube1 = CubeComponent(&game);
+	auto planet1 = CubeComponent(&game);
+	planet1.parent = &sun;
+	planet1.SetPosition(2, 0, 0);
+	
 
-	cube1.SetSize(0.05f, 0.05f, 0.05f);
-	cube1.SetColors(0, 1, 0, 0);
-	cube1.SetColors(1, 1, 0, 0);
-	cube1.SetColors(2, 1, 0, 0);
-	cube1.position = Vector3(1, 0, 0);
-	cube1.parent = &cube;
-	cube1.UpdateWorldMatrix();
+	auto planet2 = SphereComponent(&game);
+	planet2.parent = &sunOrbit2;
+	planet2.SetPosition(4, 0, 0);
 
-	auto cube2 = CubeComponent(&game);
+	auto planet3 = CubeComponent(&game);
+	planet3.parent = &sunOrbit3;
+	planet3.SetPosition(6, 0, 0);
 
-	cube2.SetSize(0.02f, 0.02f, 0.02f);
-	cube2.SetColors(0, 1, 0, 0);
-	cube2.SetColors(1, 1, 0, 0);
-	cube2.SetColors(2, 1, 0, 0);
-	cube2.position = Vector3(0.2f, 0, 0);
-	cube2.parent = &cube1;
-	cube2.UpdateWorldMatrix();
+	auto planet4 = CubeComponent(&game);
+	planet4.parent = &sun;
+	planet4.SetPosition(-2, 0, 0);
 
-	game.Components.push_back(&cube);
-	game.Components.push_back(&cube1);
-	game.Components.push_back(&cube2);
+	auto planet5 = CubeComponent(&game);
+	planet5.parent = &sunOrbit2;
+	planet5.SetPosition(-4, 0, 0);
+
+	auto moon1 = SphereComponent(&game);
+	auto moon2 = CubeComponent(&game);
+	auto moon3 = SphereComponent(&game);
+	auto moon4 = SphereComponent(&game);
+
+	moon1.parent = &planet1;
+	moon2.parent = &planet2;
+	moon3.parent = &planet3;
+	moon4.parent = &planet5;
+
+	game.Components.push_back(&sun);
+	game.Components.push_back(&sunOrbit2);
+	game.Components.push_back(&sunOrbit3);
+	game.Components.push_back(&planet1);
+	game.Components.push_back(&planet2);
+	game.Components.push_back(&planet3);
+	game.Components.push_back(&planet4);
+	game.Components.push_back(&planet5);
+	game.Components.push_back(&moon1);
+	game.Components.push_back(&moon2);
+	game.Components.push_back(&moon3);
+	game.Components.push_back(&moon4);
 	game.Run();
 }
 

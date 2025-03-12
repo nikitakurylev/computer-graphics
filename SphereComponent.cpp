@@ -23,7 +23,8 @@ SphereComponent::SphereComponent(Game* game) : GameComponent(game)
 			points[j * 20 + i].position = DirectX::XMFLOAT4(position.x, position.y, position.z, 1.0f);
 			//points[j * 20 + i].color = DirectX::XMFLOAT4(position.x + .1f, position.y + .7f, position.z + .3f, 1.0f);
 			//points[j * 20 + i].color = DirectX::XMFLOAT4(0, i%2, 0, 1.0f);
-			points[j * 20 + i].color = DirectX::XMFLOAT4(j%2, i%2, j * 0.05f, 1.0f);
+			//points[j * 20 + i].color = DirectX::XMFLOAT4(j%2, i%2, j * 0.05f, 1.0f);
+			points[j * 20 + i].color = DirectX::XMFLOAT4((j + i) % 2 * color.x, color.y, color.z * 0.5f + j * 0.025f, 1.0f);
 		}
 	}
 
