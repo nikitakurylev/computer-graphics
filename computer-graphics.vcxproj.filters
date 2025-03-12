@@ -54,12 +54,15 @@
     <ClCompile Include="EnemyPaddleComponent.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="CubeComponent.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="SphereComponent.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\MyVeryFirstShader.hlsl">
-      <Filter>Исходные файлы</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\Ball.hlsl">
       <Filter>Исходные файлы</Filter>
     </FxCompile>
   </ItemGroup>
@@ -85,9 +88,6 @@
     <ClInclude Include="Keys.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="SimpleMath.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
     <ClInclude Include="QuadComponent.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
@@ -109,10 +109,14 @@
     <ClInclude Include="EnemyPaddleComponent.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="CubeComponent.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="SphereComponent.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="SimpleMath.inl">
-      <Filter>Файлы заголовков</Filter>
-    </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

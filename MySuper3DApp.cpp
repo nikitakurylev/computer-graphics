@@ -3,13 +3,8 @@
 
 
 #include "Game.h"
-#include "TriangleComponent.h"
-#include "QuadComponent.h"
-#include "BoxComponent.h"
-#include "BallComponent.h"
-#include "PaddleComponent.h"
-#include "PlayerPaddleComponent.h"
-#include "EnemyPaddleComponent.h"
+#include "CubeComponent.h"
+#include "SphereComponent.h"
 
 
 #pragma comment(lib, "d3d11.lib")
@@ -24,33 +19,36 @@ int main()
 	auto inputDevice = InputDevice();
 	auto game = Game(&window, &inputDevice);
 
-	BoxComponent wall1 = BoxComponent(&game);
-	wall1.SetPosition(0, 0.55f, 0);
-	wall1.SetSize(2, 0.05f);
-	BoxComponent wall2 = BoxComponent(&game);
-	wall2.SetPosition(0, -0.55f, 0);
-	wall2.SetSize(2, 0.05f);
+	auto cube = SphereComponent(&game);
 
-	PlayerPaddleComponent paddle = PlayerPaddleComponent(&game);
+	cube.SetColors(0, 1, 0, 0);
+	cube.SetColors(1, 1, 0, 0);
+	cube.SetColors(2, 1, 0, 0);
+	cube.UpdateWorldMatrix();
 
-	paddle.SetPosition(-0.9, 0, 0);
+	auto cube1 = CubeComponent(&game);
 
-	BallComponent ball = BallComponent(&game);
+	cube1.SetSize(0.05f, 0.05f, 0.05f);
+	cube1.SetColors(0, 1, 0, 0);
+	cube1.SetColors(1, 1, 0, 0);
+	cube1.SetColors(2, 1, 0, 0);
+	cube1.position = Vector3(1, 0, 0);
+	cube1.parent = &cube;
+	cube1.UpdateWorldMatrix();
 
-	ball.SetSize(0.05, 0.05);
+	auto cube2 = CubeComponent(&game);
 
-	ball.Velocity.x = 0.01f;
-	//ball.Velocity.y = 0.01f;
-	
-	EnemyPaddleComponent enemy = EnemyPaddleComponent(&game, &ball);
-	enemy.SetPosition(0.9f, 0, 0);
+	cube2.SetSize(0.02f, 0.02f, 0.02f);
+	cube2.SetColors(0, 1, 0, 0);
+	cube2.SetColors(1, 1, 0, 0);
+	cube2.SetColors(2, 1, 0, 0);
+	cube2.position = Vector3(0.2f, 0, 0);
+	cube2.parent = &cube1;
+	cube2.UpdateWorldMatrix();
 
-
-	game.Components.push_back(&wall1);
-	game.Components.push_back(&wall2);
-	game.Components.push_back(&paddle);
-	game.Components.push_back(&ball);
-	game.Components.push_back(&enemy);
+	game.Components.push_back(&cube);
+	game.Components.push_back(&cube1);
+	game.Components.push_back(&cube2);
 	game.Run();
 }
 

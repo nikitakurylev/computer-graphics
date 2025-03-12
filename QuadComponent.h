@@ -33,7 +33,7 @@ private:
 	ID3D11PixelShader* pixelShader;
 	ID3DBlob* pixelShaderByteCode;
 	ID3D11RasterizerState* rastState;
-	void Initialize() override;
+	void Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader) override;
 	ID3D11Buffer* constantBuffer;
 };
 

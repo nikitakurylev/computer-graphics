@@ -8,10 +8,9 @@
 QuadComponent::QuadComponent(Game* game) : GameComponent(game)
 {
 	ShaderPath = L"./Shaders/MyVeryFirstShader.hlsl";
-	Initialize();
 }
 
-void QuadComponent::Initialize()
+void QuadComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader)
 {
 	vertexShaderByteCode = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;

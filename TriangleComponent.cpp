@@ -7,10 +7,9 @@
 
 TriangleComponent::TriangleComponent(Game* game) : GameComponent(game)
 {
-	Initialize();
 }
 
-void TriangleComponent::Initialize()
+void TriangleComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader)
 {
 	vertexShaderByteCode = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;

@@ -3,9 +3,20 @@
 
 GameComponent::GameComponent(Game* game) : game(game)
 {
+    scale = Vector3(1, 1, 1);
 }
 
-void GameComponent::Initialize()
+void GameComponent::UpdateWorldMatrix()
+{
+    world_matrix =
+        Matrix::CreateScale(scale)
+        * Matrix::CreateFromYawPitchRoll(rotation)
+        * Matrix::CreateTranslation(position)
+        * (parent == nullptr ? Matrix::Identity : parent->world_matrix);
+
+}
+
+void GameComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader)
 {
 }
 
