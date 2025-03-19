@@ -12,17 +12,17 @@ public:
 	virtual void Update();
 	virtual void Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader);
 	GameComponent* parent = nullptr;
+	float speed;
 
 	Vector3 position;
 	Vector3 rotation;
 	Vector3 scale;
+	Vector4 color;
 	Matrix world_matrix;
 protected:
-	Vector4 color;
 	Game* game;
 private:
 	void Reload();
 	void DestroyResources();
-	float speed;
 };
 

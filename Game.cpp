@@ -73,8 +73,8 @@ void Game::Run()
 
 		if (fps) {
 			auto camera_matrix =
-				Matrix::CreateFromYawPitchRoll(cam_rot)
-				* Matrix::CreateTranslation(cam_pos);
+				Matrix::CreateFromYawPitchRoll(cam_rot);
+				//* Matrix::CreateTranslation(cam_pos);
 
 			if (Input->IsKeyDown(Keys::W))
 				cam_pos += camera_matrix.Forward() * 0.01f;
@@ -310,7 +310,7 @@ void Game::Initialize()
 		&layout);
 
 	CD3D11_RASTERIZER_DESC rastDesc = {};
-	rastDesc.CullMode = D3D11_CULL_FRONT;
+	rastDesc.CullMode = D3D11_CULL_NONE;
 	rastDesc.FillMode = D3D11_FILL_SOLID;
 
 	res = Device->CreateRasterizerState(&rastDesc, &rastState);

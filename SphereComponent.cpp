@@ -6,6 +6,10 @@
 
 SphereComponent::SphereComponent(Game* game) : GameComponent(game)
 {
+}
+
+void SphereComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader)
+{
 	constexpr float thau = 6.28318530718f;
 	for (auto j = 0; j <= 20; j++)
 	{
@@ -40,10 +44,8 @@ SphereComponent::SphereComponent(Game* game) : GameComponent(game)
 			indeces[6 * index + 4] = index + 1;
 			indeces[6 * index + 5] = index;
 		}
-}
 
-void SphereComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader)
-{
+
 	VertexShader = vertexShader;
 	PixelShader = pixelShader;
 
@@ -98,12 +100,6 @@ void SphereComponent::Draw() {
 	game->Context->VSSetShader(VertexShader, nullptr, 0);
 	game->Context->PSSetShader(PixelShader, nullptr, 0);
 	game->Context->DrawIndexed(indexCount, 0, 0);
-}
-
-void SphereComponent::Update()
-{
-	rotation.y += 0.01f;
-	UpdateWorldMatrix();
 }
 
 void SphereComponent::SetRotation(float rot)

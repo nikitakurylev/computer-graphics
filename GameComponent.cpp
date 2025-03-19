@@ -18,7 +18,8 @@ void GameComponent::UpdateWorldMatrix()
         Matrix::CreateScale(scale)
         * Matrix::CreateFromYawPitchRoll(rotation)
         * Matrix::CreateTranslation(position)
-        * (parent == nullptr ? Matrix::Identity : parent->world_matrix);
+        * Matrix::CreateFromYawPitchRoll(rotation)
+        * (parent == nullptr ? Matrix::Identity : Matrix::CreateTranslation(parent->world_matrix.Translation()));
 
 }
 

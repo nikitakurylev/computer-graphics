@@ -21,6 +21,10 @@ int main()
 	auto inputDevice = InputDevice();
 	auto game = Game(&window, &inputDevice);
 
+	auto sky = SphereComponent(&game);
+	sky.speed = 0;
+	sky.color = Vector4(0, 0, 0.01f, 1.0f);
+	sky.scale = Vector3(1, 1, 1) * 1000.0f;
 	auto sun = SphereComponent(&game);
 	auto sunOrbit2 = GameComponent(&game);
 	auto sunOrbit3 = GameComponent(&game);
@@ -34,6 +38,7 @@ int main()
 
 	auto planet1 = CubeComponent(&game);
 	planet1.parent = &sun;
+	planet1.speed = 100.0f;
 	planet1.SetPosition(2, 0, 0);
 	
 
@@ -63,6 +68,7 @@ int main()
 	moon3.parent = &planet3;
 	moon4.parent = &planet5;
 
+	//game.Components.push_back(&sky);
 	game.Components.push_back(&sun);
 	game.Components.push_back(&sunOrbit2);
 	game.Components.push_back(&sunOrbit3);
@@ -75,6 +81,19 @@ int main()
 	game.Components.push_back(&moon2);
 	game.Components.push_back(&moon3);
 	game.Components.push_back(&moon4);
+
+	for (int i = 0; i < 0; i++) {
+		auto sunOrbitX = new GameComponent(&game);
+		sunOrbitX->SetPosition(0, 0, 0);
+		sunOrbitX->scale = Vector3(1, 1, 1);
+		GameComponent* planetX = i % 2 == 0 ? (GameComponent*) new CubeComponent(&game) : (GameComponent*) new SphereComponent(&game);
+		planetX->parent = sunOrbitX;
+		planetX->SetPosition(2 + i * 0.1f, 0, 0);
+
+		game.Components.push_back(sunOrbitX);
+		game.Components.push_back(planetX);
+	}
+
 	game.Run();
 }
 
