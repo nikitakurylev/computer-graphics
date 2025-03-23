@@ -1,5 +1,6 @@
 #include "GameComponent.h"
 #include "Game.h"
+#include <iostream>
 
 GameComponent::GameComponent(Game* game) : game(game)
 {
@@ -8,8 +9,10 @@ GameComponent::GameComponent(Game* game) : game(game)
     auto r = rand() % 1001 / 1000.0f;
     auto g = rand() % 1001 / 1000.0f * (1 - r);
     color = Vector4(r, g, 1.0f - r - g, 1.0f);
-    scale = Vector3(1, 1, 1) * (0.1f + rand() % 101 / 200.0f);
+    auto size = (0.1f + rand() % 101 / 200.0f);
+    scale = Vector3(10, 10, 10) * size;
     position = Vector3(1.3f + rand() % 101 / 100.0f, 0, 0);
+    mass = size * 0.0001f;
 }
 
 void GameComponent::UpdateWorldMatrix()
@@ -37,9 +40,21 @@ void GameComponent::Reload()
 {
 }
 
-void GameComponent::Update()
+void GameComponent::Update(float deltaTime)
 {
-    rotation.y += speed * 0.1f;
+    rotation.y += speed * deltaTime;
+
+    for (GameComponent* gameComponent : game->Components)
+    {
+        if (gameComponent == this)
+            continue;
+        auto directon = gameComponent->position - position;
+        auto R = directon.Length();
+        velocity += deltaTime * 9.81f * gameComponent->mass / (R * R * R) * directon;
+    }
+    
+    position += velocity;
+
     UpdateWorldMatrix();
 }
 

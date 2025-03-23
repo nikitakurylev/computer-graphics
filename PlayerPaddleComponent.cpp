@@ -4,7 +4,7 @@ PlayerPaddleComponent::PlayerPaddleComponent(Game* game) : PaddleComponent(game)
 {
 }
 
-void PlayerPaddleComponent::Update()
+void PlayerPaddleComponent::Update(float deltaTime)
 {
 	if (game->Input->IsKeyDown(Keys::Up))
 		SetPosition(offsetColor.offset.x, offsetColor.offset.y + 0.01f, offsetColor.offset.z);

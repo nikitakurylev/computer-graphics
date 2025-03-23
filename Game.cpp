@@ -106,18 +106,18 @@ void Game::Run()
 			view_matrix = Matrix::CreateLookAt(camPos, lookAtPoint, Vector3::Transform(Vector3::Up, rotMat));
 		}
 
-		Update();
+		Update(deltaTime);
 		Draw();
 	}
 
 	std::cout << "Hello World!\n";
 }
 
-void Game::Update()
+void Game::Update(float deltaTime)
 {
 	for (GameComponent* gameComponent : Components)
 	{
-		gameComponent->Update();
+		gameComponent->Update(deltaTime);
 	}
 }
 

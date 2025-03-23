@@ -27,7 +27,7 @@ public:
 	ID3D11DeviceContext* Context;
 	InputDevice* Input;
 	void Run();
-	void Update();
+	void Update(float deltaTime);
 	void Draw();
 private:
 	void Initialize();

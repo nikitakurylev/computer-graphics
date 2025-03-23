@@ -148,7 +148,7 @@ void TriangleComponent::Draw() {
 
 }
 
-void TriangleComponent::Update()
+void TriangleComponent::Update(float deltaTime)
 {
 	// If windows signals to end the application then exit out.
 	if (game->Input->IsKeyDown(Keys::Right))
