@@ -4,6 +4,6 @@ class PlayerPaddleComponent : public PaddleComponent
 {
 public:
 	PlayerPaddleComponent(Game* game);
-	void Update() override;
+	void Update(float deltaTime) override;
 };
 

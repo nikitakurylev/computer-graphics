@@ -4,7 +4,7 @@ EnemyPaddleComponent::EnemyPaddleComponent(Game* game, BallComponent* ball) : Pa
 {
 }
 
-void EnemyPaddleComponent::Update()
+void EnemyPaddleComponent::Update(float deltaTime)
 {
 	if(Ball->offsetColor.offset.y > offsetColor.offset.y)
 		SetPosition(offsetColor.offset.x, offsetColor.offset.y + fminf(0.009f, Ball->offsetColor.offset.y - offsetColor.offset.y), offsetColor.offset.z);

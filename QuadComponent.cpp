@@ -164,7 +164,7 @@ void QuadComponent::Draw() {
 	game->Context->DrawIndexed(6, 0, 0);
 }
 
-void QuadComponent::Update()
+void QuadComponent::Update(float deltaTime)
 {
 	// If windows signals to end the application then exit out.
 	if (game->Input->IsKeyDown(Keys::Right))

@@ -5,7 +5,7 @@ class EnemyPaddleComponent : public PaddleComponent
 {
 public:
 	EnemyPaddleComponent(Game* game, BallComponent* ball);
-	void Update() override;
+	void Update(float deltaTime) override;
 private:
 	BallComponent* Ball;
 };

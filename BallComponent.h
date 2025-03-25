@@ -7,6 +7,6 @@ class BallComponent : public BoxComponent
 public:
 	BallComponent(Game* game);
 	DirectX::XMFLOAT3 Velocity;
-	void Update() override;
+	void Update(float deltaTime) override;
 };
 

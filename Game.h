@@ -23,14 +23,17 @@ public:
 	Game(DisplayWin32* display, InputDevice* input);
 	std::vector<GameComponent*> Components;
 	DisplayWin32* Display;
-	Microsoft::WRL::ComPtr<ID3D11Device> Device;
+	ID3D11Device* Device;
 	ID3D11DeviceContext* Context;
 	InputDevice* Input;
+	Vector3 cam_pos;
 	void Run();
-	void Update();
+	void Update(float deltaTime);
 	void Draw();
+	Matrix GetCameraMatrix();
 private:
 	void Initialize();
+	HRESULT	CompileShaderFromFile(LPCWSTR pFileName, const D3D_SHADER_MACRO* pDefines, LPCSTR pEntryPoint, LPCSTR pShaderModel, ID3DBlob** ppBytecodeBlob);
 	IDXGISwapChain* SwapChain;
 	ID3D11RenderTargetView* RenderView;
 	std::chrono::time_point<std::chrono::steady_clock> PrevTime;
@@ -44,7 +47,6 @@ private:
 	ID3D11Buffer* constantBuffer;
 	Matrix view_matrix;
 	Matrix projection_matrix;
-	Vector3 cam_pos;
 	Vector3 cam_rot;
 	ID3D11DepthStencilView* depth_stencil_view_ = nullptr;
 	ID3D11Texture2D* depth_stencil_buffer_ = nullptr;

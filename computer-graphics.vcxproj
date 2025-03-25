@@ -28,15 +28,21 @@
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameComponent.cpp" />
     <ClCompile Include="InputDevice.cpp" />
+    <ClCompile Include="KatamariComponent.cpp" />
+    <ClCompile Include="ModelComponent.cpp" />
     <ClCompile Include="MySuper3DApp.cpp" />
     <ClCompile Include="PaddleComponent.cpp" />
     <ClCompile Include="PlayerPaddleComponent.cpp" />
     <ClCompile Include="QuadComponent.cpp" />
+    <ClCompile Include="SimpleTexturedDirectx11\ModelLoader.cpp" />
+    <ClCompile Include="SimpleTexturedDirectx11\TextureLoader.cpp" />
     <ClCompile Include="SphereComponent.cpp" />
     <ClCompile Include="TriangleComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\MyVeryFirstShader.hlsl" />
+    <FxCompile Include="SimpleTexturedDirectx11\PixelShader.hlsl" />
+    <FxCompile Include="SimpleTexturedDirectx11\VertexShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BallComponent.h" />
@@ -48,16 +54,41 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameComponent.h" />
     <ClInclude Include="InputDevice.h" />
+    <ClInclude Include="KatamariComponent.h" />
     <ClInclude Include="Keys.h" />
+    <ClInclude Include="ModelComponent.h" />
     <ClInclude Include="OffsetColor.h" />
     <ClInclude Include="PaddleComponent.h" />
     <ClInclude Include="PlayerPaddleComponent.h" />
     <ClInclude Include="QuadComponent.h" />
+    <ClInclude Include="SimpleTexturedDirectx11\Mesh.h" />
+    <ClInclude Include="SimpleTexturedDirectx11\ModelLoader.h" />
+    <ClInclude Include="SimpleTexturedDirectx11\SafeRelease.hpp" />
+    <ClInclude Include="SimpleTexturedDirectx11\TextureLoader.h" />
     <ClInclude Include="SphereComponent.h" />
     <ClInclude Include="TriangleComponent.h" />
   </ItemGroup>
   <ItemGroup>
+    <CopyFileToFolders Include="Models\soccer_ball.mtl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="Models\chair01.obj">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="Models\soccer_ball.obj">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="Models\chair01_AO.png" />
+    <CopyFileToFolders Include="Models\chair01_BaseColor.png" />
+    <CopyFileToFolders Include="Models\chair01_Metallic.png" />
+    <CopyFileToFolders Include="Models\chair01_Normal.png" />
+    <CopyFileToFolders Include="Models\chair01_Roughness.png" />
+    <CopyFileToFolders Include="Models\soccer_ball_diffuse.bmp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -95,6 +126,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\MeshContentTask.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
@@ -111,6 +143,7 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -174,11 +207,14 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="packages\directxtk12_desktop_2019.2024.10.29.1\build\native\directxtk12_desktop_2019.targets" Condition="Exists('packages\directxtk12_desktop_2019.2024.10.29.1\build\native\directxtk12_desktop_2019.targets')" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\MeshContentTask.targets" />
+    <Import Project="packages\AssimpCpp.5.0.1.6\build\native\AssimpCpp.targets" Condition="Exists('packages\AssimpCpp.5.0.1.6\build\native\AssimpCpp.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('packages\directxtk12_desktop_2019.2024.10.29.1\build\native\directxtk12_desktop_2019.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\directxtk12_desktop_2019.2024.10.29.1\build\native\directxtk12_desktop_2019.targets'))" />
+    <Error Condition="!Exists('packages\AssimpCpp.5.0.1.6\build\native\AssimpCpp.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\AssimpCpp.5.0.1.6\build\native\AssimpCpp.targets'))" />
   </Target>
 </Project>

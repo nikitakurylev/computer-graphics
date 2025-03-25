@@ -98,7 +98,7 @@ void Game::Run()
 			if(ortho && Input-> MouseWheelDelta != 0)
 				projection_matrix = Matrix::CreateOrthographic(Display->ClientWidth * distance * 0.001f, Display->ClientHeight * distance * 0.001f, 0.01f, 1000);
 			Input->MouseWheelDelta = 0;
-			auto lookAtPoint = Vector3(0, 0, 0);
+			auto lookAtPoint = cam_pos;
 			Vector3 camPos = Vector3(distance, 0, 0); // distance - расстояние от камеры
 			// до точки просмотра
 			Matrix rotMat = Matrix::CreateFromYawPitchRoll(Vector3(0, -cam_rot.y, cam_rot.x));
@@ -106,18 +106,18 @@ void Game::Run()
 			view_matrix = Matrix::CreateLookAt(camPos, lookAtPoint, Vector3::Transform(Vector3::Up, rotMat));
 		}
 
-		Update();
+		Update(deltaTime);
 		Draw();
 	}
 
 	std::cout << "Hello World!\n";
 }
 
-void Game::Update()
+void Game::Update(float deltaTime)
 {
 	for (GameComponent* gameComponent : Components)
 	{
-		gameComponent->Update();
+		gameComponent->Update(deltaTime);
 	}
 }
 
@@ -143,6 +143,7 @@ void Game::Draw()
 	Context->ClearDepthStencilView(depth_stencil_view_, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
 	Context->OMSetRenderTargets(1, &RenderView, depth_stencil_view_);
 	Context->RSSetState(rastState);
+	Context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	Context->IASetInputLayout(layout);
 
@@ -159,6 +160,11 @@ void Game::Draw()
 	Context->OMSetRenderTargets(0, nullptr, nullptr);
 
 	SwapChain->Present(1, /*DXGI_PRESENT_DO_NOT_WAIT*/ 0);
+}
+
+Matrix Game::GetCameraMatrix()
+{
+	return Matrix::CreateFromYawPitchRoll(Vector3(0, -cam_rot.y, cam_rot.x));
 }
 
 void Game::Initialize()
@@ -234,37 +240,13 @@ void Game::Initialize()
 
 	vertexShaderByteCode = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;
-	res = D3DCompileFromFile(L"./Shaders/MyVeryFirstShader.hlsl",
-		nullptr /*macros*/,
-		nullptr /*include*/,
-		"VSMain",
-		"vs_5_0",
-		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
-		0,
-		&vertexShaderByteCode,
-		&errorVertexCode);
+	res = CompileShaderFromFile(L"./SimpleTexturedDirectx11/VertexShader.hlsl", 0, "main", "vs_4_0", &vertexShaderByteCode);
 
-	if (FAILED(res)) {
-		// If the shader failed to compile it should have written something to the error message.
-		if (errorVertexCode) {
-			char* compileErrors = (char*)(errorVertexCode->GetBufferPointer());
-
-			std::cout << compileErrors << std::endl;
-		}
-		// If there was  nothing in the error message then it simply could not find the shader file itself.
-		else
-		{
-			MessageBox(Display->hWnd, L"MyVeryFirstShader.hlsl", L"Missing Shader File", MB_OK);
-		}
-
-		return;
-	}
 
 	D3D_SHADER_MACRO Shader_Macros[] = { "TEST", "1", "TCOLOR", "float4(0.0f, 1.0f, 0.0f, 1.0f)", nullptr, nullptr };
 
 	ID3DBlob* errorPixelCode;
-	res = D3DCompileFromFile(L"./Shaders/MyVeryFirstShader.hlsl", Shader_Macros /*macros*/, nullptr /*include*/, "PSMain", "ps_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &pixelShaderByteCode, &errorPixelCode);
-
+	res = CompileShaderFromFile(L"./SimpleTexturedDirectx11/PixelShader.hlsl", 0, "main", "ps_4_0", &pixelShaderByteCode);
 	Device->CreateVertexShader(
 		vertexShaderByteCode->GetBufferPointer(),
 		vertexShaderByteCode->GetBufferSize(),
@@ -275,36 +257,15 @@ void Game::Initialize()
 		pixelShaderByteCode->GetBufferSize(),
 		nullptr, &pixelShader);
 
-	D3D11_INPUT_ELEMENT_DESC inputElements[] = {
-		D3D11_INPUT_ELEMENT_DESC {
-			"POSITION",
-			0,
-			DXGI_FORMAT_R32G32B32A32_FLOAT,
-			0,
-			0,
-			D3D11_INPUT_PER_VERTEX_DATA,
-			0},
-		D3D11_INPUT_ELEMENT_DESC {
-			"COLOR",
-			0,
-			DXGI_FORMAT_R32G32B32A32_FLOAT,
-			0,
-			D3D11_APPEND_ALIGNED_ELEMENT,
-			D3D11_INPUT_PER_VERTEX_DATA,
-			0},
-		D3D11_INPUT_ELEMENT_DESC {
-			"TEXCOORD",
-			0,
-			DXGI_FORMAT_R32G32_FLOAT,
-			0,
-			D3D11_APPEND_ALIGNED_ELEMENT,
-			D3D11_INPUT_PER_VERTEX_DATA,
-			0}
+	D3D11_INPUT_ELEMENT_DESC inputElements[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
 	Device->CreateInputLayout(
 		inputElements,
-		3,
+		2,
 		vertexShaderByteCode->GetBufferPointer(),
 		vertexShaderByteCode->GetBufferSize(),
 		&layout);
@@ -329,4 +290,27 @@ void Game::Initialize()
 	{
 		gameComponent->Initialize(vertexShader, pixelShader);
 	}
+}
+
+HRESULT Game::CompileShaderFromFile(LPCWSTR pFileName, const D3D_SHADER_MACRO* pDefines, LPCSTR pEntryPoint, LPCSTR pShaderModel, ID3DBlob** ppBytecodeBlob)
+{
+	UINT compileFlags = D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR;
+
+#ifdef _DEBUG
+	compileFlags |= D3DCOMPILE_DEBUG;
+#endif
+
+	ID3DBlob* pErrorBlob = nullptr;
+
+	HRESULT result = D3DCompileFromFile(pFileName, pDefines, D3D_COMPILE_STANDARD_FILE_INCLUDE, pEntryPoint, pShaderModel, compileFlags, 0, ppBytecodeBlob, &pErrorBlob);
+	if (FAILED(result))
+	{
+		if (pErrorBlob != nullptr)
+			OutputDebugStringA((LPCSTR)pErrorBlob->GetBufferPointer());
+	}
+
+	if (pErrorBlob != nullptr)
+		pErrorBlob->Release();
+
+	return result;
 }

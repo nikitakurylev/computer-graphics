@@ -16,11 +16,9 @@ void GameComponent::UpdateWorldMatrix()
 {
     world_matrix =
         Matrix::CreateScale(scale)
-        * Matrix::CreateFromYawPitchRoll(rotation)
+        * Matrix::CreateFromQuaternion(rotation)
         * Matrix::CreateTranslation(position)
-        * Matrix::CreateFromYawPitchRoll(rotation)
-        * (parent == nullptr ? Matrix::Identity : Matrix::CreateTranslation(parent->world_matrix.Translation()));
-
+        * (parent == nullptr ? Matrix::Identity : parent->world_matrix);
 }
 
 void GameComponent::SetPosition(float x, float y, float z)
@@ -37,10 +35,8 @@ void GameComponent::Reload()
 {
 }
 
-void GameComponent::Update()
+void GameComponent::Update(float deltaTime)
 {
-    rotation.y += speed * 0.1f;
-    UpdateWorldMatrix();
 }
 
 void GameComponent::DestroyResources()

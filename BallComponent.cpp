@@ -10,7 +10,7 @@ BallComponent::BallComponent(Game* game) : BoxComponent(game)
 	ShaderPath = L"./Shaders/Ball.hlsl";
 }
 
-void BallComponent::Update()
+void BallComponent::Update(float deltaTime)
 {
 	static int playerScore;
 	static int enemyScore;

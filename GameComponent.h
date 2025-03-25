@@ -9,13 +9,13 @@ public:
 	void UpdateWorldMatrix();
 	void SetPosition(float x, float y, float z);
 	virtual void Draw();
-	virtual void Update();
+	virtual void Update(float deltaTime);
 	virtual void Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader);
 	GameComponent* parent = nullptr;
 	float speed;
 
 	Vector3 position;
-	Vector3 rotation;
+	Quaternion rotation;
 	Vector3 scale;
 	Vector4 color;
 	Matrix world_matrix;
