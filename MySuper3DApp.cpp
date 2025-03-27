@@ -21,14 +21,38 @@ int main()
 	auto inputDevice = InputDevice();
 	auto game = Game(&window, &inputDevice);
 
-	auto sun = KatamariComponent(&game, "soccer_ball.obj");
-	auto sun1 = ModelComponent(&game, "chair01.obj");
-	sun1.SetSize(0.1f, 0.1f, 0.1f);
+	auto ball = new ModelLoader;
+	auto ground = new ModelLoader;
+	
+	auto chair = new ModelLoader;
+	auto steve = new ModelLoader;
+	auto tree = new ModelLoader;
+	
+
+	ModelLoader* models[3] = {chair, steve, tree};
+
+
+	auto sun = KatamariComponent(&game, ball);
+	auto floor = ModelComponent(&game, ground);
+	floor.immovable = true;
+	//sun.scale = Vector3(0.5f, 0.5f, 0.5f);
+	
+
+	for (int i = 0; i < 100; i++) {
+		auto sun1 = new ModelComponent(&game, models[rand() % 3]);
+		sun1->position = Vector3(rand() % 50 - 25, 0, rand() % 50 - 25);
+		game.Components.push_back(sun1);
+	}
 
 	//game.Components.push_back(&sky);
 	game.Components.push_back(&sun);
-	game.Components.push_back(&sun1);
-
+	game.Components.push_back(&floor);
+	game.Initialize();
+	chair->Load(game.Display->hWnd, game.Device, game.Context, "chair01.obj");
+	ball->Load(game.Display->hWnd, game.Device, game.Context, "soccer_ball.obj");
+	ground->Load(game.Display->hWnd, game.Device, game.Context, "ground.obj");
+	steve->Load(game.Display->hWnd, game.Device, game.Context, "steve.obj");
+	tree->Load(game.Display->hWnd, game.Device, game.Context, "tree.obj");
 	game.Run();
 }
 

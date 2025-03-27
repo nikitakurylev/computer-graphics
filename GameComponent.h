@@ -13,7 +13,7 @@ public:
 	virtual void Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader);
 	GameComponent* parent = nullptr;
 	float speed;
-
+	bool immovable;
 	Vector3 position;
 	Quaternion rotation;
 	Vector3 scale;

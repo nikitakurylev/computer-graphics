@@ -27,12 +27,12 @@ public:
 	ID3D11DeviceContext* Context;
 	InputDevice* Input;
 	Vector3 cam_pos;
+	void Initialize();
 	void Run();
 	void Update(float deltaTime);
 	void Draw();
 	Matrix GetCameraMatrix();
 private:
-	void Initialize();
 	HRESULT	CompileShaderFromFile(LPCWSTR pFileName, const D3D_SHADER_MACRO* pDefines, LPCSTR pEntryPoint, LPCSTR pShaderModel, ID3DBlob** ppBytecodeBlob);
 	IDXGISwapChain* SwapChain;
 	ID3D11RenderTargetView* RenderView;
@@ -45,6 +45,7 @@ private:
 	ID3D11InputLayout* layout;
 	ID3D11RasterizerState* rastState;
 	ID3D11Buffer* constantBuffer;
+	ID3D11SamplerState* TexSamplerState = nullptr;
 	Matrix view_matrix;
 	Matrix projection_matrix;
 	Vector3 cam_rot;

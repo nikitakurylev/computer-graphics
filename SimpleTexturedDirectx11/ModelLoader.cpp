@@ -17,8 +17,10 @@ ModelLoader::~ModelLoader() {
 
 bool ModelLoader::Load(HWND hwnd, ID3D11Device * dev, ID3D11DeviceContext * devcon, std::string filename) {
 	Assimp::Importer importer;
-
-	SetCurrentDirectory(L"C:\\Users\\Nikita\\Documents\\GitHub\\computer-graphics\\x64\\Debug");
+	TCHAR buffer[MAX_PATH] = { 0 };
+	GetModuleFileName(NULL, buffer, MAX_PATH);
+	std::wstring::size_type pos = std::wstring(buffer).find_last_of(L"\\/");
+	SetCurrentDirectory(std::wstring(buffer).substr(0, pos).c_str());
 	const aiScene* pScene = importer.ReadFile(filename,
 		aiProcess_Triangulate |
 		aiProcess_ConvertToLeftHanded);

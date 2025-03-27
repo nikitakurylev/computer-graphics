@@ -72,6 +72,18 @@
     <CopyFileToFolders Include="Models\soccer_ball.mtl">
       <FileType>Document</FileType>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="Models\ground.mtl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="Models\steve.mtl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="Models\tree.mtl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="Models\chair01.mtl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -89,6 +101,34 @@
     <CopyFileToFolders Include="Models\chair01_Normal.png" />
     <CopyFileToFolders Include="Models\chair01_Roughness.png" />
     <CopyFileToFolders Include="Models\soccer_ball_diffuse.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="Models\ground.obj">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="Models\green-grass-1024x1024.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="Models\steve.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="Models\steve.obj">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="Models\BARK.jpg" />
+    <CopyFileToFolders Include="Models\Tree_Branch.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="Models\tree.obj">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="Models\soccer_ball_diffuse.tif" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

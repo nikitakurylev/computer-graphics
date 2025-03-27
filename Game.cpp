@@ -13,7 +13,6 @@ Game::Game(DisplayWin32* display, InputDevice* input) : Display(display), Input(
 
 void Game::Run()
 {
-	Initialize();
 	unsigned int frameCount = 0;
 
 
@@ -138,7 +137,7 @@ void Game::Draw()
 
 	Context->OMSetRenderTargets(1, &RenderView, nullptr);
 
-	float color[] = { 0, 0, 0, 0 };
+	float color[] = { 0.529f, 0.808f, 0.922f };
 	Context->ClearRenderTargetView(RenderView, color);
 	Context->ClearDepthStencilView(depth_stencil_view_, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
 	Context->OMSetRenderTargets(1, &RenderView, depth_stencil_view_);
@@ -154,6 +153,7 @@ void Game::Draw()
 		Context->UpdateSubresource(constantBuffer, 0, nullptr, &matrix, 0, 0);
 		Context->VSSetConstantBuffers(0, 1, &constantBuffer);
 		Context->PSSetConstantBuffers(0, 1, &constantBuffer);
+		Context->PSSetSamplers(0, 1, &TexSamplerState);
 		gameComponent->Draw();
 	}
 
@@ -271,7 +271,7 @@ void Game::Initialize()
 		&layout);
 
 	CD3D11_RASTERIZER_DESC rastDesc = {};
-	rastDesc.CullMode = D3D11_CULL_NONE;
+	rastDesc.CullMode = D3D11_CULL_FRONT;
 	rastDesc.FillMode = D3D11_FILL_SOLID;
 
 	res = Device->CreateRasterizerState(&rastDesc, &rastState);
@@ -285,6 +285,23 @@ void Game::Initialize()
 	constBufDesc.StructureByteStride = 0;
 
 	Device->CreateBuffer(&constBufDesc, nullptr, &constantBuffer);
+
+	D3D11_SAMPLER_DESC samplerDesc;
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.MipLODBias = 0.0f;
+	samplerDesc.MaxAnisotropy = 1;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	samplerDesc.BorderColor[0] = 0;
+	samplerDesc.BorderColor[1] = 0;
+	samplerDesc.BorderColor[2] = 0;
+	samplerDesc.BorderColor[3] = 0;
+	samplerDesc.MinLOD = 0;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	res = Device->CreateSamplerState(&samplerDesc, &TexSamplerState);
 
 	for (GameComponent* gameComponent : Components)
 	{

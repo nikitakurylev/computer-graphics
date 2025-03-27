@@ -7,14 +7,12 @@
 #include <assimp/scene.h>           // Output data structure
 #include <assimp/postprocess.h>     // Post processing flags
 
-ModelComponent::ModelComponent(Game* game, std::string fileName) : GameComponent(game), fileName(fileName)
+ModelComponent::ModelComponent(Game* game, ModelLoader* model) : GameComponent(game), ourModel(model)
 {
 }
 
 void ModelComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader)
 {
-	ourModel = new ModelLoader;
-	ourModel->Load(game->Display->hWnd, game->Device, game->Context, fileName);
 
 	VertexShader = vertexShader;
 	PixelShader = pixelShader;
