@@ -7,7 +7,7 @@ KatamariComponent::KatamariComponent(Game* game, ModelLoader* model) : ModelComp
 
 void KatamariComponent::Update(float deltaTime)
 {
-	auto velocity = Vector3();
+	auto acceleration = Vector3();
 	auto camera_matrix = game->GetCameraMatrix();
 	auto right = camera_matrix.Right();
 	right.y = 0;
@@ -19,25 +19,36 @@ void KatamariComponent::Update(float deltaTime)
 	auto deltaSpeed = deltaTime * speed;
 	
 	if (game->Input->IsKeyDown(Keys::W)) {
-		rotation *= Quaternion::CreateFromAxisAngle(-forward, deltaSpeed);
-		velocity -= right;
+		acceleration -= right;
 	}
 	if (game->Input->IsKeyDown(Keys::S)) {
-		rotation *= Quaternion::CreateFromAxisAngle(forward, deltaSpeed);
-		velocity += right;
+		acceleration += right;
 	}
 	if (game->Input->IsKeyDown(Keys::D)) {
-		rotation *= Quaternion::CreateFromAxisAngle(-right, deltaSpeed);
-		velocity += forward;
+		acceleration += forward;
 	}
 	if (game->Input->IsKeyDown(Keys::A)) {
-		rotation *= Quaternion::CreateFromAxisAngle(right, deltaSpeed);
-		velocity -= forward;
+		acceleration -= forward;
 	}
 
-	velocity = Vector3(velocity.x, 0, velocity.z) * deltaSpeed;
+	acceleration = Vector3(acceleration.x, 0, acceleration.z) * deltaSpeed + Vector3::Down * deltaTime;
+
+	velocity.x *= 0.7f;
+	velocity.z *= 0.7f;
+
+	velocity += acceleration;
+
+	rotation *= Quaternion::CreateFromAxisAngle(Vector3::Right, velocity.z)
+		* Quaternion::CreateFromAxisAngle(Vector3::Forward, velocity.x);
 
 	position += velocity;
+	if (position.y <= collider.Radius) {
+		position.y = collider.Radius;
+		velocity.y = 0;
+		if (game->Input->IsKeyDown(Keys::Space)) {
+			velocity += Vector3::Up * 0.5f;
+		}
+	}
 	game->cam_pos = position;
 
 	collider.Center = position;

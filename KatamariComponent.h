@@ -7,5 +7,6 @@ public:
 	void Update(float deltaTime) override;
 private:
 	BoundingSphere collider;
+	Vector3 velocity;
 };
 
