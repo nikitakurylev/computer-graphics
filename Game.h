@@ -12,9 +12,16 @@ class GameComponent;
 
 struct ConstantBuffer
 {
-	DirectX::XMMATRIX mWorld;
-	DirectX::XMMATRIX mView;
-	DirectX::XMMATRIX mProjection;
+	Matrix World;
+	Matrix View;
+	Vector4 ViewPosition;
+};
+
+struct LightsParams
+{
+	Vector4 direction;
+	Vector4 color;
+	Vector4 k;
 };
 
 class Game
@@ -27,6 +34,7 @@ public:
 	ID3D11DeviceContext* Context;
 	InputDevice* Input;
 	Vector3 cam_pos;
+	Vector3 cam_world;
 	void Initialize();
 	void Run();
 	void Update(float deltaTime);
@@ -45,6 +53,8 @@ private:
 	ID3D11InputLayout* layout;
 	ID3D11RasterizerState* rastState;
 	ID3D11Buffer* constantBuffer;
+	ID3D11Buffer* lightBuffer;
+	ID3D11Buffer* dynamicLightBuffer;
 	ID3D11SamplerState* TexSamplerState = nullptr;
 	Matrix view_matrix;
 	Matrix projection_matrix;
@@ -54,5 +64,7 @@ private:
 	bool fps;
 	bool ortho;
 	float distance;
+	LightsParams light;
+	LightsParams dynamicLight;
 };
 

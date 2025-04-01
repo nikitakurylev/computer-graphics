@@ -98,11 +98,11 @@ void Game::Run()
 				projection_matrix = Matrix::CreateOrthographic(Display->ClientWidth * distance * 0.001f, Display->ClientHeight * distance * 0.001f, 0.01f, 1000);
 			Input->MouseWheelDelta = 0;
 			auto lookAtPoint = cam_pos;
-			Vector3 camPos = Vector3(distance, 0, 0); // distance - расстояние от камеры
+			cam_world = Vector3(distance, 0, 0); // distance - расстояние от камеры
 			// до точки просмотра
 			Matrix rotMat = Matrix::CreateFromYawPitchRoll(Vector3(0, -cam_rot.y, cam_rot.x));
-			camPos = Vector3::Transform(camPos, rotMat) + lookAtPoint; // Финальная позиция камеры
-			view_matrix = Matrix::CreateLookAt(camPos, lookAtPoint, Vector3::Transform(Vector3::Up, rotMat));
+			cam_world = Vector3::Transform(cam_world, rotMat) + lookAtPoint; // Финальная позиция камеры
+			view_matrix = Matrix::CreateLookAt(cam_world, lookAtPoint, Vector3::Transform(Vector3::Up, rotMat));
 		}
 
 		Update(deltaTime);
@@ -149,10 +149,17 @@ void Game::Draw()
 
 	for (GameComponent* gameComponent : Components)
 	{
-		const auto matrix = gameComponent->world_matrix * view_matrix * projection_matrix;
-		Context->UpdateSubresource(constantBuffer, 0, nullptr, &matrix, 0, 0);
+		ConstantBuffer buffer;
+		buffer.View = gameComponent->world_matrix * view_matrix * projection_matrix;
+		buffer.World = gameComponent->world_matrix;
+		buffer.ViewPosition = Vector4(cam_world);
+		Context->UpdateSubresource(constantBuffer, 0, nullptr, &buffer, 0, 0);
+		Context->UpdateSubresource(lightBuffer, 0, nullptr, &light, 0, 0);
+		Context->UpdateSubresource(dynamicLightBuffer, 0, nullptr, &dynamicLight, 0, 0);
 		Context->VSSetConstantBuffers(0, 1, &constantBuffer);
 		Context->PSSetConstantBuffers(0, 1, &constantBuffer);
+		Context->PSSetConstantBuffers(1, 1, &lightBuffer);
+		Context->PSSetConstantBuffers(2, 1, &dynamicLightBuffer);
 		Context->PSSetSamplers(0, 1, &TexSamplerState);
 		gameComponent->Draw();
 	}
@@ -260,12 +267,13 @@ void Game::Initialize()
 	D3D11_INPUT_ELEMENT_DESC inputElements[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
 	Device->CreateInputLayout(
 		inputElements,
-		2,
+		3,
 		vertexShaderByteCode->GetBufferPointer(),
 		vertexShaderByteCode->GetBufferSize(),
 		&layout);
@@ -277,7 +285,7 @@ void Game::Initialize()
 	res = Device->CreateRasterizerState(&rastDesc, &rastState);
 
 	D3D11_BUFFER_DESC constBufDesc = {};
-	constBufDesc.ByteWidth = sizeof(Matrix);
+	constBufDesc.ByteWidth = sizeof(ConstantBuffer);
 	constBufDesc.Usage = D3D11_USAGE_DEFAULT;
 	constBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	constBufDesc.CPUAccessFlags = 0;
@@ -285,6 +293,17 @@ void Game::Initialize()
 	constBufDesc.StructureByteStride = 0;
 
 	Device->CreateBuffer(&constBufDesc, nullptr, &constantBuffer);
+
+	D3D11_BUFFER_DESC lightBufDesc = {};
+	lightBufDesc.ByteWidth = sizeof(LightsParams);
+	lightBufDesc.Usage = D3D11_USAGE_DEFAULT;
+	lightBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	lightBufDesc.CPUAccessFlags = 0;
+	lightBufDesc.MiscFlags = 0;
+	lightBufDesc.StructureByteStride = 0;
+
+	Device->CreateBuffer(&lightBufDesc, nullptr, &lightBuffer);
+	Device->CreateBuffer(&lightBufDesc, nullptr, &dynamicLightBuffer);
 
 	D3D11_SAMPLER_DESC samplerDesc;
 	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -302,6 +321,14 @@ void Game::Initialize()
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
 	res = Device->CreateSamplerState(&samplerDesc, &TexSamplerState);
+
+	light.color = Vector4(0.9922f, 0.9843f, 0.8275f, 0);
+	light.direction = Vector4(-0.7f, -0.7f, 0, 0);
+	light.k = Vector4(0.2f, 100.0f, 1.2f, 0);
+
+	dynamicLight.direction = Vector4(0, 1, 0, 0);
+	dynamicLight.color = Vector4(1, 0, 0, 0);
+	dynamicLight.k = Vector4(0, 0.1f, 0.1f, 0);
 
 	for (GameComponent* gameComponent : Components)
 	{

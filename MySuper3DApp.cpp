@@ -37,7 +37,8 @@ int main()
 	floor.immovable = true;
 	//sun.scale = Vector3(0.5f, 0.5f, 0.5f);
 	
-
+	game.Components.push_back(&sun);
+	game.Components.push_back(&floor);
 	for (int i = 0; i < 100; i++) {
 		auto sun1 = new ModelComponent(&game, models[rand() % 3]);
 		sun1->position = Vector3(rand() % 50 - 25, 0, rand() % 50 - 25);
@@ -45,8 +46,6 @@ int main()
 	}
 
 	//game.Components.push_back(&sky);
-	game.Components.push_back(&sun);
-	game.Components.push_back(&floor);
 	game.Initialize();
 	chair->Load(game.Display->hWnd, game.Device, game.Context, "chair01.obj");
 	ball->Load(game.Display->hWnd, game.Device, game.Context, "soccer_ball.obj");
