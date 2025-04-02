@@ -50,6 +50,10 @@ void Game::Run()
 			frameCount = 0;
 		}
 
+		dynamicLight.direction.y = 1.0f + sinf(t);
+		dynamicLight.direction.x = cosf(t);
+		dynamicLight.direction.z = sinf(2 * t);
+
 		if(Input->IsKeyDown(Keys::D1))
 			fps = true;
 		else if (Input->IsKeyDown(Keys::D2))
@@ -66,8 +70,8 @@ void Game::Run()
 			projection_matrix = Matrix::CreateOrthographic(Display->ClientWidth * distance * 0.001f, Display->ClientHeight * distance * 0.001f, 0.01f, 1000);
 		}
 
-		cam_rot.y -= Input->MouseOffset.x * 0.01f;
-		cam_rot.x -= Input->MouseOffset.y * 0.01f;
+		cam_rot.y += Input->MouseOffset.x * 0.01f;
+		cam_rot.x += Input->MouseOffset.y * 0.01f;
 		Input->MouseOffset = Vector2();
 
 		if (fps) {
@@ -326,9 +330,9 @@ void Game::Initialize()
 	light.direction = Vector4(-0.7f, -0.7f, 0, 0);
 	light.k = Vector4(0.2f, 100.0f, 1.2f, 0);
 
-	dynamicLight.direction = Vector4(0, 1, 0, 0);
+	dynamicLight.direction = Vector4(0, 3, 0, 0);
 	dynamicLight.color = Vector4(1, 0, 0, 0);
-	dynamicLight.k = Vector4(0, 0.1f, 0.1f, 0);
+	dynamicLight.k = Vector4(0, 1.0f, 0.1f, 0);
 
 	for (GameComponent* gameComponent : Components)
 	{
