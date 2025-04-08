@@ -7,6 +7,7 @@
 SphereComponent::SphereComponent(Game* game, LightsParams* light) : GameComponent(game), light(light)
 {
 	immovable = true;
+	position.y = -10000000000;
 }
 
 void SphereComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader)
@@ -25,13 +26,15 @@ void SphereComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelSh
 
 			const auto position = DirectX::XMFLOAT3(cos * t, height - 0.5f, sin * t);
 
-			points[j * 20 + i].position = DirectX::XMFLOAT4(position.x, position.y, position.z, 1.0f);
+			points[j * 20 + i].position = DirectX::XMFLOAT3(position.x, position.y, position.z);
 			//points[j * 20 + i].color = DirectX::XMFLOAT4(position.x + .1f, position.y + .7f, position.z + .3f, 1.0f);
 			//points[j * 20 + i].color = DirectX::XMFLOAT4(0, i%2, 0, 1.0f);
 			//points[j * 20 + i].color = DirectX::XMFLOAT4(j%2, i%2, j * 0.05f, 1.0f);
 			//points[j * 20 + i].color = DirectX::XMFLOAT4((j + i) % 2 * color.x, color.y, color.z * 0.5f + j * 0.025f, 1.0f);
-			points[j * 20 + i].normal = Vector4(position.x, position.y, position.z, 1);
-			points[j * 20 + i].texCoord = Vector2(0,0);
+			auto norm = Vector3(position.x, position.y, position.z);
+			norm.Normalize();
+			points[j * 20 + i].normal = -norm;
+			points[j * 20 + i].texCoord = Vector2(0, 0);
 		}
 	}
 
@@ -88,7 +91,7 @@ void SphereComponent::Draw() {
 	ID3D11Buffer* ib;
 	game->Device->CreateBuffer(&indexBufDesc, &indexData, &ib);
 
-	UINT strides[] = { 40 };
+	UINT strides[] = { sizeof(Vertex) };
 	UINT offsets[] = { 0 };
 	game->Context->VSSetShader(VertexShader, nullptr, 0);
 	game->Context->PSSetShader(PixelShader, nullptr, 0);
@@ -104,5 +107,16 @@ void SphereComponent::Update(float deltaTime)
 	light->direction.x = position.x;
 	light->direction.y = position.y;
 	light->direction.z = position.z;
+	collider.Center = position;
+
+	for (GameComponent* object : game->Components)
+	{
+		if (object == this || object->immovable || !collider.Contains(object->position + Vector3::Up))
+			continue;
+		object->position.y = -10000000000;
+		position.y = -10000000000;
+		velocity = Vector3();
+	}
+
 	GameComponent::Update(deltaTime);
 }

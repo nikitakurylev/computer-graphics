@@ -1,6 +1,7 @@
 #pragma once
 #include "GameComponent.h"
 #include "LightsParams.h"
+using namespace DirectX;
 
 class SphereComponent : public GameComponent
 {
@@ -14,11 +15,12 @@ public:
 private:
 	struct Vertex
 	{
-		DirectX::XMFLOAT4 position;
-		DirectX::XMFLOAT4 normal;
+		DirectX::XMFLOAT3 position;
+		DirectX::XMFLOAT3 normal;
 		DirectX::XMFLOAT2 texCoord;
 	};
 
+	BoundingSphere collider;
 	Vertex points[420];
 	ID3D11VertexShader* VertexShader;
 	ID3D11PixelShader* PixelShader;

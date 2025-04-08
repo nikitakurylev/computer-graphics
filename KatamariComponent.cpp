@@ -5,6 +5,7 @@ KatamariComponent::KatamariComponent(Game* game, ModelLoader* model, SphereCompo
 {
 	position.y = collider.Radius = 1.0f;
 	_bullets = bullets;
+	immovable = true;
 }
 
 void KatamariComponent::Update(float deltaTime)
