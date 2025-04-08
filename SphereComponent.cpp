@@ -4,8 +4,9 @@
 #include "GameComponent.h"
 #include "Game.h"
 
-SphereComponent::SphereComponent(Game* game) : GameComponent(game)
+SphereComponent::SphereComponent(Game* game, LightsParams* light) : GameComponent(game), light(light)
 {
+	immovable = true;
 }
 
 void SphereComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader)
@@ -28,7 +29,9 @@ void SphereComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelSh
 			//points[j * 20 + i].color = DirectX::XMFLOAT4(position.x + .1f, position.y + .7f, position.z + .3f, 1.0f);
 			//points[j * 20 + i].color = DirectX::XMFLOAT4(0, i%2, 0, 1.0f);
 			//points[j * 20 + i].color = DirectX::XMFLOAT4(j%2, i%2, j * 0.05f, 1.0f);
-			points[j * 20 + i].color = DirectX::XMFLOAT4((j + i) % 2 * color.x, color.y, color.z * 0.5f + j * 0.025f, 1.0f);
+			//points[j * 20 + i].color = DirectX::XMFLOAT4((j + i) % 2 * color.x, color.y, color.z * 0.5f + j * 0.025f, 1.0f);
+			points[j * 20 + i].normal = Vector4(position.x, position.y, position.z, 1);
+			points[j * 20 + i].texCoord = Vector2(0,0);
 		}
 	}
 
@@ -48,12 +51,6 @@ void SphereComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelSh
 
 	VertexShader = vertexShader;
 	PixelShader = pixelShader;
-
-	points[0].texCoord = DirectX::XMFLOAT2(1, 1);
-	points[1].texCoord = DirectX::XMFLOAT2(-1, -1);
-	points[2].texCoord = DirectX::XMFLOAT2(-1, 1);
-	points[3].texCoord = DirectX::XMFLOAT2(1, -1);
-
 }
 
 void SphereComponent::Draw() {
@@ -93,20 +90,19 @@ void SphereComponent::Draw() {
 
 	UINT strides[] = { 40 };
 	UINT offsets[] = { 0 };
-
-	game->Context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	game->Context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
-	game->Context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
 	game->Context->VSSetShader(VertexShader, nullptr, 0);
 	game->Context->PSSetShader(PixelShader, nullptr, 0);
+	game->Context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
+	game->Context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
+	game->Context->PSSetShaderResources(0, 1, &texture);
 	game->Context->DrawIndexed(indexCount, 0, 0);
 }
 
-void SphereComponent::SetRotation(float rot)
+void SphereComponent::Update(float deltaTime)
 {
-}
-
-void SphereComponent::SetColors(int index, float r, float g, float b)
-{
-	points[index].color = DirectX::XMFLOAT4(r, g, b, 1.0f);
+	position += velocity * deltaTime;
+	light->direction.x = position.x;
+	light->direction.y = position.y;
+	light->direction.z = position.z;
+	GameComponent::Update(deltaTime);
 }

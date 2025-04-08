@@ -3,7 +3,7 @@
 #include <unordered_set>
 #include "Keys.h"
 #include <d3d11.h>
-#include "SimpleMath.h"
+#include "LightsParams.h"
 #include "Delegates.h"
 #include "DisplayWin32.h"
 

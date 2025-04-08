@@ -50,10 +50,6 @@ void Game::Run()
 			frameCount = 0;
 		}
 
-		dynamicLight.direction.y = 1.0f + sinf(t);
-		dynamicLight.direction.x = cosf(t);
-		dynamicLight.direction.z = sinf(2 * t);
-
 		if(Input->IsKeyDown(Keys::D1))
 			fps = true;
 		else if (Input->IsKeyDown(Keys::D2))
@@ -141,7 +137,7 @@ void Game::Draw()
 
 	Context->OMSetRenderTargets(1, &RenderView, nullptr);
 
-	float color[] = { 0.529f, 0.808f, 0.922f };
+	float color[] = { 0.054f, 0.149f, 0.49f };
 	Context->ClearRenderTargetView(RenderView, color);
 	Context->ClearDepthStencilView(depth_stencil_view_, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
 	Context->OMSetRenderTargets(1, &RenderView, depth_stencil_view_);
@@ -159,7 +155,7 @@ void Game::Draw()
 		buffer.ViewPosition = Vector4(cam_world);
 		Context->UpdateSubresource(constantBuffer, 0, nullptr, &buffer, 0, 0);
 		Context->UpdateSubresource(lightBuffer, 0, nullptr, &light, 0, 0);
-		Context->UpdateSubresource(dynamicLightBuffer, 0, nullptr, &dynamicLight, 0, 0);
+		Context->UpdateSubresource(dynamicLightBuffer, 0, nullptr, dynamicLights, 0, 0);
 		Context->VSSetConstantBuffers(0, 1, &constantBuffer);
 		Context->PSSetConstantBuffers(0, 1, &constantBuffer);
 		Context->PSSetConstantBuffers(1, 1, &lightBuffer);
@@ -307,7 +303,16 @@ void Game::Initialize()
 	lightBufDesc.StructureByteStride = 0;
 
 	Device->CreateBuffer(&lightBufDesc, nullptr, &lightBuffer);
-	Device->CreateBuffer(&lightBufDesc, nullptr, &dynamicLightBuffer);
+
+	D3D11_BUFFER_DESC dynamicLightBufDesc = {};
+	dynamicLightBufDesc.ByteWidth = sizeof(LightsParams) * 10;
+	dynamicLightBufDesc.Usage = D3D11_USAGE_DEFAULT;
+	dynamicLightBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	dynamicLightBufDesc.CPUAccessFlags = 0;
+	dynamicLightBufDesc.MiscFlags = 0;
+	dynamicLightBufDesc.StructureByteStride = 0;
+
+	res = Device->CreateBuffer(&dynamicLightBufDesc, nullptr, &dynamicLightBuffer);
 
 	D3D11_SAMPLER_DESC samplerDesc;
 	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -326,13 +331,15 @@ void Game::Initialize()
 
 	res = Device->CreateSamplerState(&samplerDesc, &TexSamplerState);
 
-	light.color = Vector4(0.9922f, 0.9843f, 0.8275f, 0);
+	light.color = Vector4(0.054f, 0.149f, 0.49f, 0);
 	light.direction = Vector4(-0.7f, -0.7f, 0, 0);
-	light.k = Vector4(0.2f, 100.0f, 1.2f, 0);
+	light.k = Vector4(0.1f, 100.0f, 1.2f, 0);
 
-	dynamicLight.direction = Vector4(0, 3, 0, 0);
-	dynamicLight.color = Vector4(1, 0, 0, 0);
-	dynamicLight.k = Vector4(0, 1.0f, 0.1f, 0);
+	for (int i = 0; i < 10; i++) {
+		dynamicLights[i].direction = Vector4(i, 3, 0, 0);
+		dynamicLights[i].color = Vector4(1, 1, 0, 0);
+		dynamicLights[i].k = Vector4(0, 1.0f, 0.1f, 0);
+	}
 
 	for (GameComponent* gameComponent : Components)
 	{

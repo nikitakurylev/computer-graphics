@@ -17,13 +17,6 @@ struct ConstantBuffer
 	Vector4 ViewPosition;
 };
 
-struct LightsParams
-{
-	Vector4 direction;
-	Vector4 color;
-	Vector4 k;
-};
-
 class Game
 {
 public:
@@ -40,6 +33,7 @@ public:
 	void Update(float deltaTime);
 	void Draw();
 	Matrix GetCameraMatrix();
+	LightsParams dynamicLights[10];
 private:
 	HRESULT	CompileShaderFromFile(LPCWSTR pFileName, const D3D_SHADER_MACRO* pDefines, LPCSTR pEntryPoint, LPCSTR pShaderModel, ID3DBlob** ppBytecodeBlob);
 	IDXGISwapChain* SwapChain;
@@ -65,6 +59,5 @@ private:
 	bool ortho;
 	float distance;
 	LightsParams light;
-	LightsParams dynamicLight;
 };
 

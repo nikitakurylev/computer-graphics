@@ -56,6 +56,7 @@
     <ClInclude Include="InputDevice.h" />
     <ClInclude Include="KatamariComponent.h" />
     <ClInclude Include="Keys.h" />
+    <ClInclude Include="LightsParams.h" />
     <ClInclude Include="ModelComponent.h" />
     <ClInclude Include="OffsetColor.h" />
     <ClInclude Include="PaddleComponent.h" />

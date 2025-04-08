@@ -1,8 +1,10 @@
 #include "KatamariComponent.h"
+#include "SphereComponent.h"
 
-KatamariComponent::KatamariComponent(Game* game, ModelLoader* model) : ModelComponent(game, model)
+KatamariComponent::KatamariComponent(Game* game, ModelLoader* model, SphereComponent* bullets[10]) : ModelComponent(game, model)
 {
 	position.y = collider.Radius = 1.0f;
+	_bullets = bullets;
 }
 
 void KatamariComponent::Update(float deltaTime)
@@ -29,6 +31,19 @@ void KatamariComponent::Update(float deltaTime)
 	}
 	if (game->Input->IsKeyDown(Keys::A)) {
 		acceleration -= forward;
+	}
+	
+	if (game->Input->IsKeyDown(Keys::E)) {
+		if (!shootButtonDown) {
+			_bullets[currentBullet % 10]->position = position;
+			_bullets[currentBullet % 10]->velocity = -right * 10;
+			currentBullet = (currentBullet + 1) % 10;
+			shootButtonDown = true;
+		}
+	}
+	else
+	{
+		shootButtonDown = false;
 	}
 
 	acceleration = Vector3(acceleration.x, 0, acceleration.z) * deltaSpeed + Vector3::Down * deltaTime;

@@ -6,7 +6,6 @@
 #include "ModelComponent.h"
 #include "KatamariComponent.h"
 
-
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
@@ -31,8 +30,15 @@ int main()
 
 	ModelLoader* models[3] = {chair, steve, tree};
 
+	SphereComponent* bullets[10];
+	for (int i = 0; i < 10; i++) {
+		auto sun1 = new SphereComponent(&game, &game.dynamicLights[i]);
+		sun1->color = Vector4(1, 1, 0, 1);
+		game.Components.push_back(sun1);
+		bullets[i] = sun1;
+	}
 
-	auto sun = KatamariComponent(&game, ball);
+	auto sun = KatamariComponent(&game, ball, bullets);
 	auto floor = ModelComponent(&game, ground);
 	floor.immovable = true;
 	//sun.scale = Vector3(0.5f, 0.5f, 0.5f);
@@ -54,6 +60,9 @@ int main()
 	ground->Load(game.Display->hWnd, game.Device, game.Context, "ground.obj");
 	steve->Load(game.Display->hWnd, game.Device, game.Context, "steve.obj");
 	tree->Load(game.Display->hWnd, game.Device, game.Context, "tree.obj");
+	for (int i = 0; i < 10; i++) {
+		bullets[i]->texture = ball->textures_loaded_[0].texture;
+	}
 	game.Run();
 }
 

@@ -24,12 +24,12 @@ public:
 	void Draw(ID3D11DeviceContext* devcon);
 
 	void Close();
+	std::vector<Texture> textures_loaded_;
 private:
 	ID3D11Device *dev_;
 	ID3D11DeviceContext *devcon_;
 	std::vector<Mesh> meshes_;
 	std::string directory_;
-	std::vector<Texture> textures_loaded_;
 	HWND hwnd_;
 
 	void processNode(aiNode* node, const aiScene* scene);
