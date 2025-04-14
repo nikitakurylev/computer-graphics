@@ -19,9 +19,6 @@ void ModelComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelSha
 }
 
 void ModelComponent::Draw() {
-
-	game->Context->VSSetShader(VertexShader, 0, 0);
-	game->Context->PSSetShader(PixelShader, 0, 0);
 	ourModel->Draw(game->Context);
 }
 

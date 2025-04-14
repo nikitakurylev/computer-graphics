@@ -40,6 +40,7 @@
     <ClCompile Include="TriangleComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="DepthShader.hlsl" />
     <FxCompile Include="Shaders\MyVeryFirstShader.hlsl" />
     <FxCompile Include="SimpleTexturedDirectx11\PixelShader.hlsl" />
     <FxCompile Include="SimpleTexturedDirectx11\VertexShader.hlsl" />

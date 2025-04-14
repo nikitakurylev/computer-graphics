@@ -79,6 +79,7 @@
     </FxCompile>
     <FxCompile Include="SimpleTexturedDirectx11\PixelShader.hlsl" />
     <FxCompile Include="SimpleTexturedDirectx11\VertexShader.hlsl" />
+    <FxCompile Include="DepthShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameComponent.h">

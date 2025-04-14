@@ -35,6 +35,7 @@ public:
 	Matrix GetCameraMatrix();
 	LightsParams dynamicLights[10];
 private:
+	void Render(GameComponent* gameComponent, Matrix view, Matrix projection, ID3D11VertexShader* vertex, ID3D11PixelShader* pixel);
 	HRESULT	CompileShaderFromFile(LPCWSTR pFileName, const D3D_SHADER_MACRO* pDefines, LPCSTR pEntryPoint, LPCSTR pShaderModel, ID3DBlob** ppBytecodeBlob);
 	IDXGISwapChain* SwapChain;
 	ID3D11RenderTargetView* RenderView;
@@ -47,9 +48,11 @@ private:
 	ID3D11InputLayout* layout;
 	ID3D11RasterizerState* rastState;
 	ID3D11Buffer* constantBuffer;
+	ID3D11Buffer* lightTransformBuffer;
 	ID3D11Buffer* lightBuffer;
 	ID3D11Buffer* dynamicLightBuffer;
 	ID3D11SamplerState* TexSamplerState = nullptr;
+	ID3D11SamplerState* DepthSamplerState = nullptr;
 	Matrix view_matrix;
 	Matrix projection_matrix;
 	Vector3 cam_rot;
@@ -59,5 +62,18 @@ private:
 	bool ortho;
 	float distance;
 	LightsParams light;
+
+	D3D11_VIEWPORT viewport;
+	D3D11_VIEWPORT viewport_depth_directional_light_{};
+	ID3D11RenderTargetView* render_target_view_depth_directional_light_ = nullptr;
+	ID3D11ShaderResourceView* resource_view_depth_directional_light_ = nullptr;
+
+	Vector3 directional_light_position_; 
+	Matrix directional_light_view_;
+	Matrix directional_light_projection_;
+
+	ID3D11VertexShader* depthVertexShader;
+	ID3D11PixelShader* depthPixelShader;
+	ID3D11InputLayout* depthInputLayout;
 };
 
