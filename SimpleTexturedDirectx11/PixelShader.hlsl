@@ -1,5 +1,8 @@
 Texture2D diffTexture : register(t0);
-Texture2D DirLightDepthMapTexture : register(t1);
+Texture2D DirLightDepthMapTexture1 : register(t1);
+Texture2D DirLightDepthMapTexture2 : register(t2);
+Texture2D DirLightDepthMapTexture3 : register(t3);
+Texture2D DirLightDepthMapTexture4 : register(t4);
 SamplerState SampleType : register(s0);
 SamplerState DepthSampleType : register(s1);
 
@@ -10,30 +13,60 @@ struct PointLight
     float4 dyn_k;
 };
 
-cbuffer LightBuffer : register(b1)
+cbuffer LightBuffer : register(b0)
 {
+    row_major float4x4 ViewProj[4];
+    float4 Distances;
     float4 direction;
     float4 color;
     float4 k;
 }
 
-cbuffer DynamicLightBuffer : register(b2)
+cbuffer DynamicLightBuffer : register(b1)
 {
     PointLight lights[10];
 }
 
-float4 main(float4 pos : SV_POSITION, float4 norm : NORMAL, float2 texcoord : TEXCOORD0, float4 world_pos : TEXCOORD1, float4 view_pos : TEXCOORD2, float4 pos_in_light_view : TEXCOORD3, float3 camera_direction : TEXCOORD4) : SV_TARGET
+float4 main(float4 pos : SV_POSITION, float4 norm : NORMAL, float2 texcoord : TEXCOORD0, float4 world_pos : TEXCOORD1, float4 view_pos : TEXCOORD2, float3 camera_direction : TEXCOORD3, float4 depth_pos : TEXCOORD4, float4 pos_in_light_view[4] : TEXCOORD5) : SV_TARGET
 {
 	float4 textureColor = diffTexture.Sample(SampleType, texcoord);
 	if(textureColor.a < 0.5f)
         discard;
     
-    float2 projected_tex_coord;
-    projected_tex_coord.x = pos_in_light_view.x / pos_in_light_view.w / 2.0f + 0.5f;
-    projected_tex_coord.y = -pos_in_light_view.y / pos_in_light_view.w / 2.0f + 0.5f;
-    const float depth = DirLightDepthMapTexture.Sample(DepthSampleType, projected_tex_coord).r;
-    const float light_depth = pos_in_light_view.z / pos_in_light_view.w - 5e-6f;
-
+    float depth = 0;
+    float dist = abs(depth_pos);
+    if (dist < 10)
+    {
+        float light_depth = pos_in_light_view[0].z / pos_in_light_view[0].w - 5e-6f;
+        float3 projected_tex_coord = pos_in_light_view[0].xyz / pos_in_light_view[0].w / 2.0f + 0.5f;
+        projected_tex_coord.y = 1 -projected_tex_coord.y;
+        depth = light_depth < DirLightDepthMapTexture1.Sample(DepthSampleType, projected_tex_coord.xy).r;
+    } 
+    else if (dist < 30)
+    {
+        float light_depth = pos_in_light_view[1].z / pos_in_light_view[1].w - 5e-6f;
+        float3 projected_tex_coord = pos_in_light_view[1].xyz / pos_in_light_view[1].w / 2.0f + 0.5f;
+        projected_tex_coord.y = 1 - projected_tex_coord.y;
+        depth = light_depth < DirLightDepthMapTexture2.Sample(DepthSampleType, projected_tex_coord.xy).r;
+    } 
+    else if (dist < 60)
+    {
+        float light_depth = pos_in_light_view[2].z / pos_in_light_view[2].w - 5e-6f;
+        float3 projected_tex_coord = pos_in_light_view[2].xyz / pos_in_light_view[2].w / 2.0f + 0.5f;
+        projected_tex_coord.y = 1 - projected_tex_coord.y;
+        depth = light_depth < DirLightDepthMapTexture3.Sample(DepthSampleType, projected_tex_coord.xy).r;
+    }
+    else if (dist < 200)
+    {
+        float light_depth = pos_in_light_view[3].z / pos_in_light_view[3].w - 5e-6f;
+        float3 projected_tex_coord = pos_in_light_view[3].xyz / pos_in_light_view[3].w / 2.0f + 0.5f;
+        projected_tex_coord.y = 1 - projected_tex_coord.y;
+        depth = light_depth < DirLightDepthMapTexture4.Sample(DepthSampleType, projected_tex_coord.xy).r;
+    }
+    else
+    {
+        depth = 1;
+    }
     
     const float3 normal = norm.xyz;
 
@@ -57,8 +90,9 @@ float4 main(float4 pos : SV_POSITION, float4 norm : NORMAL, float2 texcoord : TE
     const float3 ambient = textureColor * float4(0.529f, 0.808f, 0.922f, 1.0f) * k.x;
     const float3 specular = pow(max(0, dot(-view_direction, reflection_vector)), k.y) * k.z;
 
-    float4 col = float4(color.xyz * (diffuse + specular) * (light_depth < depth) + dyn + ambient, 1);
+    float4 col = float4(color.xyz * (diffuse + specular) * depth + dyn + ambient, 1);
     col.rgb = pow(col.rgb, 1 / 2.2f);
     
-    return col; //float4(normal, 0) / 2 + float4(0.5f, 0.5f, 0.5f, 0.0f);
+    float3 asda = pos_in_light_view[0].xyz / pos_in_light_view[0].w / 2.0f + 0.5;
+    return col; //abs(asda.x + asda.y) < 2; //float4(dist < 20, dist < 40, dist < 60, 1); //float4(normal, 0) / 2 + float4(0.5f, 0.5f, 0.5f, 0.0f);
 }

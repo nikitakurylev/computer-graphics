@@ -1,15 +1,17 @@
 cbuffer ConstantBuffer : register(b0)
 {
-    row_major matrix World;
-    row_major matrix View;
+    matrix World;
+    matrix View;
     float4 ViewPosition;
 }
 
 cbuffer LightBuffer : register(b1)
 {
-    row_major matrix LightWorld;
-    row_major matrix LightView;
-    float4 CameraPosition;
+    matrix ViewProj[4];
+    float4 Distances;
+    float4 direction;
+    float4 color;
+    float4 k;
 }
 
 struct VOut {
@@ -18,8 +20,9 @@ struct VOut {
 	float2 texcoord : TEXCOORD;
     float4 world_pos : TEXCOORD1;
     float4 view_pos : TEXCOORD2;
-    float4 pos_in_light_view : TEXCOORD3;
-    float3 camera_direction : TEXCOORD4;
+    float3 camera_direction : TEXCOORD3;
+    float4 depth_pos : TEXCOORD4;
+    float4 pos_in_light_view[4] : TEXCOORD5;
 };
 
 VOut main(float4 pos : POSITION, float4 norm : NORMAL, float2 texcoord : TEXCOORD)
@@ -29,10 +32,12 @@ VOut main(float4 pos : POSITION, float4 norm : NORMAL, float2 texcoord : TEXCOOR
     output.norm = mul(float4(norm.xyz, 0), World);
     output.world_pos = mul(float4(pos.xyz, 1), World);
     output.pos = mul(float4(pos.xyz, 1), View);
-	output.texcoord = texcoord;
+    output.depth_pos = output.pos.z;
+    output.texcoord = texcoord;
     output.view_pos = ViewPosition;
-    output.pos_in_light_view = mul(output.world_pos, LightView);
-    output.camera_direction = normalize(CameraPosition.xyz - output.world_pos.xyz);
+    for (int i = 0; i < 4; i++)
+        output.pos_in_light_view[i] = mul(output.world_pos, ViewProj[i]);
+    output.camera_direction = normalize(ViewPosition.xyz - output.world_pos.xyz);
 
 	return output;
 }

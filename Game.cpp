@@ -50,7 +50,7 @@ void Game::Run()
 			frameCount = 0;
 		}
 
-		if(Input->IsKeyDown(Keys::D1))
+		if (Input->IsKeyDown(Keys::D1))
 			fps = true;
 		else if (Input->IsKeyDown(Keys::D2))
 			fps = false;
@@ -73,7 +73,7 @@ void Game::Run()
 		if (fps) {
 			auto camera_matrix =
 				Matrix::CreateFromYawPitchRoll(cam_rot);
-				//* Matrix::CreateTranslation(cam_pos);
+			//* Matrix::CreateTranslation(cam_pos);
 
 			if (Input->IsKeyDown(Keys::W))
 				cam_pos += camera_matrix.Forward() * 0.01f;
@@ -94,7 +94,7 @@ void Game::Run()
 		}
 		else {
 			distance = max(1.0f, distance - Input->MouseWheelDelta * 0.01f);
-			if(ortho && Input-> MouseWheelDelta != 0)
+			if (ortho && Input->MouseWheelDelta != 0)
 				projection_matrix = Matrix::CreateOrthographic(Display->ClientWidth * distance * 0.001f, Display->ClientHeight * distance * 0.001f, 0.01f, 1000);
 			Input->MouseWheelDelta = 0;
 			auto lookAtPoint = cam_pos;
@@ -122,48 +122,35 @@ void Game::Update(float deltaTime)
 
 void Game::Draw()
 {
-	float black[] = { 0.0f, 0.0f, 0.0f };
 	Context->ClearState();
 	Context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	Context->RSSetState(rastState);
 
-	Context->ClearRenderTargetView(render_target_view_depth_directional_light_, black);
-	Context->ClearDepthStencilView(depth_stencil_view_, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
-	Context->OMSetRenderTargets(1, &render_target_view_depth_directional_light_, depth_stencil_view_);
-
-	Context->RSSetViewports(1, &viewport_depth_directional_light_);
-
-	Context->IASetInputLayout(layout);
-
-	for (GameComponent* gameComponent : Components)
-	{
-		Render(gameComponent, directional_light_view_, directional_light_projection_, depthVertexShader, depthPixelShader);
-	}
-
-	Context->OMSetRenderTargets(1, &RenderView, nullptr);
+	Context->PSSetSamplers(0, 1, &TexSamplerState);
+	RenderDepthMap(0);
+	RenderDepthMap(1);
+	RenderDepthMap(2);
+	RenderDepthMap(3);
 
 	float color[] = { 0.054f, 0.149f, 0.49f };
 	Context->ClearRenderTargetView(RenderView, color);
-	Context->ClearDepthStencilView(depth_stencil_view_, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
-	Context->OMSetRenderTargets(1, &RenderView, depth_stencil_view_);
+	Context->ClearDepthStencilView(depth_stencil_view[0], D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
+	Context->OMSetRenderTargets(1, &RenderView, depth_stencil_view[0]);
 	Context->RSSetViewports(1, &viewport);
 
-	ConstantBuffer buffer;
-	buffer.View = directional_light_view_ * directional_light_projection_;
-	buffer.ViewPosition = Vector4(cam_world);
-	Context->UpdateSubresource(lightTransformBuffer, 0, nullptr, &buffer, 0, 0);
-	Context->UpdateSubresource(lightBuffer, 0, nullptr, &light, 0, 0);
+	Context->UpdateSubresource(lightTransformBuffer, 0, nullptr, &cascadeData, 0, 0);
 	Context->UpdateSubresource(dynamicLightBuffer, 0, nullptr, dynamicLights, 0, 0);
-	
+
 	Context->VSSetConstantBuffers(1, 1, &lightTransformBuffer);
 
-	Context->PSSetConstantBuffers(0, 1, &constantBuffer);
-	Context->PSSetConstantBuffers(1, 1, &lightBuffer);
-	Context->PSSetConstantBuffers(2, 1, &dynamicLightBuffer);
-	
-	Context->PSSetSamplers(0, 1, &TexSamplerState);
+	Context->PSSetConstantBuffers(0, 1, &lightTransformBuffer);
+	Context->PSSetConstantBuffers(1, 1, &dynamicLightBuffer);
+
 	Context->PSSetSamplers(1, 1, &DepthSamplerState);
-	Context->PSSetShaderResources(1, 1, &resource_view_depth_directional_light_);
+	Context->PSSetShaderResources(1, 1, &resource_view_depth_directional_light[0]);
+	Context->PSSetShaderResources(2, 1, &resource_view_depth_directional_light[1]);
+	Context->PSSetShaderResources(3, 1, &resource_view_depth_directional_light[2]);
+	Context->PSSetShaderResources(4, 1, &resource_view_depth_directional_light[3]);
 
 	for (GameComponent* gameComponent : Components)
 	{
@@ -233,47 +220,15 @@ void Game::Initialize()
 		// Well, that was unexpected
 	}
 
-	D3D11_TEXTURE2D_DESC depth_texture_descriptor{};
-	depth_texture_descriptor.Width = Display->ClientWidth * 3.0f;
-	depth_texture_descriptor.Height = Display->ClientHeight * 3.0f;
-	depth_texture_descriptor.MipLevels = 1;
-	depth_texture_descriptor.ArraySize = 1;
-	depth_texture_descriptor.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	depth_texture_descriptor.SampleDesc.Count = 1;
-	depth_texture_descriptor.Usage = D3D11_USAGE_DEFAULT;
-	depth_texture_descriptor.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-
-	ID3D11Texture2D* background_texture_depth;
-	Device->CreateTexture2D(&depth_texture_descriptor, nullptr, &background_texture_depth);
-	Device->CreateRenderTargetView(background_texture_depth, nullptr, &render_target_view_depth_directional_light_);
-	Device->CreateShaderResourceView(background_texture_depth, nullptr, &resource_view_depth_directional_light_);
-
 	ID3D11Texture2D* backTex;
 	res = SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backTex);	// __uuidof(ID3D11Texture2D)
 	res = Device->CreateRenderTargetView(backTex, nullptr, &RenderView);
 
 	PrevTime = std::chrono::steady_clock::now();
 	TotalTime = 0;
-	
-
-	D3D11_TEXTURE2D_DESC depth_stencil_descriptor;
-	depth_stencil_descriptor.Width = Display->ClientWidth * 3;
-	depth_stencil_descriptor.Height = Display->ClientHeight * 3;
-	depth_stencil_descriptor.MipLevels = 1;
-	depth_stencil_descriptor.ArraySize = 1;
-	depth_stencil_descriptor.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depth_stencil_descriptor.SampleDesc.Count = 1;
-	depth_stencil_descriptor.SampleDesc.Quality = 0;
-	depth_stencil_descriptor.Usage = D3D11_USAGE_DEFAULT;
-	depth_stencil_descriptor.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-	depth_stencil_descriptor.CPUAccessFlags = 0;
-	depth_stencil_descriptor.MiscFlags = 0;
-
-	Device->CreateTexture2D(&depth_stencil_descriptor, nullptr, &depth_stencil_buffer_);
-	Device->CreateDepthStencilView(depth_stencil_buffer_, nullptr, &depth_stencil_view_);
 
 	projection_matrix = Matrix::CreatePerspectiveFieldOfView(
-		DirectX::XM_PIDIV2, Display->ClientWidth/(FLOAT)Display->ClientHeight,
+		DirectX::XM_PIDIV2, Display->ClientWidth / (FLOAT)Display->ClientHeight,
 		0.01f, 1000);
 
 	vertexShaderByteCode = nullptr;
@@ -325,17 +280,15 @@ void Game::Initialize()
 
 	Device->CreateBuffer(&constBufDesc, nullptr, &constantBuffer);
 
+	constBufDesc = {};
+	constBufDesc.ByteWidth = sizeof(CascadeData);
+	constBufDesc.Usage = D3D11_USAGE_DEFAULT;
+	constBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	constBufDesc.CPUAccessFlags = 0;
+	constBufDesc.MiscFlags = 0;
+	constBufDesc.StructureByteStride = 0;
+
 	Device->CreateBuffer(&constBufDesc, nullptr, &lightTransformBuffer);
-
-	D3D11_BUFFER_DESC lightBufDesc = {};
-	lightBufDesc.ByteWidth = sizeof(LightsParams);
-	lightBufDesc.Usage = D3D11_USAGE_DEFAULT;
-	lightBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	lightBufDesc.CPUAccessFlags = 0;
-	lightBufDesc.MiscFlags = 0;
-	lightBufDesc.StructureByteStride = 0;
-
-	Device->CreateBuffer(&lightBufDesc, nullptr, &lightBuffer);
 
 	D3D11_BUFFER_DESC dynamicLightBufDesc = {};
 	dynamicLightBufDesc.ByteWidth = sizeof(LightsParams) * 10;
@@ -368,19 +321,24 @@ void Game::Initialize()
 	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
 	res = Device->CreateSamplerState(&samplerDesc, &DepthSamplerState);
 
-	directional_light_position_ =
-		Vector3::Transform(Vector3(-15, 15, 0), Quaternion::CreateFromAxisAngle(Vector3::Right, 45));
-	const auto directional_light_direction = Vector4(
-		-directional_light_position_.x, -directional_light_position_.y, -directional_light_position_.z, 0);
-	const Matrix directional_light_view = Matrix::CreateLookAt(
-		directional_light_position_, Vector3(), Vector3::Up);
+	directional_light_position_ = Vector3(100, 100, 100);
 
-	light.color = Vector4(0.054f, 0.149f, 0.49f, 0);
-	light.direction = directional_light_direction;
-	light.k = Vector4(0.1f, 100.0f, 1.2f, 0);
+	auto dir = Vector3(-directional_light_position_.x, -directional_light_position_.y, -directional_light_position_.z);
 
-	directional_light_view_ = directional_light_view;
-	directional_light_projection_ = Matrix::CreatePerspectiveFieldOfView(3.14f / 2, 1, 0.01f, 1000);
+	dir.Normalize();
+	const auto directional_light_direction = Vector4(dir.x, dir.y, dir.z, 1);
+
+	cascadeData.color = Vector4(0.054f, 0.149f, 0.49f, 0);
+	cascadeData.direction = directional_light_direction;
+	cascadeData.k = Vector4(0.1f, 100.0f, 1.2f, 0);
+
+	auto fov = DirectX::XM_PIDIV2;
+	auto aspect = Display->ClientWidth / (FLOAT)Display->ClientHeight;
+
+	directional_light_projection[0] = Matrix::CreatePerspectiveFieldOfView(fov, aspect, 0.01f, 10);
+	directional_light_projection[1] = Matrix::CreatePerspectiveFieldOfView(fov, aspect, 10, 30);
+	directional_light_projection[2] = Matrix::CreatePerspectiveFieldOfView(fov, aspect, 30, 60);
+	directional_light_projection[3] = Matrix::CreatePerspectiveFieldOfView(fov, aspect, 60, 200);
 
 
 	for (int i = 0; i < 10; i++) {
@@ -397,9 +355,10 @@ void Game::Initialize()
 	viewport.MinDepth = 0;
 	viewport.MaxDepth = 1.0f;
 
-	viewport_depth_directional_light_ = viewport;
-	viewport_depth_directional_light_.Width *= 3.0f;
-	viewport_depth_directional_light_.Height *= 3.0f;
+	InitDepthMap(0, 3.0f);
+	InitDepthMap(1, 2.0f);
+	InitDepthMap(2, 1.0f);
+	InitDepthMap(3, 0.75f);
 
 	for (GameComponent* gameComponent : Components)
 	{
@@ -434,7 +393,7 @@ void Game::Initialize()
 
 HRESULT Game::CompileShaderFromFile(LPCWSTR pFileName, const D3D_SHADER_MACRO* pDefines, LPCSTR pEntryPoint, LPCSTR pShaderModel, ID3DBlob** ppBytecodeBlob)
 {
-	UINT compileFlags = D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR;
+	UINT compileFlags = D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_PACK_MATRIX_ROW_MAJOR;
 
 #ifdef _DEBUG
 	compileFlags |= D3DCOMPILE_DEBUG;
@@ -453,4 +412,137 @@ HRESULT Game::CompileShaderFromFile(LPCWSTR pFileName, const D3D_SHADER_MACRO* p
 		pErrorBlob->Release();
 
 	return result;
+}
+
+void Game::InitDepthMap(int index, float resolution)
+{
+	D3D11_TEXTURE2D_DESC depth_texture_descriptor{};
+	depth_texture_descriptor.Width = Display->ClientWidth * resolution;
+	depth_texture_descriptor.Height = Display->ClientHeight * resolution;
+	depth_texture_descriptor.MipLevels = 1;
+	depth_texture_descriptor.ArraySize = 1;
+	depth_texture_descriptor.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	depth_texture_descriptor.SampleDesc.Count = 1;
+	depth_texture_descriptor.Usage = D3D11_USAGE_DEFAULT;
+	depth_texture_descriptor.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+
+	viewport_depth_directional_light_[index] = viewport;
+	viewport_depth_directional_light_[index].Width *= resolution;
+	viewport_depth_directional_light_[index].Height *= resolution;
+
+	ID3D11Texture2D* background_texture_depth;
+	Device->CreateTexture2D(&depth_texture_descriptor, nullptr, &background_texture_depth);
+	auto res = Device->CreateRenderTargetView(background_texture_depth, nullptr, &(render_target_view_depth_directional_light[index]));
+	res = Device->CreateShaderResourceView(background_texture_depth, nullptr, &(resource_view_depth_directional_light[index]));
+
+	D3D11_TEXTURE2D_DESC depth_stencil_descriptor;
+	depth_stencil_descriptor.Width = Display->ClientWidth * resolution;
+	depth_stencil_descriptor.Height = Display->ClientHeight * resolution;
+	depth_stencil_descriptor.MipLevels = 1;
+	depth_stencil_descriptor.ArraySize = 1;
+	depth_stencil_descriptor.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depth_stencil_descriptor.SampleDesc.Count = 1;
+	depth_stencil_descriptor.SampleDesc.Quality = 0;
+	depth_stencil_descriptor.Usage = D3D11_USAGE_DEFAULT;
+	depth_stencil_descriptor.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	depth_stencil_descriptor.CPUAccessFlags = 0;
+	depth_stencil_descriptor.MiscFlags = 0;
+
+	res = Device->CreateTexture2D(&depth_stencil_descriptor, nullptr, &(depth_stencil_buffer[index]));
+	res = Device->CreateDepthStencilView(depth_stencil_buffer[index], nullptr, &(depth_stencil_view[index]));
+}
+
+void Game::RenderDepthMap(int index)
+{
+	auto corners = GetFrustrumCornersWorldSpace(directional_light_projection[index]);
+	auto view = GetCascadeView(corners);
+	auto projection = GetCascadeProjection(view, corners);
+	cascadeData.ViewProj[index] = view * projection;
+
+	float black[] = { 0.0f, 0.0f, 0.0f };
+	Context->ClearRenderTargetView(render_target_view_depth_directional_light[index], black);
+	Context->ClearDepthStencilView(depth_stencil_view[index], D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
+	Context->OMSetRenderTargets(1, &render_target_view_depth_directional_light[index], depth_stencil_view[index]);
+
+	Context->RSSetViewports(1, &viewport_depth_directional_light_[index]);
+
+	Context->IASetInputLayout(layout);
+
+	for (GameComponent* gameComponent : Components)
+	{
+		Render(gameComponent, view, projection, depthVertexShader, depthPixelShader);
+	}
+
+	Context->OMSetRenderTargets(1, &RenderView, nullptr);
+}
+
+std::vector<Vector4> Game::GetFrustrumCornersWorldSpace(const Matrix& proj)
+{
+	const auto viewProj = view_matrix * proj;
+	const auto aa = view_matrix * projection_matrix;
+	const auto inv = viewProj.Invert();
+
+	std::vector<Vector4> frustrumCorners;
+	frustrumCorners.reserve(8);
+	for (int x = 0; x < 2; x++)
+		for (int y = 0; y < 2; y++)
+			for (int z = 0; z < 2; z++) {
+				const Vector4 pt =
+					Vector4::Transform(Vector4(
+						2.0f * x - 1.0f,
+						2.0f * y - 1.0f,
+						z,//2.0f * z - 1.0f,
+						1.0f), inv);
+				frustrumCorners.push_back(pt / pt.w);
+			}
+
+	return frustrumCorners;
+}
+
+Matrix Game::GetCascadeView(const std::vector<Vector4>& corners)
+{
+	Vector3 center = Vector3::Zero;
+
+	for (const auto& v : corners)
+		center += Vector3(v.x, v.y, v.z);
+
+	center /= corners.size();
+
+	const auto lightView = Matrix::CreateLookAt(
+		center,
+		center + cascadeData.direction,
+		Vector3::Up
+	);
+
+	return lightView;
+}
+
+Matrix Game::GetCascadeProjection(const Matrix& lightView, const std::vector<Vector4>& corners)
+{
+	float minX = FLT_MAX;
+	float maxX = FLT_MIN;
+	float minY = FLT_MAX;
+	float maxY = FLT_MIN;
+	float minZ = FLT_MAX;
+	float maxZ = FLT_MIN;
+
+	for (const auto& v : corners)
+	{
+		const auto trf = Vector4::Transform(v, lightView);
+
+		minX = min(minX, trf.x);
+		maxX = max(maxX, trf.x);
+		minY = min(minY, trf.y);
+		maxY = max(maxY, trf.y);
+		minZ = min(minZ, trf.z);
+		maxZ = max(maxZ, trf.z);
+	}
+
+	constexpr float zMult = 10.0f;
+	minZ = (minZ < 0) ? minZ * zMult : minZ / zMult;
+	maxZ = (maxZ < 0) ? maxZ / zMult : maxZ * zMult;
+
+	auto lightProjection = Matrix::CreateOrthographicOffCenter(minX, maxX, minY, maxY, minZ, maxZ);
+
+	return lightProjection;
 }
