@@ -316,6 +316,8 @@ void Game::Initialize()
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
 	res = Device->CreateSamplerState(&samplerDesc, &TexSamplerState);
+	samplerDesc.Filter = D3D11_FILTER_MAXIMUM_MIN_MAG_MIP_LINEAR;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
 	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
 	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
@@ -338,7 +340,7 @@ void Game::Initialize()
 	directional_light_projection[0] = Matrix::CreatePerspectiveFieldOfView(fov, aspect, 0.01f, 10);
 	directional_light_projection[1] = Matrix::CreatePerspectiveFieldOfView(fov, aspect, 10, 30);
 	directional_light_projection[2] = Matrix::CreatePerspectiveFieldOfView(fov, aspect, 30, 60);
-	directional_light_projection[3] = Matrix::CreatePerspectiveFieldOfView(fov, aspect, 60, 200);
+	directional_light_projection[3] = Matrix::CreatePerspectiveFieldOfView(fov, aspect, 60, 500);
 
 
 	for (int i = 0; i < 10; i++) {
@@ -356,9 +358,9 @@ void Game::Initialize()
 	viewport.MaxDepth = 1.0f;
 
 	InitDepthMap(0, 3.0f);
-	InitDepthMap(1, 2.0f);
-	InitDepthMap(2, 1.0f);
-	InitDepthMap(3, 0.75f);
+	InitDepthMap(1, 2.5f);
+	InitDepthMap(2, 2.0f);
+	InitDepthMap(3, 1.0f);
 
 	for (GameComponent* gameComponent : Components)
 	{

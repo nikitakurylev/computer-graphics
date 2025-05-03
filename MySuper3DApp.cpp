@@ -53,6 +53,12 @@ int main()
 		game.Components.push_back(sun1);
 	}
 
+	auto huge = new ModelComponent(&game, tree);
+	huge->scale *= 50;
+	huge->position = Vector3(-50, 0, 100);
+	game.Components.push_back(huge);
+
+
 	//game.Components.push_back(&sky);
 	game.Initialize();
 	chair->Load(game.Display->hWnd, game.Device, game.Context, "chair01.obj");

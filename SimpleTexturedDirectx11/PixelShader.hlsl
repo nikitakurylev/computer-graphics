@@ -27,6 +27,29 @@ cbuffer DynamicLightBuffer : register(b1)
     PointLight lights[10];
 }
 
+float sampleDepthMap(float4 pos_in_light_view, Texture2D depthTexture)
+{
+    float light_depth = pos_in_light_view.z / pos_in_light_view.w - 5e-4f;
+    float3 projected_tex_coord = pos_in_light_view.xyz / pos_in_light_view.w / 2.0f + 0.5f;
+    projected_tex_coord.y = 1 - projected_tex_coord.y;
+    
+    float shadow = 0.0;
+    float width, height;
+    depthTexture.GetDimensions(width, height);
+    float2 texelSize = 1.0 / float2(width, height);
+    for (int x = -1; x <= 1; ++x)
+    {
+        for (int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = depthTexture.Sample(DepthSampleType, float2(projected_tex_coord.xy + float2(x, y) * texelSize)).r;
+            shadow += light_depth > pcfDepth;
+        }
+    }
+    shadow /= 9.0f;
+    
+    return 1 - shadow;
+}
+
 float4 main(float4 pos : SV_POSITION, float4 norm : NORMAL, float2 texcoord : TEXCOORD0, float4 world_pos : TEXCOORD1, float4 view_pos : TEXCOORD2, float3 camera_direction : TEXCOORD3, float4 depth_pos : TEXCOORD4, float4 pos_in_light_view[4] : TEXCOORD5) : SV_TARGET
 {
 	float4 textureColor = diffTexture.Sample(SampleType, texcoord);
@@ -37,38 +60,26 @@ float4 main(float4 pos : SV_POSITION, float4 norm : NORMAL, float2 texcoord : TE
     float dist = abs(depth_pos);
     if (dist < 10)
     {
-        float light_depth = pos_in_light_view[0].z / pos_in_light_view[0].w - 5e-6f;
-        float3 projected_tex_coord = pos_in_light_view[0].xyz / pos_in_light_view[0].w / 2.0f + 0.5f;
-        projected_tex_coord.y = 1 -projected_tex_coord.y;
-        depth = light_depth < DirLightDepthMapTexture1.Sample(DepthSampleType, projected_tex_coord.xy).r;
+        depth = sampleDepthMap(pos_in_light_view[0], DirLightDepthMapTexture1);
     } 
     else if (dist < 30)
     {
-        float light_depth = pos_in_light_view[1].z / pos_in_light_view[1].w - 5e-6f;
-        float3 projected_tex_coord = pos_in_light_view[1].xyz / pos_in_light_view[1].w / 2.0f + 0.5f;
-        projected_tex_coord.y = 1 - projected_tex_coord.y;
-        depth = light_depth < DirLightDepthMapTexture2.Sample(DepthSampleType, projected_tex_coord.xy).r;
+        depth = sampleDepthMap(pos_in_light_view[1], DirLightDepthMapTexture2);
     } 
     else if (dist < 60)
     {
-        float light_depth = pos_in_light_view[2].z / pos_in_light_view[2].w - 5e-6f;
-        float3 projected_tex_coord = pos_in_light_view[2].xyz / pos_in_light_view[2].w / 2.0f + 0.5f;
-        projected_tex_coord.y = 1 - projected_tex_coord.y;
-        depth = light_depth < DirLightDepthMapTexture3.Sample(DepthSampleType, projected_tex_coord.xy).r;
+        depth = sampleDepthMap(pos_in_light_view[2], DirLightDepthMapTexture3);
     }
-    else if (dist < 200)
+    else if (dist < 500)
     {
-        float light_depth = pos_in_light_view[3].z / pos_in_light_view[3].w - 5e-6f;
-        float3 projected_tex_coord = pos_in_light_view[3].xyz / pos_in_light_view[3].w / 2.0f + 0.5f;
-        projected_tex_coord.y = 1 - projected_tex_coord.y;
-        depth = light_depth < DirLightDepthMapTexture4.Sample(DepthSampleType, projected_tex_coord.xy).r;
+        depth = sampleDepthMap(pos_in_light_view[3], DirLightDepthMapTexture4);
     }
     else
     {
         depth = 1;
     }
     
-    const float3 normal = norm.xyz;
+    const float3 normal = normalize(norm.xyz);
 
     const float3 view_direction = normalize(view_pos.xyz - world_pos.xyz);
     const float3 light_direction = -normalize(direction.xyz);
