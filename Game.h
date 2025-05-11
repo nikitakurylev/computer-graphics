@@ -9,6 +9,7 @@
 
 using namespace DirectX::SimpleMath;
 class GameComponent;
+class CubeComponent;
 
 struct ConstantBuffer
 {
@@ -24,6 +25,7 @@ struct CascadeData
 	Vector4 direction;
 	Vector4 color;
 	Vector4 k;
+	Vector4 debug;
 };
 
 class Game
@@ -49,15 +51,17 @@ private:
 	void InitDepthMap(int index, float resolution);
 	void RenderDepthMap(int index);
 	std::vector<Vector4> GetFrustrumCornersWorldSpace(const Matrix& proj);
-	Matrix GetCascadeView(const std::vector<Vector4>& corners);
-	Matrix GetCascadeProjection(const Matrix& lightView, const std::vector<Vector4>& corners);
+	Matrix GetCascadeView(const std::vector<Vector4>& corners, int index);
+	Matrix GetCascadeProjection(const Matrix& lightView, const std::vector<Vector4>& corners, int index);
 	IDXGISwapChain* SwapChain;
 	ID3D11RenderTargetView* RenderView;
 	std::chrono::time_point<std::chrono::steady_clock> PrevTime;
 	float TotalTime;
 	ID3D11VertexShader* vertexShader;
+	ID3D11VertexShader* debugVertexShader;
 	ID3DBlob* vertexShaderByteCode;
 	ID3D11PixelShader* pixelShader;
+	ID3D11PixelShader* debugPixelShader;
 	ID3DBlob* pixelShaderByteCode;
 	ID3D11InputLayout* layout;
 	ID3D11RasterizerState* rastState;
@@ -80,6 +84,7 @@ private:
 	D3D11_VIEWPORT viewport_depth_directional_light_[4];
 	ID3D11RenderTargetView* render_target_view_depth_directional_light[4];
 	ID3D11ShaderResourceView* resource_view_depth_directional_light[4];
+	CubeComponent* debug_cube;
 
 	Vector3 directional_light_position_; 
 	Matrix directional_light_projection[4];

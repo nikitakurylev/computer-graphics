@@ -93,8 +93,6 @@ void SphereComponent::Draw() {
 
 	UINT strides[] = { sizeof(Vertex) };
 	UINT offsets[] = { 0 };
-	game->Context->VSSetShader(VertexShader, nullptr, 0);
-	game->Context->PSSetShader(PixelShader, nullptr, 0);
 	game->Context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
 	game->Context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
 	game->Context->PSSetShaderResources(0, 1, &texture);

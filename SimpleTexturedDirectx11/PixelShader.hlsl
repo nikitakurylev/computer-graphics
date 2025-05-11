@@ -20,6 +20,7 @@ cbuffer LightBuffer : register(b0)
     float4 direction;
     float4 color;
     float4 k;
+    float4 debug;
 }
 
 cbuffer DynamicLightBuffer : register(b1)
@@ -56,23 +57,27 @@ float4 main(float4 pos : SV_POSITION, float4 norm : NORMAL, float2 texcoord : TE
 	if(textureColor.a < 0.5f)
         discard;
     
-    float depth = 0;
+    float3 depth = 0;
     float dist = abs(depth_pos);
     if (dist < 10)
     {
-        depth = sampleDepthMap(pos_in_light_view[0], DirLightDepthMapTexture1);
+        float d = sampleDepthMap(pos_in_light_view[0], DirLightDepthMapTexture1);
+        depth = debug.x ? float3(1, d, d) : d;
     } 
     else if (dist < 30)
     {
-        depth = sampleDepthMap(pos_in_light_view[1], DirLightDepthMapTexture2);
+        float d = sampleDepthMap(pos_in_light_view[1], DirLightDepthMapTexture2);
+        depth = debug.x ? float3(d, d, 1) : d;
     } 
     else if (dist < 60)
     {
-        depth = sampleDepthMap(pos_in_light_view[2], DirLightDepthMapTexture3);
+        float d = sampleDepthMap(pos_in_light_view[2], DirLightDepthMapTexture3);
+        depth = debug.x ? float3(1, d, 1) : d;
     }
     else if (dist < 500)
     {
-        depth = sampleDepthMap(pos_in_light_view[3], DirLightDepthMapTexture4);
+        float d = sampleDepthMap(pos_in_light_view[3], DirLightDepthMapTexture4);
+        depth = debug.x ? float3(1, d, d) : d;
     }
     else
     {
@@ -101,9 +106,30 @@ float4 main(float4 pos : SV_POSITION, float4 norm : NORMAL, float2 texcoord : TE
     const float3 ambient = textureColor * float4(0.529f, 0.808f, 0.922f, 1.0f) * k.x;
     const float3 specular = pow(max(0, dot(-view_direction, reflection_vector)), k.y) * k.z;
 
-    float4 col = float4(color.xyz * (diffuse + specular) * depth + dyn + ambient, 1);
+    float4 col = float4(color.xyz * (diffuse + specular) * depth + dyn + ambient * (1 - debug.x), 1);
     col.rgb = pow(col.rgb, 1 / 2.2f);
     
-    float3 asda = pos_in_light_view[0].xyz / pos_in_light_view[0].w / 2.0f + 0.5;
-    return col; //abs(asda.x + asda.y) < 2; //float4(dist < 20, dist < 40, dist < 60, 1); //float4(normal, 0) / 2 + float4(0.5f, 0.5f, 0.5f, 0.0f);
+    if (debug.x == 1)
+    {
+    
+        if (abs(pos_in_light_view[0].y) < 1.0f &&
+            abs(pos_in_light_view[0].x) < 1.0f &&
+            (abs(pos_in_light_view[0].y) > 0.995f || abs(pos_in_light_view[0].x) > 0.995f))
+            col = float4(1, 0, 1, 1);
+        else if (abs(pos_in_light_view[1].y) < 1.0f &&
+            abs(pos_in_light_view[1].x) < 1.0f &&
+            (abs(pos_in_light_view[1].y) > 0.995f || abs(pos_in_light_view[1].x) > 0.995f))
+            col = float4(1, 1, 0, 1);
+        else if (abs(pos_in_light_view[2].y) < 1.0f &&
+            abs(pos_in_light_view[2].x) < 1.0f &&
+            (abs(pos_in_light_view[2].y) > 0.995f || abs(pos_in_light_view[2].x) > 0.995f))
+            col = float4(0, 1, 1, 1);
+        else if (abs(pos_in_light_view[3].y) < 1.0f &&
+            abs(pos_in_light_view[3].x) < 1.0f &&
+            (abs(pos_in_light_view[3].y) > 0.995f || abs(pos_in_light_view[3].x) > 0.995f))
+            col = float4(1, 0, 0, 1);
+        
+    }
+    
+    return col; //float4(dist < 20, dist < 40, dist < 60, 1); //float4(normal, 0) / 2 + float4(0.5f, 0.5f, 0.5f, 0.0f);
 }

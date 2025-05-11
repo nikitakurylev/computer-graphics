@@ -12,6 +12,7 @@ cbuffer LightBuffer : register(b1)
     float4 direction;
     float4 color;
     float4 k;
+    float4 debug;
 }
 
 struct VOut {

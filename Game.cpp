@@ -2,6 +2,7 @@
 #include <d3d11.h>
 #include <iostream>
 #include "GameComponent.h"
+#include "CubeComponent.h"
 #include <d3dcompiler.h>
 #include "SimpleMath.h"
 
@@ -9,6 +10,16 @@ using namespace DirectX::SimpleMath;
 
 Game::Game(DisplayWin32* display, InputDevice* input) : Display(display), Input(input)
 {
+	debug_cube = new CubeComponent[4]{
+		CubeComponent(this),
+		CubeComponent(this),
+		CubeComponent(this),
+		CubeComponent(this)
+	};
+	debug_cube[0].SetColor(1, 0, 1);
+	debug_cube[1].SetColor(1, 1, 0);
+	debug_cube[2].SetColor(0, 1, 1);
+	debug_cube[3].SetColor(1, 0, 0);
 }
 
 void Game::Run()
@@ -64,6 +75,13 @@ void Game::Run()
 		else if (Input->IsKeyDown(Keys::D4)) {
 			ortho = true;
 			projection_matrix = Matrix::CreateOrthographic(Display->ClientWidth * distance * 0.001f, Display->ClientHeight * distance * 0.001f, 0.01f, 1000);
+		}
+
+		if (Input->IsKeyDown(Keys::D5)) {
+			cascadeData.debug.x = 1;
+		}
+		else if (Input->IsKeyDown(Keys::D6)) {
+			cascadeData.debug.x = 0;
 		}
 
 		cam_rot.y += Input->MouseOffset.x * 0.01f;
@@ -155,6 +173,14 @@ void Game::Draw()
 	for (GameComponent* gameComponent : Components)
 	{
 		Render(gameComponent, view_matrix, projection_matrix, vertexShader, pixelShader);
+	}
+
+	if (cascadeData.debug.x == 1) {
+		Context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+		for (int i = 0; i < 4; i++)
+		{
+			Render(&debug_cube[i], view_matrix, projection_matrix, debugVertexShader, debugPixelShader);
+		}
 	}
 
 	Context->OMSetRenderTargets(0, nullptr, nullptr);
@@ -288,7 +314,7 @@ void Game::Initialize()
 	constBufDesc.MiscFlags = 0;
 	constBufDesc.StructureByteStride = 0;
 
-	Device->CreateBuffer(&constBufDesc, nullptr, &lightTransformBuffer);
+	res = Device->CreateBuffer(&constBufDesc, nullptr, &lightTransformBuffer);
 
 	D3D11_BUFFER_DESC dynamicLightBufDesc = {};
 	dynamicLightBufDesc.ByteWidth = sizeof(LightsParams) * 10;
@@ -323,7 +349,7 @@ void Game::Initialize()
 	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
 	res = Device->CreateSamplerState(&samplerDesc, &DepthSamplerState);
 
-	directional_light_position_ = Vector3(100, 100, 100);
+	directional_light_position_ = Vector3(20, 100, 20);
 
 	auto dir = Vector3(-directional_light_position_.x, -directional_light_position_.y, -directional_light_position_.z);
 
@@ -391,6 +417,25 @@ void Game::Initialize()
 		pixel_shader_buffer->GetBufferPointer(), pixel_shader_buffer->GetBufferSize(),
 		nullptr, &depthPixelShader);
 
+	D3DCompileFromFile(L"./DebugShader.hlsl",
+		nullptr, nullptr,
+		"VSMain", "vs_5_0",
+		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_PACK_MATRIX_ROW_MAJOR, 0,
+		&vertex_shader_buffer, &error_message);
+
+	D3DCompileFromFile(L"./DebugShader.hlsl",
+		nullptr, nullptr,
+		"PSMain", "ps_5_0",
+		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_PACK_MATRIX_ROW_MAJOR, 0,
+		&pixel_shader_buffer, &error_message);
+
+	Device->CreateVertexShader(
+		vertex_shader_buffer->GetBufferPointer(), vertex_shader_buffer->GetBufferSize(),
+		nullptr, &debugVertexShader);
+
+	Device->CreatePixelShader(
+		pixel_shader_buffer->GetBufferPointer(), pixel_shader_buffer->GetBufferSize(),
+		nullptr, &debugPixelShader);
 }
 
 HRESULT Game::CompileShaderFromFile(LPCWSTR pFileName, const D3D_SHADER_MACRO* pDefines, LPCSTR pEntryPoint, LPCSTR pShaderModel, ID3DBlob** ppBytecodeBlob)
@@ -457,8 +502,9 @@ void Game::InitDepthMap(int index, float resolution)
 void Game::RenderDepthMap(int index)
 {
 	auto corners = GetFrustrumCornersWorldSpace(directional_light_projection[index]);
-	auto view = GetCascadeView(corners);
-	auto projection = GetCascadeProjection(view, corners);
+	auto view = GetCascadeView(corners, index);
+	auto projection = GetCascadeProjection(view, corners, index);
+	debug_cube[index].UpdateWorldMatrix();
 	cascadeData.ViewProj[index] = view * projection;
 
 	float black[] = { 0.0f, 0.0f, 0.0f };
@@ -501,7 +547,7 @@ std::vector<Vector4> Game::GetFrustrumCornersWorldSpace(const Matrix& proj)
 	return frustrumCorners;
 }
 
-Matrix Game::GetCascadeView(const std::vector<Vector4>& corners)
+Matrix Game::GetCascadeView(const std::vector<Vector4>& corners, int index)
 {
 	Vector3 center = Vector3::Zero;
 
@@ -515,11 +561,14 @@ Matrix Game::GetCascadeView(const std::vector<Vector4>& corners)
 		center + cascadeData.direction,
 		Vector3::Up
 	);
+	debug_cube[index].position = center;
+	auto a = lightView.ToEuler();
+	debug_cube[index].rotation = Quaternion::CreateFromYawPitchRoll(a.x,a.y,0);
 
 	return lightView;
 }
 
-Matrix Game::GetCascadeProjection(const Matrix& lightView, const std::vector<Vector4>& corners)
+Matrix Game::GetCascadeProjection(const Matrix& lightView, const std::vector<Vector4>& corners, int index)
 {
 	float minX = FLT_MAX;
 	float maxX = FLT_MIN;
@@ -543,6 +592,8 @@ Matrix Game::GetCascadeProjection(const Matrix& lightView, const std::vector<Vec
 	constexpr float zMult = 10.0f;
 	minZ = (minZ < 0) ? minZ * zMult : minZ / zMult;
 	maxZ = (maxZ < 0) ? maxZ / zMult : maxZ * zMult;
+
+	debug_cube[index].scale = Vector3(maxX - minX, maxY - minY, maxZ - minZ);
 
 	auto lightProjection = Matrix::CreateOrthographicOffCenter(minX, maxX, minY, maxY, minZ, maxZ);
 
