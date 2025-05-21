@@ -10,7 +10,7 @@ SphereComponent::SphereComponent(Game* game, LightsParams* light) : GameComponen
 	position.y = -10000000000;
 }
 
-void SphereComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader)
+void SphereComponent::Initialize(ID3D11Device* device, ID3D11DeviceContext* context)
 {
 	constexpr float thau = 6.28318530718f;
 	for (auto j = 0; j <= 20; j++)
@@ -50,13 +50,9 @@ void SphereComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelSh
 			indeces[6 * index + 4] = index + 1;
 			indeces[6 * index + 5] = index;
 		}
-
-
-	VertexShader = vertexShader;
-	PixelShader = pixelShader;
 }
 
-void SphereComponent::Draw() {
+void SphereComponent::Draw(ID3D11Device* device, ID3D11DeviceContext* context) {
 
 	D3D11_BUFFER_DESC vertexBufDesc = {};
 	vertexBufDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -72,7 +68,7 @@ void SphereComponent::Draw() {
 	vertexData.SysMemSlicePitch = 0;
 
 	ID3D11Buffer* vb;
-	game->Device->CreateBuffer(&vertexBufDesc, &vertexData, &vb);
+	device->CreateBuffer(&vertexBufDesc, &vertexData, &vb);
 
 	auto indexCount = std::size(indeces);
 	D3D11_BUFFER_DESC indexBufDesc = {};
@@ -89,14 +85,14 @@ void SphereComponent::Draw() {
 	indexData.SysMemSlicePitch = 0;
 
 	ID3D11Buffer* ib;
-	game->Device->CreateBuffer(&indexBufDesc, &indexData, &ib);
+	device->CreateBuffer(&indexBufDesc, &indexData, &ib);
 
 	UINT strides[] = { sizeof(Vertex) };
 	UINT offsets[] = { 0 };
-	game->Context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
-	game->Context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
-	game->Context->PSSetShaderResources(0, 1, &texture);
-	game->Context->DrawIndexed(indexCount, 0, 0);
+	context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
+	context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
+	context->PSSetShaderResources(0, 1, &texture);
+	context->DrawIndexed(indexCount, 0, 0);
 }
 
 void SphereComponent::Update(float deltaTime)

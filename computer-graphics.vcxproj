@@ -34,6 +34,7 @@
     <ClCompile Include="PaddleComponent.cpp" />
     <ClCompile Include="PlayerPaddleComponent.cpp" />
     <ClCompile Include="QuadComponent.cpp" />
+    <ClCompile Include="RenderingSystem.cpp" />
     <ClCompile Include="SimpleTexturedDirectx11\ModelLoader.cpp" />
     <ClCompile Include="SimpleTexturedDirectx11\TextureLoader.cpp" />
     <ClCompile Include="SphereComponent.cpp" />
@@ -49,6 +50,7 @@
   <ItemGroup>
     <ClInclude Include="BallComponent.h" />
     <ClInclude Include="BoxComponent.h" />
+    <ClInclude Include="CascadeData.h" />
     <ClInclude Include="CubeComponent.h" />
     <ClInclude Include="Delegates.h" />
     <ClInclude Include="DisplayWin32.h" />
@@ -64,6 +66,7 @@
     <ClInclude Include="PaddleComponent.h" />
     <ClInclude Include="PlayerPaddleComponent.h" />
     <ClInclude Include="QuadComponent.h" />
+    <ClInclude Include="RenderingSystem.h" />
     <ClInclude Include="SimpleTexturedDirectx11\Mesh.h" />
     <ClInclude Include="SimpleTexturedDirectx11\ModelLoader.h" />
     <ClInclude Include="SimpleTexturedDirectx11\SafeRelease.hpp" />

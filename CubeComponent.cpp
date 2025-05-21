@@ -9,18 +9,15 @@ CubeComponent::CubeComponent(Game* game) : GameComponent(game)
 	SetSize(0.5f, 0.5f, 0.5f);
 }
 
-void CubeComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader)
+void CubeComponent::Initialize(ID3D11Device* device, ID3D11DeviceContext* context)
 {
-	VertexShader = vertexShader;
-	PixelShader = pixelShader;
-
 	points[0].texCoord = DirectX::XMFLOAT2(1, 1);
 	points[1].texCoord = DirectX::XMFLOAT2(-1, -1);
 	points[2].texCoord = DirectX::XMFLOAT2(-1, 1);
 	points[3].texCoord = DirectX::XMFLOAT2(1, -1);
 }
 
-void CubeComponent::Draw() {
+void CubeComponent::Draw(ID3D11Device* device, ID3D11DeviceContext* context) {
 
 	D3D11_BUFFER_DESC vertexBufDesc = {};
 	vertexBufDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -36,7 +33,7 @@ void CubeComponent::Draw() {
 	vertexData.SysMemSlicePitch = 0;
 
 	ID3D11Buffer* vb;
-	game->Device->CreateBuffer(&vertexBufDesc, &vertexData, &vb);
+	device->CreateBuffer(&vertexBufDesc, &vertexData, &vb);
 
 	int indeces[] = { 
 		0,1,
@@ -67,14 +64,14 @@ void CubeComponent::Draw() {
 	indexData.SysMemSlicePitch = 0;
 
 	ID3D11Buffer* ib;
-	game->Device->CreateBuffer(&indexBufDesc, &indexData, &ib);
+	device->CreateBuffer(&indexBufDesc, &indexData, &ib);
 
 	UINT strides[] = { sizeof(Vertex) };
 	UINT offsets[] = { 0 };
 
-	game->Context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
-	game->Context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
-	game->Context->DrawIndexed(indexCount, 0, 0);
+	context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
+	context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
+	context->DrawIndexed(indexCount, 0, 0);
 }
 
 void CubeComponent::Translate(float x, float y, float z)
@@ -90,10 +87,10 @@ void CubeComponent::SetRotation(float rot)
 {
 
 	D3D11_MAPPED_SUBRESOURCE res = {};
-	//game->Context->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &res);
+	//context->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &res);
 
 	auto dataPtr = reinterpret_cast<float*>(res.pData);
-	//game->Context->Unmap(constantBuffer, 0);
+	//context->Unmap(constantBuffer, 0);
 }
 
 void CubeComponent::SetColor(float r, float g, float b)

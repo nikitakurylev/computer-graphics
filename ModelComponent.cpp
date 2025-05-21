@@ -11,15 +11,13 @@ ModelComponent::ModelComponent(Game* game, ModelLoader* model) : GameComponent(g
 {
 }
 
-void ModelComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader)
+void ModelComponent::Initialize(ID3D11Device* device, ID3D11DeviceContext* context)
 {
 
-	VertexShader = vertexShader;
-	PixelShader = pixelShader;
 }
 
-void ModelComponent::Draw() {
-	ourModel->Draw(game->Context);
+void ModelComponent::Draw(ID3D11Device* device, ID3D11DeviceContext* context) {
+	ourModel->Draw(context);
 }
 
 void ModelComponent::SetRotation(float rot)

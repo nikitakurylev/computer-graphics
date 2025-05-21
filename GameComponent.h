@@ -8,9 +8,9 @@ public:
 	GameComponent(Game* game);
 	void UpdateWorldMatrix();
 	void SetPosition(float x, float y, float z);
-	virtual void Draw();
+	virtual void Draw(ID3D11Device* device, ID3D11DeviceContext* context);
 	virtual void Update(float deltaTime);
-	virtual void Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader);
+	virtual void Initialize(ID3D11Device* device, ID3D11DeviceContext* context);
 	GameComponent* parent = nullptr;
 	float speed;
 	bool immovable;

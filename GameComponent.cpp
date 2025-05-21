@@ -24,7 +24,7 @@ void GameComponent::SetPosition(float x, float y, float z)
     UpdateWorldMatrix();
 }
 
-void GameComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader)
+void GameComponent::Initialize(ID3D11Device* device, ID3D11DeviceContext* context)
 {
 }
 
@@ -41,6 +41,6 @@ void GameComponent::DestroyResources()
 {
 }
 
-void GameComponent::Draw()
+void GameComponent::Draw(ID3D11Device* device, ID3D11DeviceContext* context)
 {
 }

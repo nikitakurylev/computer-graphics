@@ -10,7 +10,7 @@ QuadComponent::QuadComponent(Game* game) : GameComponent(game)
 	ShaderPath = L"./Shaders/MyVeryFirstShader.hlsl";
 }
 
-void QuadComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader)
+void QuadComponent::Initialize(ID3D11Device* device, ID3D11DeviceContext* context)
 {
 	vertexShaderByteCode = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;
@@ -32,10 +32,6 @@ void QuadComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShad
 			std::cout << compileErrors << std::endl;
 		}
 		// If there was  nothing in the error message then it simply could not find the shader file itself.
-		else
-		{
-			MessageBox(game->Display->hWnd, L"MyVeryFirstShader.hlsl", L"Missing Shader File", MB_OK);
-		}
 
 		return;
 	}
@@ -45,12 +41,12 @@ void QuadComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShad
 	ID3DBlob* errorPixelCode;
 	res = D3DCompileFromFile(ShaderPath, Shader_Macros /*macros*/, nullptr /*include*/, "PSMain", "ps_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &pixelShaderByteCode, &errorPixelCode);
 
-	game->Device->CreateVertexShader(
+	device->CreateVertexShader(
 		vertexShaderByteCode->GetBufferPointer(),
 		vertexShaderByteCode->GetBufferSize(),
 		nullptr, &vertexShader);
 
-	game->Device->CreatePixelShader(
+	device->CreatePixelShader(
 		pixelShaderByteCode->GetBufferPointer(),
 		pixelShaderByteCode->GetBufferSize(),
 		nullptr, &pixelShader);
@@ -82,7 +78,7 @@ void QuadComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShad
 			0}
 	};
 
-	game->Device->CreateInputLayout(
+	device->CreateInputLayout(
 		inputElements,
 		3,
 		vertexShaderByteCode->GetBufferPointer(),
@@ -93,7 +89,7 @@ void QuadComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShad
 	rastDesc.CullMode = D3D11_CULL_NONE;
 	rastDesc.FillMode = D3D11_FILL_SOLID;
 
-	res = game->Device->CreateRasterizerState(&rastDesc, &rastState);
+	res = device->CreateRasterizerState(&rastDesc, &rastState);
 
 	D3D11_BUFFER_DESC constBufDesc = {};
 	constBufDesc.ByteWidth = sizeof(OffsetColor);
@@ -103,7 +99,7 @@ void QuadComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShad
 	constBufDesc.MiscFlags = 0;
 	constBufDesc.StructureByteStride = 0;
 
-	game->Device->CreateBuffer(&constBufDesc, nullptr, &constantBuffer);
+	device->CreateBuffer(&constBufDesc, nullptr, &constantBuffer);
 
 	points[0].texCoord = DirectX::XMFLOAT2(1, 1);
 	points[1].texCoord = DirectX::XMFLOAT2(-1, -1);
@@ -113,7 +109,7 @@ void QuadComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShad
 	SetColors(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 }
 
-void QuadComponent::Draw() {
+void QuadComponent::Draw(ID3D11Device* device, ID3D11DeviceContext* context) {
 
 	D3D11_BUFFER_DESC vertexBufDesc = {};
 	vertexBufDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -129,7 +125,7 @@ void QuadComponent::Draw() {
 	vertexData.SysMemSlicePitch = 0;
 
 	ID3D11Buffer* vb;
-	game->Device->CreateBuffer(&vertexBufDesc, &vertexData, &vb);
+	device->CreateBuffer(&vertexBufDesc, &vertexData, &vb);
 
 	int indeces[] = { 0,1,2, 1,0,3 };
 	D3D11_BUFFER_DESC indexBufDesc = {};
@@ -146,22 +142,22 @@ void QuadComponent::Draw() {
 	indexData.SysMemSlicePitch = 0;
 
 	ID3D11Buffer* ib;
-	game->Device->CreateBuffer(&indexBufDesc, &indexData, &ib);
+	device->CreateBuffer(&indexBufDesc, &indexData, &ib);
 
 	UINT strides[] = { 40 };
 	UINT offsets[] = { 0 };
 
-	game->Context->RSSetState(rastState);
+	context->RSSetState(rastState);
 
-	game->Context->IASetInputLayout(layout);
-	game->Context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	game->Context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
-	game->Context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
-	game->Context->VSSetShader(vertexShader, nullptr, 0);
-	game->Context->PSSetShader(pixelShader, nullptr, 0);
-	game->Context->VSSetConstantBuffers(0, 1, &constantBuffer);
-	game->Context->PSSetConstantBuffers(0, 1, &constantBuffer);
-	game->Context->DrawIndexed(6, 0, 0);
+	context->IASetInputLayout(layout);
+	context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
+	context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
+	context->VSSetShader(vertexShader, nullptr, 0);
+	context->PSSetShader(pixelShader, nullptr, 0);
+	context->VSSetConstantBuffers(0, 1, &constantBuffer);
+	context->PSSetConstantBuffers(0, 1, &constantBuffer);
+	context->DrawIndexed(6, 0, 0);
 }
 
 void QuadComponent::Update(float deltaTime)
@@ -184,24 +180,24 @@ void QuadComponent::SetOffset(float x, float y, float z)
 {
 	offsetColor.offset = DirectX::XMFLOAT4(x, y, z, 0.0f);
 
-	D3D11_MAPPED_SUBRESOURCE res = {};
-	game->Context->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &res);
+	/*D3D11_MAPPED_SUBRESOURCE res = {};
+	context->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &res);
 
 	auto dataPtr = reinterpret_cast<float*>(res.pData);
 	memcpy(dataPtr, &offsetColor, sizeof(OffsetColor));
-	game->Context->Unmap(constantBuffer, 0);
+	context->Unmap(constantBuffer, 0);*/
 }
 
 void QuadComponent::SetRotation(float rot)
 {
 	offsetColor.rotation.w = rot;
-
+	/*
 	D3D11_MAPPED_SUBRESOURCE res = {};
-	game->Context->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &res);
+	context->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &res);
 
 	auto dataPtr = reinterpret_cast<float*>(res.pData);
 	memcpy(dataPtr, &offsetColor, sizeof(OffsetColor));
-	game->Context->Unmap(constantBuffer, 0);
+	context->Unmap(constantBuffer, 0);*/
 }
 
 void QuadComponent::SetColors(float r1, float g1, float b1, float r2, float g2, float b2, float r3, float g3, float b3, float r4, float g4, float b4)

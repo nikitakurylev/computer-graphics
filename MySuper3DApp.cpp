@@ -61,11 +61,11 @@ int main()
 
 	//game.Components.push_back(&sky);
 	game.Initialize();
-	chair->Load(game.Display->hWnd, game.Device, game.Context, "chair01.obj");
-	ball->Load(game.Display->hWnd, game.Device, game.Context, "soccer_ball.obj");
-	ground->Load(game.Display->hWnd, game.Device, game.Context, "ground.obj");
-	steve->Load(game.Display->hWnd, game.Device, game.Context, "steve.obj");
-	tree->Load(game.Display->hWnd, game.Device, game.Context, "tree.obj");
+	chair->Load(game.Display->hWnd, game.Render->Device, game.Render->Context, "chair01.obj");
+	ball->Load(game.Display->hWnd, game.Render->Device, game.Render->Context, "soccer_ball.obj");
+	ground->Load(game.Display->hWnd, game.Render->Device, game.Render->Context, "ground.obj");
+	steve->Load(game.Display->hWnd, game.Render->Device, game.Render->Context, "steve.obj");
+	tree->Load(game.Display->hWnd, game.Render->Device, game.Render->Context, "tree.obj");
 	for (int i = 0; i < 10; i++) {
 		bullets[i]->texture = ball->textures_loaded_[0].texture;
 	}

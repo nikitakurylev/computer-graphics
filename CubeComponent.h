@@ -7,8 +7,8 @@ class CubeComponent : public GameComponent
 {
 public:
 	CubeComponent(Game* game);
-	void Draw() override;
-	void Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader) override;
+	void Draw(ID3D11Device* device, ID3D11DeviceContext* context) override;
+	void Initialize(ID3D11Device* device, ID3D11DeviceContext* context) override;
 	void Translate(float x, float y, float z);
 	void SetColor(float r, float g, float b);
 	void SetSize(float x, float y, float z);

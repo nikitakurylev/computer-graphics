@@ -9,7 +9,7 @@ TriangleComponent::TriangleComponent(Game* game) : GameComponent(game)
 {
 }
 
-void TriangleComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader)
+void TriangleComponent::Initialize(ID3D11Device* device, ID3D11DeviceContext* context)
 {
 	vertexShaderByteCode = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;
@@ -44,12 +44,12 @@ void TriangleComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11Pixel
 	ID3DBlob* errorPixelCode;
 	res = D3DCompileFromFile(L"./Shaders/MyVeryFirstShader.hlsl", Shader_Macros /*macros*/, nullptr /*include*/, "PSMain", "ps_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &pixelShaderByteCode, &errorPixelCode);
 
-	game->Device->CreateVertexShader(
+	device->CreateVertexShader(
 		vertexShaderByteCode->GetBufferPointer(),
 		vertexShaderByteCode->GetBufferSize(),
 		nullptr, &vertexShader);
 
-	game->Device->CreatePixelShader(
+	device->CreatePixelShader(
 		pixelShaderByteCode->GetBufferPointer(),
 		pixelShaderByteCode->GetBufferSize(),
 		nullptr, &pixelShader);
@@ -73,7 +73,7 @@ void TriangleComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11Pixel
 			0}
 	};
 
-	game->Device->CreateInputLayout(
+	device->CreateInputLayout(
 		inputElements,
 		2,
 		vertexShaderByteCode->GetBufferPointer(),
@@ -84,7 +84,7 @@ void TriangleComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11Pixel
 	rastDesc.CullMode = D3D11_CULL_NONE;
 	rastDesc.FillMode = D3D11_FILL_SOLID;
 
-	res = game->Device->CreateRasterizerState(&rastDesc, &rastState);
+	res = device->CreateRasterizerState(&rastDesc, &rastState);
 
 	D3D11_BUFFER_DESC constBufDesc = {};
 	constBufDesc.ByteWidth = sizeof(OffsetColor);
@@ -94,10 +94,10 @@ void TriangleComponent::Initialize(ID3D11VertexShader* vertexShader, ID3D11Pixel
 	constBufDesc.MiscFlags = 0;
 	constBufDesc.StructureByteStride = 0;
 
-	game->Device->CreateBuffer(&constBufDesc, nullptr, &constantBuffer);
+	device->CreateBuffer(&constBufDesc, nullptr, &constantBuffer);
 }
 
-void TriangleComponent::Draw() {
+void TriangleComponent::Draw(ID3D11Device* device, ID3D11DeviceContext* context) {
 
 	D3D11_BUFFER_DESC vertexBufDesc = {};
 	vertexBufDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -113,7 +113,7 @@ void TriangleComponent::Draw() {
 	vertexData.SysMemSlicePitch = 0;
 
 	ID3D11Buffer* vb;
-	game->Device->CreateBuffer(&vertexBufDesc, &vertexData, &vb);
+	device->CreateBuffer(&vertexBufDesc, &vertexData, &vb);
 
 	int indeces[] = { 0,1,2 };
 	D3D11_BUFFER_DESC indexBufDesc = {};
@@ -130,21 +130,21 @@ void TriangleComponent::Draw() {
 	indexData.SysMemSlicePitch = 0;
 
 	ID3D11Buffer* ib;
-	game->Device->CreateBuffer(&indexBufDesc, &indexData, &ib);
+	device->CreateBuffer(&indexBufDesc, &indexData, &ib);
 
 	UINT strides[] = { 32 };
 	UINT offsets[] = { 0 };
 
-	game->Context->RSSetState(rastState);
+	context->RSSetState(rastState);
 
-	game->Context->IASetInputLayout(layout);
-	game->Context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	game->Context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
-	game->Context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
-	game->Context->VSSetShader(vertexShader, nullptr, 0);
-	game->Context->PSSetShader(pixelShader, nullptr, 0);
-	game->Context->VSSetConstantBuffers(0, 1, &constantBuffer);
-	game->Context->DrawIndexed(3, 0, 0);
+	context->IASetInputLayout(layout);
+	context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
+	context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
+	context->VSSetShader(vertexShader, nullptr, 0);
+	context->PSSetShader(pixelShader, nullptr, 0);
+	context->VSSetConstantBuffers(0, 1, &constantBuffer);
+	context->DrawIndexed(3, 0, 0);
 
 }
 
@@ -162,12 +162,12 @@ void TriangleComponent::Update(float deltaTime)
 	if (game->Input->IsKeyDown(Keys::Down))
 		offsetColor.color = DirectX::XMFLOAT4(1.0f, 0, 0, 0);
 
-	D3D11_MAPPED_SUBRESOURCE res = {};
+	/*D3D11_MAPPED_SUBRESOURCE res = {};
 	game->Context->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &res);
 
 	auto dataPtr = reinterpret_cast<float*>(res.pData);
 	memcpy(dataPtr, &offsetColor, sizeof(OffsetColor));
-	game->Context->Unmap(constantBuffer, 0);
+	game->Context->Unmap(constantBuffer, 0);*/
 }
 
 void TriangleComponent::SetColors(float r1, float g1, float b1, float r2, float g2, float b2, float r3, float g3, float b3)
