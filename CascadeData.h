@@ -4,7 +4,7 @@
 struct CascadeData
 {
 	Matrix ViewProj[4];
-	Vector4 Distances;
+	Vector4 view_pos;
 	Vector4 direction;
 	Vector4 color;
 	Vector4 k;

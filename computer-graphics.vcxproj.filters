@@ -75,6 +75,12 @@
     <ClCompile Include="RenderingSystem.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="DeferredRenderingSystem.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="GBuffer.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\MyVeryFirstShader.hlsl">
@@ -84,6 +90,11 @@
     <FxCompile Include="SimpleTexturedDirectx11\VertexShader.hlsl" />
     <FxCompile Include="DepthShader.hlsl" />
     <FxCompile Include="DebugShader.hlsl" />
+    <FxCompile Include="Shaders\DeferredPixelShader.hlsl" />
+    <FxCompile Include="Shaders\DeferredVertexShader.hlsl" />
+    <FxCompile Include="Shaders\DirPixelShader.hlsl" />
+    <FxCompile Include="Shaders\DirVertexShader.hlsl" />
+    <FxCompile Include="Shaders\PointPixelShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameComponent.h">
@@ -159,6 +170,12 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="CascadeData.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="DeferredRenderingSystem.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="GBuffer.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

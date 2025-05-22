@@ -1,0 +1,47 @@
+cbuffer LightBuffer : register(b0)
+{
+    row_major float4x4 ViewProj[4];
+    float4 view_pos;
+    float4 dyn_position;
+    float4 dyn_color;
+    float4 dyn_k;
+    float4 debug;
+}
+
+Texture2D NormalMap : register(t0);
+Texture2D Texture : register(t1);
+Texture2D Position	: register(t2);
+
+SamplerState Sampler	: register(s0);
+
+struct VertexToPixel
+{
+	float4 position		: SV_POSITION;
+};
+
+float4 main(VertexToPixel input) : SV_TARGET
+{
+	int3 sampleIndices = int3(input.position.xy, 0);
+
+    float4 textureColor = Texture.Load(sampleIndices);
+    if (textureColor.w == 0)
+        discard;
+    
+    float3 normal = NormalMap.Load(sampleIndices).xyz;
+
+    float3 world_pos = Position.Load(sampleIndices).xyz;
+    
+    const float3 view_direction = normalize(view_pos.xyz - world_pos.xyz);
+    
+    float3 dyn;
+    
+    const float3 dyn_light_direction = normalize(dyn_position.xyz - world_pos.xyz);
+    const float3 dyn_reflection_vector = normalize(reflect(dyn_light_direction, normal));
+    const float3 dyn_diffuse = max(0, dot(dyn_light_direction, normal)) * textureColor.xyz;
+    const float3 dyn_specular = pow(max(0, dot(-view_direction, dyn_reflection_vector)), dyn_k.y) * dyn_k.z;
+    dyn = dyn_color.xyz * (dyn_diffuse + dyn_specular) / pow(distance(dyn_position.xyz, world_pos.xyz), 2);
+    
+    float4 col = float4(dyn, 1);
+    col.rgb = pow(col.rgb, 1 / 2.2f);
+    return col;
+}

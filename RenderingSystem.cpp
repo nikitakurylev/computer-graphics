@@ -15,11 +15,8 @@ void RenderingSystem::Draw(DisplayWin32* display, std::vector<GameComponent*> Co
 	Context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	Context->RSSetState(rastState);
 
-	Context->PSSetSamplers(0, 1, &TexSamplerState);
-	RenderDepthMap(0, cascadeData, Components, view_matrix, cam_world);
-	RenderDepthMap(1, cascadeData, Components, view_matrix, cam_world);
-	RenderDepthMap(2, cascadeData, Components, view_matrix, cam_world);
-	RenderDepthMap(3, cascadeData, Components, view_matrix, cam_world);
+	SetColorSampler();
+	RenderDepthMaps(cascadeData, Components, view_matrix, cam_world);
 
 	float color[] = { 0.054f, 0.149f, 0.49f };
 	Context->ClearRenderTargetView(RenderView, color);
@@ -27,19 +24,13 @@ void RenderingSystem::Draw(DisplayWin32* display, std::vector<GameComponent*> Co
 	Context->OMSetRenderTargets(1, &RenderView, depth_stencil_view[3]);
 	Context->RSSetViewports(1, &viewport);
 
-	Context->UpdateSubresource(lightTransformBuffer, 0, nullptr, cascadeData, 0, 0);
 	Context->UpdateSubresource(dynamicLightBuffer, 0, nullptr, dynamicLights, 0, 0);
 
 	Context->VSSetConstantBuffers(1, 1, &lightTransformBuffer);
 
-	Context->PSSetConstantBuffers(0, 1, &lightTransformBuffer);
 	Context->PSSetConstantBuffers(1, 1, &dynamicLightBuffer);
-
-	Context->PSSetSamplers(1, 1, &DepthSamplerState);
-	Context->PSSetShaderResources(1, 1, &resource_view_depth_directional_light[0]);
-	Context->PSSetShaderResources(2, 1, &resource_view_depth_directional_light[1]);
-	Context->PSSetShaderResources(3, 1, &resource_view_depth_directional_light[2]);
-	Context->PSSetShaderResources(4, 1, &resource_view_depth_directional_light[3]);
+	UpdateCascadeBuffer(cascadeData);
+	SetShadowMaps(1);
 
 	for (GameComponent* gameComponent : Components)
 	{
@@ -57,6 +48,30 @@ void RenderingSystem::Draw(DisplayWin32* display, std::vector<GameComponent*> Co
 	Context->OMSetRenderTargets(0, nullptr, nullptr);
 
 	SwapChain->Present(1, /*DXGI_PRESENT_DO_NOT_WAIT*/ 0);
+}
+
+void RenderingSystem::RenderDepthMaps(CascadeData* cascadeData, std::vector<GameComponent*> Components, const Matrix& view_matrix, Vector3 cam_world) {
+	RenderDepthMap(0, cascadeData, Components, view_matrix, cam_world);
+	RenderDepthMap(1, cascadeData, Components, view_matrix, cam_world);
+	RenderDepthMap(2, cascadeData, Components, view_matrix, cam_world);
+	RenderDepthMap(3, cascadeData, Components, view_matrix, cam_world);
+}
+
+void RenderingSystem::SetShadowMaps(int offset) {
+	Context->PSSetSamplers(1, 1, &DepthSamplerState);
+	Context->PSSetShaderResources(offset, 1, &resource_view_depth_directional_light[0]);
+	Context->PSSetShaderResources(offset + 1, 1, &resource_view_depth_directional_light[1]);
+	Context->PSSetShaderResources(offset + 2, 1, &resource_view_depth_directional_light[2]);
+	Context->PSSetShaderResources(offset + 3, 1, &resource_view_depth_directional_light[3]);
+}
+
+void RenderingSystem::UpdateCascadeBuffer(CascadeData* cascadeData) {
+	Context->UpdateSubresource(lightTransformBuffer, 0, nullptr, cascadeData, 0, 0);
+	Context->PSSetConstantBuffers(0, 1, &lightTransformBuffer);
+}
+
+void RenderingSystem::SetColorSampler() {
+	Context->PSSetSamplers(0, 1, &TexSamplerState);
 }
 
 void RenderingSystem::Render(GameComponent* gameComponent, Matrix view, Matrix projection, ID3D11VertexShader* vertex, ID3D11PixelShader* pixel, Vector3 cam_world)
@@ -118,13 +133,13 @@ void RenderingSystem::Initialize(DisplayWin32* Display)
 
 	ID3DBlob* vertexShaderByteCode = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;
-	res = CompileShaderFromFile(L"./SimpleTexturedDirectx11/VertexShader.hlsl", 0, "main", "vs_4_0", &vertexShaderByteCode);
+	res = CompileShaderFromFile(vertexShaderName, 0, "main", "vs_4_0", &vertexShaderByteCode);
 
 
 	D3D_SHADER_MACRO Shader_Macros[] = { "TEST", "1", "TCOLOR", "float4(0.0f, 1.0f, 0.0f, 1.0f)", nullptr, nullptr };
 
 	ID3DBlob* pixelShaderByteCode;
-	res = CompileShaderFromFile(L"./SimpleTexturedDirectx11/PixelShader.hlsl", 0, "main", "ps_4_0", &pixelShaderByteCode);
+	res = CompileShaderFromFile(pixelShaderName, 0, "main", "ps_4_0", &pixelShaderByteCode);
 	Device->CreateVertexShader(
 		vertexShaderByteCode->GetBufferPointer(),
 		vertexShaderByteCode->GetBufferSize(),

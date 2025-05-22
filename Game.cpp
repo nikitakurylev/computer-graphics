@@ -6,6 +6,7 @@
 #include <d3dcompiler.h>
 #include "SimpleMath.h"
 #include "RenderingSystem.h"
+#include "DeferredRenderingSystem.h"
 
 using namespace DirectX::SimpleMath;
 
@@ -22,7 +23,7 @@ Game::Game(DisplayWin32* display, InputDevice* input) : Display(display), Input(
 	cubes[2].SetColor(0, 1, 1);
 	cubes[3].SetColor(1, 0, 0);
 
-	Render = new RenderingSystem(cubes);
+	Render = new DeferredRenderingSystem(cubes);
 }
 
 void Game::Run()
@@ -126,6 +127,8 @@ void Game::Run()
 			view_matrix = Matrix::CreateLookAt(cam_world, lookAtPoint, Vector3::Transform(Vector3::Up, rotMat));
 		}
 
+		cascadeData.view_pos = Vector4(cam_world);
+
 		Update(deltaTime);
 		Render->Draw(Display, Components, view_matrix, projection_matrix, dynamicLights, &cascadeData, cam_world);
 	}
@@ -169,8 +172,8 @@ void Game::Initialize()
 
 	for (int i = 0; i < 10; i++) {
 		dynamicLights[i].direction = Vector4(i, 3, 0, 0);
-		dynamicLights[i].color = Vector4(1, 1, 0, 0);
-		dynamicLights[i].k = Vector4(0, 1.0f, 0.1f, 0);
+		dynamicLights[i].color = Vector4(i % 2, 1, 1 - i % 2, 0);
+		dynamicLights[i].k = Vector4(0.1f, 100.0f, 1.2f, 0);
 	}
 
 	Render->Initialize(Display);

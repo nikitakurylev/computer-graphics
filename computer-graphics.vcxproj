@@ -22,11 +22,13 @@
     <ClCompile Include="BallComponent.cpp" />
     <ClCompile Include="BoxComponent.cpp" />
     <ClCompile Include="CubeComponent.cpp" />
+    <ClCompile Include="DeferredRenderingSystem.cpp" />
     <ClCompile Include="Delegates.cpp" />
     <ClCompile Include="DisplayWin32.cpp" />
     <ClCompile Include="EnemyPaddleComponent.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameComponent.cpp" />
+    <ClCompile Include="GBuffer.cpp" />
     <ClCompile Include="InputDevice.cpp" />
     <ClCompile Include="KatamariComponent.cpp" />
     <ClCompile Include="ModelComponent.cpp" />
@@ -43,7 +45,12 @@
   <ItemGroup>
     <FxCompile Include="DebugShader.hlsl" />
     <FxCompile Include="DepthShader.hlsl" />
+    <FxCompile Include="Shaders\DeferredPixelShader.hlsl" />
+    <FxCompile Include="Shaders\DeferredVertexShader.hlsl" />
+    <FxCompile Include="Shaders\DirPixelShader.hlsl" />
+    <FxCompile Include="Shaders\DirVertexShader.hlsl" />
     <FxCompile Include="Shaders\MyVeryFirstShader.hlsl" />
+    <FxCompile Include="Shaders\PointPixelShader.hlsl" />
     <FxCompile Include="SimpleTexturedDirectx11\PixelShader.hlsl" />
     <FxCompile Include="SimpleTexturedDirectx11\VertexShader.hlsl" />
   </ItemGroup>
@@ -52,11 +59,13 @@
     <ClInclude Include="BoxComponent.h" />
     <ClInclude Include="CascadeData.h" />
     <ClInclude Include="CubeComponent.h" />
+    <ClInclude Include="DeferredRenderingSystem.h" />
     <ClInclude Include="Delegates.h" />
     <ClInclude Include="DisplayWin32.h" />
     <ClInclude Include="EnemyPaddleComponent.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameComponent.h" />
+    <ClInclude Include="GBuffer.h" />
     <ClInclude Include="InputDevice.h" />
     <ClInclude Include="KatamariComponent.h" />
     <ClInclude Include="Keys.h" />
