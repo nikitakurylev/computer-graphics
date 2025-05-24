@@ -22,6 +22,22 @@ private:
 
 	ID3D11VertexShader* dirVertexShader;
 	ID3D11PixelShader* dirPixelShader;
+	ID3D11VertexShader* pointVertexShader;
 	ID3D11PixelShader* pointPixelShader;
+	ID3D11VertexShader* spotVertexShader;
+	ID3D11PixelShader* spotPixelShader;
+
+	struct Vertex
+	{
+		DirectX::XMFLOAT3 position;
+		DirectX::XMFLOAT3 normal;
+		DirectX::XMFLOAT2 texCoord;
+	};
+
+	ID3D11Buffer* sphereVertexBuffer;
+	ID3D11Buffer* sphereIndexBuffer;
+
+	ID3D11Buffer* coneVertexBuffer;
+	ID3D11Buffer* coneIndexBuffer;
 };
 

@@ -76,15 +76,19 @@ void RenderingSystem::SetColorSampler() {
 
 void RenderingSystem::Render(GameComponent* gameComponent, Matrix view, Matrix projection, ID3D11VertexShader* vertex, ID3D11PixelShader* pixel, Vector3 cam_world)
 {
-	ConstantBuffer buffer;
-	buffer.View = gameComponent->world_matrix * view * projection;
-	buffer.World = gameComponent->world_matrix;
-	buffer.ViewPosition = Vector4(cam_world);
-	Context->UpdateSubresource(constantBuffer, 0, nullptr, &buffer, 0, 0);
-	Context->VSSetConstantBuffers(0, 1, &constantBuffer);
+	UpdateTransformBuffer(gameComponent->world_matrix, view, projection, cam_world);
 	Context->VSSetShader(vertex, 0, 0);
 	Context->PSSetShader(pixel, 0, 0);
 	gameComponent->Draw(Device, Context);
+}
+
+void RenderingSystem::UpdateTransformBuffer(Matrix world_matrix, Matrix view, Matrix projection, Vector3 cam_world) {
+	ConstantBuffer buffer;
+	buffer.View = world_matrix * view * projection;
+	buffer.World = world_matrix;
+	buffer.ViewPosition = Vector4(cam_world);
+	Context->UpdateSubresource(constantBuffer, 0, nullptr, &buffer, 0, 0);
+	Context->VSSetConstantBuffers(0, 1, &constantBuffer);
 }
 
 void RenderingSystem::Initialize(DisplayWin32* Display)

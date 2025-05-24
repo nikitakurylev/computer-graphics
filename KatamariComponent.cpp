@@ -42,6 +42,14 @@ void KatamariComponent::Update(float deltaTime)
 			shootButtonDown = true;
 		}
 	}
+	else if (game->Input->IsKeyDown(Keys::R)) {
+		if (!shootButtonDown) {
+			_bullets[currentBullet % 10]->position = position;
+			_bullets[currentBullet % 10]->velocity = Vector3::Zero;
+			currentBullet = (currentBullet + 1) % 10;
+			shootButtonDown = true;
+		}
+	}
 	else
 	{
 		shootButtonDown = false;

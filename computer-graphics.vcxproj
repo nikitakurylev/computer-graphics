@@ -51,6 +51,9 @@
     <FxCompile Include="Shaders\DirVertexShader.hlsl" />
     <FxCompile Include="Shaders\MyVeryFirstShader.hlsl" />
     <FxCompile Include="Shaders\PointPixelShader.hlsl" />
+    <FxCompile Include="Shaders\PointVertexShader.hlsl" />
+    <FxCompile Include="Shaders\SpotPixelShader.hlsl" />
+    <FxCompile Include="Shaders\SpotVertexShader.hlsl" />
     <FxCompile Include="SimpleTexturedDirectx11\PixelShader.hlsl" />
     <FxCompile Include="SimpleTexturedDirectx11\VertexShader.hlsl" />
   </ItemGroup>

@@ -95,6 +95,9 @@
     <FxCompile Include="Shaders\DirPixelShader.hlsl" />
     <FxCompile Include="Shaders\DirVertexShader.hlsl" />
     <FxCompile Include="Shaders\PointPixelShader.hlsl" />
+    <FxCompile Include="Shaders\PointVertexShader.hlsl" />
+    <FxCompile Include="Shaders\SpotPixelShader.hlsl" />
+    <FxCompile Include="Shaders\SpotVertexShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameComponent.h">

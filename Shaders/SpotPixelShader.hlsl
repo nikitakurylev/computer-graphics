@@ -19,6 +19,7 @@ struct VertexToPixel
 {
     float4 pos : SV_POSITION;
     float4 depth_pos : TEXCOORD;
+    float4 down : TEXCOORD1;
 };
 
 float4 main(VertexToPixel input) : SV_TARGET
@@ -40,8 +41,11 @@ float4 main(VertexToPixel input) : SV_TARGET
     const float3 view_direction = normalize(view_pos.xyz - world_pos.xyz);
     
     float3 dyn;
-    float dist = distance(dyn_position.xyz, world_pos.xyz);
-    if (dist > dyn_k.x)
+    float3 direction = world_pos.xyz - dyn_position.xyz;
+    float dist = length(direction);
+    direction = normalize(direction);
+    float angle = dot(input.down.xyz, direction);
+    if (dist > dyn_k.x || angle < 0.70710678118f)
         discard;
     
     const float3 dyn_light_direction = normalize(dyn_position.xyz - world_pos.xyz);
@@ -52,7 +56,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     dyn = dyn_color.xyz * (dyn_diffuse + dyn_specular) / pow(dist, 2);
     
     float4 col = float4(dyn, 1);
-    col.rgb = (1 - pow(dist / dyn_k.x, 3)) * pow(col.rgb, 1 / 2.2f);
-    return col;
+    col.rgb = (1 - pow(dist / dyn_k.x, 3)) * (1 - (1 - angle) / 0.29289321881) * pow(col.rgb, 1 / 2.2f);
+    return col; //dist / dyn_k.x;//(1 - angle) / 0.29289321881;
 
 }

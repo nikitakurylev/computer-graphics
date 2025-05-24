@@ -66,17 +66,49 @@ void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameCompon
 	Context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
 
 	Context->Draw(3, 0);
+	Context->VSSetShader(pointVertexShader, 0, 0);
 	Context->PSSetShader(pointPixelShader, 0, 0);
 	CascadeData pointLightData;
 	pointLightData.view_pos = Vector4(cam_world);
 
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < 5; i++)
 	{
 		pointLightData.color = dynamicLights[i].color;
 		pointLightData.direction = dynamicLights[i].direction;
 		pointLightData.k = dynamicLights[i].k;
 		UpdateCascadeBuffer(&pointLightData);
-		Context->Draw(3, 0);
+		auto world_matrix = 
+			Matrix::CreateScale(dynamicLights[i].k.x * 2 * Vector3::One) *
+			Matrix::CreateTranslation(Vector3(dynamicLights[i].direction)) *
+			Matrix::Identity;
+		UpdateTransformBuffer(world_matrix, view_matrix, projection_matrix, cam_world);
+		UINT strides[] = { sizeof(Vertex) };
+		UINT offsets[] = { 0 };
+		Context->IASetVertexBuffers(0, 1, &sphereVertexBuffer, strides, offsets);
+		Context->IASetIndexBuffer(sphereIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+		Context->DrawIndexed(2400, 0, 0);
+	}
+
+	Context->VSSetShader(spotVertexShader, 0, 0);
+	Context->PSSetShader(spotPixelShader, 0, 0);
+
+	for (int i = 5; i < 10; i++)
+	{
+		pointLightData.color = dynamicLights[i].color;
+		pointLightData.direction = dynamicLights[i].direction;
+		pointLightData.k = dynamicLights[i].k;
+		UpdateCascadeBuffer(&pointLightData);
+		auto world_matrix =
+			Matrix::CreateScale(dynamicLights[i].k.x * 2 * Vector3::One) *
+			Matrix::CreateFromYawPitchRoll(0, i - 5, i - 5) *
+			Matrix::CreateTranslation(Vector3(dynamicLights[i].direction)) *
+			Matrix::Identity;
+		UpdateTransformBuffer(world_matrix, view_matrix, projection_matrix, cam_world);
+		UINT strides[] = { sizeof(Vertex) };
+		UINT offsets[] = { 0 };
+		Context->IASetVertexBuffers(0, 1, &coneVertexBuffer, strides, offsets);
+		Context->IASetIndexBuffer(coneIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+		Context->DrawIndexed(117, 0, 0);
 	}
 
 	Context->RSSetState(NULL);
@@ -94,11 +126,17 @@ void DeferredRenderingSystem::Initialize(DisplayWin32* Display)
 
 	ID3DBlob* vertexShaderByteCode = nullptr;
 	ID3DBlob* pixelShaderByteCode = nullptr;
+	ID3DBlob* pointVertexShaderByteCode = nullptr;
 	ID3DBlob* pointPixelShaderByteCode = nullptr;
+	ID3DBlob* spotVertexShaderByteCode = nullptr;
+	ID3DBlob* spotPixelShaderByteCode = nullptr;
 	
 	auto res = CompileShaderFromFile(L"./Shaders/DirVertexShader.hlsl", 0, "main", "vs_4_0", &vertexShaderByteCode);
 	res = CompileShaderFromFile(L"./Shaders/DirPixelShader.hlsl", 0, "main", "ps_4_0", &pixelShaderByteCode);
+	res = CompileShaderFromFile(L"./Shaders/PointVertexShader.hlsl", 0, "main", "vs_4_0", &pointVertexShaderByteCode);
 	res = CompileShaderFromFile(L"./Shaders/PointPixelShader.hlsl", 0, "main", "ps_4_0", &pointPixelShaderByteCode);
+	res = CompileShaderFromFile(L"./Shaders/SpotVertexShader.hlsl", 0, "main", "vs_4_0", &spotVertexShaderByteCode);
+	res = CompileShaderFromFile(L"./Shaders/SpotPixelShader.hlsl", 0, "main", "ps_4_0", &spotPixelShaderByteCode);
 	
 	Device->CreateVertexShader(
 		vertexShaderByteCode->GetBufferPointer(),
@@ -110,10 +148,25 @@ void DeferredRenderingSystem::Initialize(DisplayWin32* Display)
 		pixelShaderByteCode->GetBufferSize(),
 		nullptr, &dirPixelShader);
 
+	Device->CreateVertexShader(
+		pointVertexShaderByteCode->GetBufferPointer(),
+		pointVertexShaderByteCode->GetBufferSize(),
+		nullptr, &pointVertexShader);
+
 	Device->CreatePixelShader(
 		pointPixelShaderByteCode->GetBufferPointer(),
 		pointPixelShaderByteCode->GetBufferSize(),
 		nullptr, &pointPixelShader);
+
+	Device->CreateVertexShader(
+		spotVertexShaderByteCode->GetBufferPointer(),
+		spotVertexShaderByteCode->GetBufferSize(),
+		nullptr, &spotVertexShader);
+
+	Device->CreatePixelShader(
+		spotPixelShaderByteCode->GetBufferPointer(),
+		spotPixelShaderByteCode->GetBufferSize(),
+		nullptr, &spotPixelShader);
 
 	SetDefferedSetup(Display->ClientWidth, Display->ClientHeight);
 }
@@ -243,4 +296,136 @@ void DeferredRenderingSystem::SetDefferedSetup(int textureWidth, int textureHeig
 	depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 
 	Device->CreateDepthStencilState(&depthStencilDesc, &depthState);
+
+	Vertex points[420];
+	int indeces[2400];
+	constexpr float thau = 6.28318530718f;
+	for (auto j = 0; j <= 20; j++)
+	{
+		const auto height = static_cast<float>(j) / 20.0f;
+		const auto t = sqrtf(height * (1.0f - height));
+
+		for (auto i = 0; i < 20; i++)
+		{
+			float sin, cos;
+
+			DirectX::XMScalarSinCos(&sin, &cos, thau * static_cast<float>(i) / 20.0f);
+
+			const auto position = DirectX::XMFLOAT3(cos * t, height - 0.5f, sin * t);
+
+			points[j * 20 + i].position = DirectX::XMFLOAT3(position.x, position.y, position.z);
+			auto norm = Vector3(position.x, position.y, position.z);
+			norm.Normalize();
+			points[j * 20 + i].normal = -norm;
+			points[j * 20 + i].texCoord = Vector2(0, 0);
+		}
+	}
+
+	for (auto j = 0; j < 20; j++)
+		for (auto i = 0; i < 20; i++)
+		{
+			const int index = j * 20 + i;
+
+			indeces[6 * index] = index;
+			indeces[6 * index + 1] = index + 20 - 1;
+			indeces[6 * index + 2] = index + 20;
+			indeces[6 * index + 3] = index + 20;
+			indeces[6 * index + 4] = index + 1;
+			indeces[6 * index + 5] = index;
+		}
+
+	D3D11_BUFFER_DESC vertexBufDesc = {};
+	vertexBufDesc.Usage = D3D11_USAGE_DEFAULT;
+	vertexBufDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexBufDesc.CPUAccessFlags = 0;
+	vertexBufDesc.MiscFlags = 0;
+	vertexBufDesc.StructureByteStride = 0;
+	vertexBufDesc.ByteWidth = sizeof(Vertex) * std::size(points);
+
+	D3D11_SUBRESOURCE_DATA vertexData = {};
+	vertexData.pSysMem = points;
+	vertexData.SysMemPitch = 0;
+	vertexData.SysMemSlicePitch = 0;
+
+	Device->CreateBuffer(&vertexBufDesc, &vertexData, &sphereVertexBuffer);
+
+	auto indexCount = std::size(indeces);
+	D3D11_BUFFER_DESC indexBufDesc = {};
+	indexBufDesc.Usage = D3D11_USAGE_DEFAULT;
+	indexBufDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	indexBufDesc.CPUAccessFlags = 0;
+	indexBufDesc.MiscFlags = 0;
+	indexBufDesc.StructureByteStride = 0;
+	indexBufDesc.ByteWidth = sizeof(int) * indexCount;
+
+	D3D11_SUBRESOURCE_DATA indexData = {};
+	indexData.pSysMem = indeces;
+	indexData.SysMemPitch = 0;
+	indexData.SysMemSlicePitch = 0;
+
+	Device->CreateBuffer(&indexBufDesc, &indexData, &sphereIndexBuffer);
+
+	Vertex conePoints[21];
+	int coneIndeces[117];
+	conePoints[0].position = Vector3::Zero;
+
+	for (auto i = 1; i < 21; i++)
+	{
+		float sin, cos;
+
+		DirectX::XMScalarSinCos(&sin, &cos, thau * static_cast<float>(i) / 20.0f);
+
+		const auto position = DirectX::XMFLOAT3(cos, -1, sin);
+
+		conePoints[i].position = DirectX::XMFLOAT3(position.x, position.y, position.z);
+		auto norm = Vector3(position.x, position.y, position.z);
+		norm.Normalize();
+		conePoints[i].normal = -norm;
+		conePoints[i].texCoord = Vector2(0, 0);
+	}
+
+	for (auto i = 0; i < 20; i++)
+	{
+		coneIndeces[3 * i + 2] = 0;
+		coneIndeces[3 * i + 1] = i;
+		coneIndeces[3 * i] = i + 1;
+	}
+
+	for (auto i = 0; i < 18; i++)
+	{
+		coneIndeces[63 + 3 * i] = 1;
+		coneIndeces[63 + 3 * i + 1] = i + 2;
+		coneIndeces[63 + 3 * i + 2] = i + 3;
+	}
+
+	coneIndeces[62] = 0;
+	coneIndeces[61] = 20;
+	coneIndeces[60] = 1;
+
+	vertexBufDesc.Usage = D3D11_USAGE_DEFAULT;
+	vertexBufDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexBufDesc.CPUAccessFlags = 0;
+	vertexBufDesc.MiscFlags = 0;
+	vertexBufDesc.StructureByteStride = 0;
+	vertexBufDesc.ByteWidth = sizeof(Vertex) * std::size(conePoints);
+
+	vertexData.pSysMem = conePoints;
+	vertexData.SysMemPitch = 0;
+	vertexData.SysMemSlicePitch = 0;
+
+	Device->CreateBuffer(&vertexBufDesc, &vertexData, &coneVertexBuffer);
+
+	indexCount = std::size(coneIndeces);
+	indexBufDesc.Usage = D3D11_USAGE_DEFAULT;
+	indexBufDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	indexBufDesc.CPUAccessFlags = 0;
+	indexBufDesc.MiscFlags = 0;
+	indexBufDesc.StructureByteStride = 0;
+	indexBufDesc.ByteWidth = sizeof(int) * indexCount;
+
+	indexData.pSysMem = coneIndeces;
+	indexData.SysMemPitch = 0;
+	indexData.SysMemSlicePitch = 0;
+
+	Device->CreateBuffer(&indexBufDesc, &indexData, &coneIndexBuffer);
 }

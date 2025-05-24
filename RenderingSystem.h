@@ -27,6 +27,7 @@ protected:
 	LPCWSTR vertexShaderName = L"./SimpleTexturedDirectx11/VertexShader.hlsl";
 	LPCWSTR pixelShaderName = L"./SimpleTexturedDirectx11/PixelShader.hlsl";
 	void Render(GameComponent* gameComponent, Matrix view, Matrix projection, ID3D11VertexShader* vertex, ID3D11PixelShader* pixel, Vector3 cam_world);
+	void UpdateTransformBuffer(Matrix world_matrix, Matrix view, Matrix projection, Vector3 cam_world);
 	ID3D11VertexShader* vertexShader;
 	ID3D11PixelShader* pixelShader;
 	IDXGISwapChain* SwapChain;
