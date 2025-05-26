@@ -12,5 +12,6 @@ private:
 	Vector3 velocity;
 	int currentBullet;
 	bool shootButtonDown;
+	bool isGrounded;
 };
 

@@ -19,8 +19,6 @@ void KatamariComponent::Update(float deltaTime)
 	forward.y = 0;
 	forward.Normalize();
 
-	auto deltaSpeed = deltaTime * speed;
-	
 	if (game->Input->IsKeyDown(Keys::W)) {
 		acceleration -= right;
 	}
@@ -55,23 +53,27 @@ void KatamariComponent::Update(float deltaTime)
 		shootButtonDown = false;
 	}
 
-	acceleration = Vector3(acceleration.x, 0, acceleration.z) * deltaSpeed + Vector3::Down * deltaTime;
+	acceleration = Vector3(acceleration.x, 0, acceleration.z) * speed;
+
+	if (isGrounded && game->Input->IsKeyDown(Keys::Space)) {
+		isGrounded = false;
+		acceleration.y += 20;
+	}
 
 	velocity.x *= 0.7f;
 	velocity.z *= 0.7f;
+	velocity.y -= 30 * deltaTime;
 
 	velocity += acceleration;
 
-	rotation *= Quaternion::CreateFromAxisAngle(Vector3::Right, velocity.z)
-		* Quaternion::CreateFromAxisAngle(Vector3::Forward, velocity.x);
+	rotation *= Quaternion::CreateFromAxisAngle(Vector3::Right, velocity.z * deltaTime)
+		* Quaternion::CreateFromAxisAngle(Vector3::Forward, velocity.x * deltaTime);
 
-	position += velocity;
-	if (position.y <= collider.Radius) {
+	position += velocity * deltaTime;
+	if (position.y < collider.Radius) {
 		position.y = collider.Radius;
 		velocity.y = 0;
-		if (game->Input->IsKeyDown(Keys::Space)) {
-			velocity += Vector3::Up * 0.5f;
-		}
+		isGrounded = true;
 	}
 	game->cam_pos = position;
 

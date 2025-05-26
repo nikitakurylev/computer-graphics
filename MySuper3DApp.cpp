@@ -48,7 +48,7 @@ int main()
 	int count = 20;
 	int width = sqrt(count * 20);
 	for (int i = 0; i < count; i++) {
-		auto sun1 = new ModelComponent(&game, models[rand() % 3]);
+		auto sun1 = new ModelComponent(&game, models[rand() % 2]);
 		sun1->position = Vector3(rand() % width - (width / 2), 0, rand() % width - (width / 2));
 		game.Components.push_back(sun1);
 	}
