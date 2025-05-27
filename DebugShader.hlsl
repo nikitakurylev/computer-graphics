@@ -3,9 +3,12 @@ SamplerState SampleType : register(s0);
 
 cbuffer ConstantBuffer : register(b0)
 {
-    row_major matrix World;
-    row_major matrix View;
+    matrix World;
+    matrix ViewProjection;
     float4 ViewPosition;
+    matrix InverseProjectionView;
+    matrix ViewInv;
+    matrix ProjInv;
 }
 
 struct PixelShader_Input
@@ -18,7 +21,7 @@ struct PixelShader_Input
 PixelShader_Input VSMain(float4 pos : POSITION, float4 norm : NORMAL, float2 texcoord : TEXCOORD)
 {
     PixelShader_Input output;
-    output.pos = mul(float4(pos.xyz, 1), View);
+    output.pos = mul(float4(pos.xyz, 1), ViewProjection);
     output.color = norm;
     //output.world_pos = mul(float4(pos.xyz, 1), World);
     

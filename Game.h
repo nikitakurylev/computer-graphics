@@ -16,8 +16,13 @@ class CubeComponent;
 struct ConstantBuffer
 {
 	Matrix World;
-	Matrix View;
+	Matrix ViewProjection;
 	Vector4 ViewPosition;
+	Matrix InverseProjectionView;
+	Matrix ViewInv;
+	Matrix ProjInv;
+	Matrix View;
+	Matrix Projection;
 };
 
 class Game

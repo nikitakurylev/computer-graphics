@@ -5,6 +5,7 @@
 #include "Game.h"
 #include "ModelComponent.h"
 #include "KatamariComponent.h"
+#include "ParticleSystemComponent.h"
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -45,7 +46,7 @@ int main()
 	
 	game.Components.push_back(&sun);
 	game.Components.push_back(&floor);
-	int count = 20;
+	int count = 100;
 	int width = sqrt(count * 20);
 	for (int i = 0; i < count; i++) {
 		auto sun1 = new ModelComponent(&game, models[rand() % 2]);
@@ -58,6 +59,12 @@ int main()
 	huge->position = Vector3(-50, 0, 100);
 	game.Components.push_back(huge);
 
+	auto particles = new ParticleSystemComponent(&game);
+	particles->position = Vector3(-40, 0, 40);
+	game.Components.push_back(particles);
+	auto particles1 = new ParticleSystemComponent(&game);
+	particles1->position = Vector3(-30, 0, 40);
+	game.Components.push_back(particles1);
 
 	//game.Components.push_back(&sky);
 	game.Initialize();

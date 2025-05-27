@@ -49,10 +49,11 @@ void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameCompon
 	Context->OMSetBlendState(blendState, blend, 0xFFFFFFFF);
 	Context->OMSetDepthStencilState(depthState, 0);
 
-	Context->PSSetShaderResources(0, 1, &shaderResourceViewArray[0]);
-	Context->PSSetShaderResources(1, 1, &shaderResourceViewArray[1]);
-	Context->PSSetShaderResources(2, 1, &shaderResourceViewArray[2]);
-	Context->PSSetShaderResources(3, 1, &shaderResourceViewArray[3]);
+	for (int i = 0; i < BUFFER_COUNT; i++) {
+		Context->PSSetShaderResources(i, 1, &shaderResourceViewArray[i]);
+		Context->CSSetShaderResources(i, 1, &shaderResourceViewArray[i]);
+	}
+
 	SetShadowMaps(4);
 
 	UpdateCascadeBuffer(cascadeData);

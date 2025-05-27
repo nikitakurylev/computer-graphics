@@ -1,6 +1,7 @@
 #include "RenderingSystem.h"
 #include "GameComponent.h"
 #include "CubeComponent.h"
+#include "ParticleSystemComponent.h"
 #include "DisplayWin32.h"
 #include <d3d11.h>
 #include <d3dcompiler.h>
@@ -72,6 +73,7 @@ void RenderingSystem::UpdateCascadeBuffer(CascadeData* cascadeData) {
 
 void RenderingSystem::SetColorSampler() {
 	Context->PSSetSamplers(0, 1, &TexSamplerState);
+	Context->CSSetSamplers(0, 1, &TexSamplerState);
 }
 
 void RenderingSystem::Render(GameComponent* gameComponent, Matrix view, Matrix projection, ID3D11VertexShader* vertex, ID3D11PixelShader* pixel, Vector3 cam_world)
@@ -84,11 +86,18 @@ void RenderingSystem::Render(GameComponent* gameComponent, Matrix view, Matrix p
 
 void RenderingSystem::UpdateTransformBuffer(Matrix world_matrix, Matrix view, Matrix projection, Vector3 cam_world) {
 	ConstantBuffer buffer;
-	buffer.View = world_matrix * view * projection;
+	buffer.ViewProjection = world_matrix * view * projection;
 	buffer.World = world_matrix;
 	buffer.ViewPosition = Vector4(cam_world);
+	buffer.InverseProjectionView = buffer.ViewProjection.Invert();
+	buffer.ViewInv = view.Invert();
+	buffer.ProjInv = projection.Invert();
+	buffer.View = projection;
+	buffer.Projection = projection;
 	Context->UpdateSubresource(constantBuffer, 0, nullptr, &buffer, 0, 0);
 	Context->VSSetConstantBuffers(0, 1, &constantBuffer);
+	Context->GSSetConstantBuffers(0, 1, &constantBuffer);
+	Context->CSSetConstantBuffers(0, 1, &constantBuffer);
 }
 
 void RenderingSystem::Initialize(DisplayWin32* Display)
@@ -374,6 +383,9 @@ void RenderingSystem::RenderDepthMap(int index, CascadeData* cascadeData, std::v
 
 	for (GameComponent* gameComponent : Components)
 	{
+		auto* particles = dynamic_cast<ParticleSystemComponent*>(gameComponent);
+		if (particles)
+			continue;
 		Render(gameComponent, view, projection, depthVertexShader, depthPixelShader, cam_world);
 	}
 

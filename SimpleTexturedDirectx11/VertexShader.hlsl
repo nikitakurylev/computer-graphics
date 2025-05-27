@@ -1,8 +1,11 @@
 cbuffer ConstantBuffer : register(b0)
 {
     matrix World;
-    matrix View;
+    matrix ViewProjection;
     float4 ViewPosition;
+    matrix InverseProjectionView;
+    matrix ViewInv;
+    matrix ProjInv;
 }
 
 cbuffer LightBuffer : register(b1)
@@ -32,7 +35,7 @@ VOut main(float4 pos : POSITION, float4 norm : NORMAL, float2 texcoord : TEXCOOR
 
     output.norm = mul(float4(norm.xyz, 0), World);
     output.world_pos = mul(float4(pos.xyz, 1), World);
-    output.pos = mul(float4(pos.xyz, 1), View);
+    output.pos = mul(float4(pos.xyz, 1), ViewProjection);
     output.depth_pos = output.pos.z;
     output.texcoord = texcoord;
     output.view_pos = ViewPosition;

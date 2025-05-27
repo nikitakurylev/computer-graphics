@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -28,12 +28,12 @@
     <ClCompile Include="EnemyPaddleComponent.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameComponent.cpp" />
-    <ClCompile Include="GBuffer.cpp" />
     <ClCompile Include="InputDevice.cpp" />
     <ClCompile Include="KatamariComponent.cpp" />
     <ClCompile Include="ModelComponent.cpp" />
     <ClCompile Include="MySuper3DApp.cpp" />
     <ClCompile Include="PaddleComponent.cpp" />
+    <ClCompile Include="ParticleSystemComponent.cpp" />
     <ClCompile Include="PlayerPaddleComponent.cpp" />
     <ClCompile Include="QuadComponent.cpp" />
     <ClCompile Include="RenderingSystem.cpp" />
@@ -50,6 +50,15 @@
     <FxCompile Include="Shaders\DirPixelShader.hlsl" />
     <FxCompile Include="Shaders\DirVertexShader.hlsl" />
     <FxCompile Include="Shaders\MyVeryFirstShader.hlsl" />
+    <FxCompile Include="Shaders\particles\Emit.hlsl" />
+    <FxCompile Include="Shaders\particles\InitSort.hlsl" />
+    <FxCompile Include="Shaders\particles\Render.hlsl" />
+    <FxCompile Include="Shaders\particles\Reset.hlsl" />
+    <FxCompile Include="Shaders\particles\Simulate.hlsl" />
+    <FxCompile Include="Shaders\particles\Sort.hlsl" />
+    <FxCompile Include="Shaders\particles\Sort512.hlsl" />
+    <FxCompile Include="Shaders\particles\SortInner.hlsl" />
+    <FxCompile Include="Shaders\particles\SortStep2.hlsl" />
     <FxCompile Include="Shaders\PointPixelShader.hlsl" />
     <FxCompile Include="Shaders\PointVertexShader.hlsl" />
     <FxCompile Include="Shaders\SpotPixelShader.hlsl" />
@@ -68,7 +77,6 @@
     <ClInclude Include="EnemyPaddleComponent.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameComponent.h" />
-    <ClInclude Include="GBuffer.h" />
     <ClInclude Include="InputDevice.h" />
     <ClInclude Include="KatamariComponent.h" />
     <ClInclude Include="Keys.h" />
@@ -76,6 +84,7 @@
     <ClInclude Include="ModelComponent.h" />
     <ClInclude Include="OffsetColor.h" />
     <ClInclude Include="PaddleComponent.h" />
+    <ClInclude Include="ParticleSystemComponent.h" />
     <ClInclude Include="PlayerPaddleComponent.h" />
     <ClInclude Include="QuadComponent.h" />
     <ClInclude Include="RenderingSystem.h" />
@@ -264,15 +273,15 @@
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="packages\directxtk12_desktop_2019.2024.10.29.1\build\native\directxtk12_desktop_2019.targets" Condition="Exists('packages\directxtk12_desktop_2019.2024.10.29.1\build\native\directxtk12_desktop_2019.targets')" />
     <Import Project="$(VCTargetsPath)\BuildCustomizations\MeshContentTask.targets" />
     <Import Project="packages\AssimpCpp.5.0.1.6\build\native\AssimpCpp.targets" Condition="Exists('packages\AssimpCpp.5.0.1.6\build\native\AssimpCpp.targets')" />
+    <Import Project="packages\directxtk_desktop_win10.2025.3.21.2\build\native\directxtk_desktop_win10.targets" Condition="Exists('packages\directxtk_desktop_win10.2025.3.21.2\build\native\directxtk_desktop_win10.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('packages\directxtk12_desktop_2019.2024.10.29.1\build\native\directxtk12_desktop_2019.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\directxtk12_desktop_2019.2024.10.29.1\build\native\directxtk12_desktop_2019.targets'))" />
     <Error Condition="!Exists('packages\AssimpCpp.5.0.1.6\build\native\AssimpCpp.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\AssimpCpp.5.0.1.6\build\native\AssimpCpp.targets'))" />
+    <Error Condition="!Exists('packages\directxtk_desktop_win10.2025.3.21.2\build\native\directxtk_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\directxtk_desktop_win10.2025.3.21.2\build\native\directxtk_desktop_win10.targets'))" />
   </Target>
 </Project>
