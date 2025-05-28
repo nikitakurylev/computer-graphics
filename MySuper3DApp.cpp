@@ -46,7 +46,7 @@ int main()
 	
 	game.Components.push_back(&sun);
 	game.Components.push_back(&floor);
-	int count = 100;
+	int count = 10;
 	int width = sqrt(count * 20);
 	for (int i = 0; i < count; i++) {
 		auto sun1 = new ModelComponent(&game, models[rand() % 2]);
@@ -54,9 +54,9 @@ int main()
 		game.Components.push_back(sun1);
 	}
 
-	auto huge = new ModelComponent(&game, tree);
+	auto huge = new ModelComponent(&game, chair);
 	huge->scale *= 50;
-	huge->position = Vector3(-50, 0, 100);
+	huge->position = Vector3(-50, 0, 51);
 	game.Components.push_back(huge);
 
 	auto particles = new ParticleSystemComponent(&game);

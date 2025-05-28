@@ -229,7 +229,7 @@ void RenderingSystem::Initialize(DisplayWin32* Display)
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
 	res = Device->CreateSamplerState(&samplerDesc, &TexSamplerState);
-	samplerDesc.Filter = D3D11_FILTER_MAXIMUM_MIN_MAG_MIP_LINEAR;
+	//samplerDesc.Filter = D3D11_FILTER_MAXIMUM_MIN_MAG_MIP_LINEAR;
 	samplerDesc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
 	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
@@ -253,9 +253,9 @@ void RenderingSystem::Initialize(DisplayWin32* Display)
 	viewport.MinDepth = 0;
 	viewport.MaxDepth = 1.0f;
 
-	InitDepthMap(0, 3.0f, Display);
-	InitDepthMap(1, 2.5f, Display);
-	InitDepthMap(2, 2.0f, Display);
+	InitDepthMap(0, 0.5f, Display);
+	InitDepthMap(1, 0.5f, Display);
+	InitDepthMap(2, 0.25f, Display);
 	InitDepthMap(3, 1.0f, Display);
 
 	ID3DBlob* error_message;

@@ -30,9 +30,9 @@ PixelShader_Input VSMain(float4 pos : POSITION, float4 norm : NORMAL, float2 tex
 
 float4 PSMain(PixelShader_Input input) : SV_TARGET
 {
-    float4 textureColor = diffTexture.Sample(SampleType, input.texcoord);
-    if (textureColor.a < 0.5f)
-        discard;
+    //float4 textureColor = diffTexture.Sample(SampleType, input.texcoord);
+    //if (textureColor.a < 0.5f)
+    //    discard;
     // float depthValue = 0.0001 / (1.0001 - input.depth_pos.z / input.depth_pos.w);
     float depthValue = input.depth_pos.z / input.depth_pos.w;
     return float4(depthValue, depthValue, depthValue, 1.0f);

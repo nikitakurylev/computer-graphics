@@ -25,7 +25,7 @@ void ParticleSystemComponent::Initialize(ID3D11Device* device, ID3D11DeviceConte
 {
     emitterProps_ = {
         {0.0, 0.0, 0.0},
-        1024,
+        256,
         5.0f
     };
 

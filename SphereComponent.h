@@ -13,6 +13,8 @@ public:
 	void Initialize(ID3D11Device* device, ID3D11DeviceContext* context) override;
 	ID3D11ShaderResourceView* texture;
 private:
+	ID3D11Buffer* vb;
+	ID3D11Buffer* ib;
 	struct Vertex
 	{
 		DirectX::XMFLOAT3 position;
