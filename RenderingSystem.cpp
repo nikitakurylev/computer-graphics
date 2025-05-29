@@ -301,6 +301,9 @@ void RenderingSystem::Initialize(DisplayWin32* Display)
 	Device->CreatePixelShader(
 		pixel_shader_buffer->GetBufferPointer(), pixel_shader_buffer->GetBufferSize(),
 		nullptr, &debugPixelShader);
+
+	for (int i = 0; i < 4; i++)
+		debug_cube[i].Initialize(Device, Context);
 }
 
 void RenderingSystem::InitDepthMap(int index, float resolution, DisplayWin32* Display)

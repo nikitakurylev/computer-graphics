@@ -15,9 +15,7 @@ void CubeComponent::Initialize(ID3D11Device* device, ID3D11DeviceContext* contex
 	points[1].texCoord = DirectX::XMFLOAT2(-1, -1);
 	points[2].texCoord = DirectX::XMFLOAT2(-1, 1);
 	points[3].texCoord = DirectX::XMFLOAT2(1, -1);
-}
 
-void CubeComponent::Draw(ID3D11Device* device, ID3D11DeviceContext* context) {
 
 	D3D11_BUFFER_DESC vertexBufDesc = {};
 	vertexBufDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -32,10 +30,9 @@ void CubeComponent::Draw(ID3D11Device* device, ID3D11DeviceContext* context) {
 	vertexData.SysMemPitch = 0;
 	vertexData.SysMemSlicePitch = 0;
 
-	ID3D11Buffer* vb;
 	device->CreateBuffer(&vertexBufDesc, &vertexData, &vb);
 
-	int indeces[] = { 
+	int indeces[] = {
 		0,1,
 		1,2,
 		2,3,
@@ -63,15 +60,18 @@ void CubeComponent::Draw(ID3D11Device* device, ID3D11DeviceContext* context) {
 	indexData.SysMemPitch = 0;
 	indexData.SysMemSlicePitch = 0;
 
-	ID3D11Buffer* ib;
 	device->CreateBuffer(&indexBufDesc, &indexData, &ib);
+}
+
+void CubeComponent::Draw(ID3D11Device* device, ID3D11DeviceContext* context) {
+
 
 	UINT strides[] = { sizeof(Vertex) };
 	UINT offsets[] = { 0 };
 
 	context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
 	context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
-	context->DrawIndexed(indexCount, 0, 0);
+	context->DrawIndexed(24, 0, 0);
 }
 
 void CubeComponent::Translate(float x, float y, float z)

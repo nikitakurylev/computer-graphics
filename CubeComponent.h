@@ -24,5 +24,7 @@ private:
 	Vertex points[8];
 	ID3D11VertexShader* VertexShader;
 	ID3D11PixelShader* PixelShader;
+	ID3D11Buffer* vb;
+	ID3D11Buffer* ib;
 };
 
