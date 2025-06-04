@@ -107,6 +107,7 @@
     <FxCompile Include="Shaders\particles\Sort512.hlsl" />
     <FxCompile Include="Shaders\particles\SortInner.hlsl" />
     <FxCompile Include="Shaders\particles\SortStep2.hlsl" />
+    <FxCompile Include="Shaders\GammaCorrection.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameComponent.h">

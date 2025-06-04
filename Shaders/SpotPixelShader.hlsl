@@ -22,7 +22,12 @@ struct VertexToPixel
     float4 down : TEXCOORD1;
 };
 
-float4 main(VertexToPixel input) : SV_TARGET
+struct PixelShaderOutput
+{
+    float4 Color : SV_Target0;
+};
+
+PixelShaderOutput main(VertexToPixel input) : SV_TARGET
 {
     int3 sampleIndices = int3(input.pos.xy, 0);
 
@@ -55,8 +60,10 @@ float4 main(VertexToPixel input) : SV_TARGET
 
     dyn = dyn_color.xyz * (dyn_diffuse + dyn_specular) / pow(dist, 2);
     
-    float4 col = float4(dyn, 1);
-    col.rgb = (1 - pow(dist / dyn_k.x, 3)) * (1 - (1 - angle) / 0.29289321881) * pow(col.rgb, 1 / 2.2f);
-    return col; //dist / dyn_k.x;//(1 - angle) / 0.29289321881;
+    PixelShaderOutput output;
+
+    output.Color = float4(dyn, 1);
+    output.Color.rgb *= (1 - pow(dist / dyn_k.x, 3)) * (1 - (1 - angle) / 0.29289321881);
+    return output; //dist / dyn_k.x;//(1 - angle) / 0.29289321881;
 
 }

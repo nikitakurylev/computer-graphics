@@ -49,6 +49,7 @@
     <FxCompile Include="Shaders\DeferredVertexShader.hlsl" />
     <FxCompile Include="Shaders\DirPixelShader.hlsl" />
     <FxCompile Include="Shaders\DirVertexShader.hlsl" />
+    <FxCompile Include="Shaders\GammaCorrection.hlsl" />
     <FxCompile Include="Shaders\MyVeryFirstShader.hlsl" />
     <FxCompile Include="Shaders\particles\Emit.hlsl" />
     <FxCompile Include="Shaders\particles\InitSort.hlsl" />

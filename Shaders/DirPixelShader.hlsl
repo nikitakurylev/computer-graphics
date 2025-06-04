@@ -25,6 +25,11 @@ struct VertexToPixel
 	float4 position		: SV_POSITION;
 };
 
+struct PixelShaderOutput
+{
+    float4 Color : SV_Target0;
+};
+
 float sampleDepthMap(float4 pos_in_light_view, Texture2D depthTexture)
 {
     float light_depth = pos_in_light_view.z / pos_in_light_view.w - 5e-4f;
@@ -48,13 +53,17 @@ float sampleDepthMap(float4 pos_in_light_view, Texture2D depthTexture)
     return 1 - shadow;
 }
 
-float4 main(VertexToPixel input) : SV_TARGET
+PixelShaderOutput main(VertexToPixel input) : SV_TARGET
 {
-	int3 sampleIndices = int3(input.position.xy, 0);
+    PixelShaderOutput output;
+    int3 sampleIndices = int3(input.position.xy, 0);
 
     float4 textureColor = Texture.Load(sampleIndices);
     if (textureColor.w == 0)
-        return float4(0.054f, 0.149f, 0.49f, 0);
+    {
+        output.Color = float4(0.054f, 0.149f, 0.49f, 0);
+        return output;
+    }
     
     float3 normal = NormalMap.Load(sampleIndices).xyz;
 
@@ -99,7 +108,6 @@ float4 main(VertexToPixel input) : SV_TARGET
     const float3 ambient = textureColor.xyz * float3(0.529f, 0.808f, 0.922f) * k.x;
     const float3 specular = pow(max(0, dot(-view_direction, reflection_vector)), k.y) * k.z;
 
-    float4 col = float4(color.xyz * (diffuse + specular) * depth + ambient * (1 - debug.x), 1);
-    col.rgb = pow(col.rgb, 1 / 2.2f);
-    return col;
+    output.Color = float4(color.xyz * (diffuse + specular) * depth + ambient * (1 - debug.x), 1);
+    return output;
 }

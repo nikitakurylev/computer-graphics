@@ -69,8 +69,8 @@ void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameCompon
 	}
 
 	
-	Context->OMSetRenderTargets(1, &RenderView, depthStencilView);
-	Context->ClearRenderTargetView(RenderView, color);
+	Context->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
+	Context->ClearRenderTargetView(renderTargetView, color);
 	Context->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	Context->RSSetState(rasterizer);
@@ -140,6 +140,15 @@ void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameCompon
 		Context->DrawIndexed(117, 0, 0);
 	}
 
+	Context->ClearRenderTargetView(RenderView, color);
+	Context->OMSetRenderTargets(1, &RenderView, NULL);
+	Context->PSSetShader(gammaCorrection, 0, 0);
+	Context->PSSetShaderResources(0, 1, &shaderResourceView);
+	Context->VSSetShader(dirVertexShader, 0, 0);
+	Context->IASetVertexBuffers(0, 1, &nothing, &stride, &offset);
+	Context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
+	Context->Draw(3, 0);
+
 	Context->RSSetState(NULL);
 	Context->OMSetBlendState(NULL, blend, 0xFFFFFFFF);
 	Context->OMSetDepthStencilState(NULL, 0);
@@ -159,6 +168,7 @@ void DeferredRenderingSystem::Initialize(DisplayWin32* Display)
 	ID3DBlob* pointPixelShaderByteCode = nullptr;
 	ID3DBlob* spotVertexShaderByteCode = nullptr;
 	ID3DBlob* spotPixelShaderByteCode = nullptr;
+	ID3DBlob* gammaCorrectionByteCode = nullptr;
 	
 	auto res = CompileShaderFromFile(L"./Shaders/DirVertexShader.hlsl", 0, "main", "vs_4_0", &vertexShaderByteCode);
 	res = CompileShaderFromFile(L"./Shaders/DirPixelShader.hlsl", 0, "main", "ps_4_0", &pixelShaderByteCode);
@@ -166,6 +176,7 @@ void DeferredRenderingSystem::Initialize(DisplayWin32* Display)
 	res = CompileShaderFromFile(L"./Shaders/PointPixelShader.hlsl", 0, "main", "ps_4_0", &pointPixelShaderByteCode);
 	res = CompileShaderFromFile(L"./Shaders/SpotVertexShader.hlsl", 0, "main", "vs_4_0", &spotVertexShaderByteCode);
 	res = CompileShaderFromFile(L"./Shaders/SpotPixelShader.hlsl", 0, "main", "ps_4_0", &spotPixelShaderByteCode);
+	res = CompileShaderFromFile(L"./Shaders/GammaCorrection.hlsl", 0, "main", "ps_4_0", &gammaCorrectionByteCode);
 	
 	Device->CreateVertexShader(
 		vertexShaderByteCode->GetBufferPointer(),
@@ -197,6 +208,11 @@ void DeferredRenderingSystem::Initialize(DisplayWin32* Display)
 		spotPixelShaderByteCode->GetBufferSize(),
 		nullptr, &spotPixelShader);
 
+	Device->CreatePixelShader(
+		gammaCorrectionByteCode->GetBufferPointer(),
+		gammaCorrectionByteCode->GetBufferSize(),
+		nullptr, &gammaCorrection);
+
 	SetDefferedSetup(Display->ClientWidth, Display->ClientHeight);
 }
 
@@ -221,12 +237,13 @@ void DeferredRenderingSystem::SetDefferedSetup(int textureWidth, int textureHeig
 
 
 	ID3D11Texture2D* renderTargetTextureArray[BUFFER_COUNT];
+	ID3D11Texture2D* renderTargetTexture;
 
 	for (i = 0; i < BUFFER_COUNT; i++)
 	{
 		Device->CreateTexture2D(&textureDesc, NULL, &renderTargetTextureArray[i]);
-
 	}
+	Device->CreateTexture2D(&textureDesc, NULL, &renderTargetTexture);
 
 	D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc32;
 	ZeroMemory(&renderTargetViewDesc32, sizeof(renderTargetViewDesc32));
@@ -246,6 +263,7 @@ void DeferredRenderingSystem::SetDefferedSetup(int textureWidth, int textureHeig
 	Device->CreateRenderTargetView(renderTargetTextureArray[1], &renderTargetViewDesc32, &renderTargetViewArray[1]);
 	Device->CreateRenderTargetView(renderTargetTextureArray[2], &renderTargetViewDesc32, &renderTargetViewArray[2]);
 	Device->CreateRenderTargetView(renderTargetTextureArray[3], &renderTargetViewDesc32, &renderTargetViewArray[3]);
+	Device->CreateRenderTargetView(renderTargetTexture, &renderTargetViewDesc32, &renderTargetView);
 
 
 	//Shader Resource View Description
@@ -260,12 +278,14 @@ void DeferredRenderingSystem::SetDefferedSetup(int textureWidth, int textureHeig
 	{
 		Device->CreateShaderResourceView(renderTargetTextureArray[i], &shaderResourceViewDesc, &shaderResourceViewArray[i]);
 	}
+	Device->CreateShaderResourceView(renderTargetTexture, &shaderResourceViewDesc, &shaderResourceView);
 
 	//Release render target texture array
 	for (i = 0; i < BUFFER_COUNT; i++)
 	{
 		renderTargetTextureArray[i]->Release();
 	}
+	renderTargetTexture->Release();
 
 	//Depth Buffer Description
 	D3D11_TEXTURE2D_DESC depthBufferDesc;

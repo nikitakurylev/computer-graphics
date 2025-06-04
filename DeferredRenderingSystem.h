@@ -12,7 +12,9 @@ private:
 	void SetDefferedSetup(int textureWidth, int textureHeight);
 
 	ID3D11RenderTargetView* renderTargetViewArray[BUFFER_COUNT];
+	ID3D11RenderTargetView* renderTargetView;
 	ID3D11ShaderResourceView* shaderResourceViewArray[BUFFER_COUNT];
+	ID3D11ShaderResourceView* shaderResourceView;
 	ID3D11Texture2D* depthStencilBuffer;
 	ID3D11DepthStencilState* depthState;
 
@@ -26,6 +28,7 @@ private:
 	ID3D11PixelShader* pointPixelShader;
 	ID3D11VertexShader* spotVertexShader;
 	ID3D11PixelShader* spotPixelShader;
+	ID3D11PixelShader* gammaCorrection;
 
 	struct Vertex
 	{
