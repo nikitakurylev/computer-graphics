@@ -1,4 +1,5 @@
 #include "DeferredRenderingSystem.h"
+#include "ParticleSystemComponent.h"
 
 DeferredRenderingSystem::DeferredRenderingSystem(CubeComponent* cubes) : RenderingSystem(cubes)
 {
@@ -36,6 +37,34 @@ void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameCompon
 	Context->IASetInputLayout(layout);
 	for (GameComponent* gameComponent : Components)
 	{
+		auto* particles = dynamic_cast<ParticleSystemComponent*>(gameComponent);
+		if (particles) {
+			particles->Emit(Context);
+			continue;
+		}
+		Render(gameComponent, view_matrix, projection_matrix, vertexShader, pixelShader, cam_world);
+	}
+	ID3D11RenderTargetView* nullRTV[BUFFER_COUNT] = {NULL, NULL, NULL, NULL };
+	Context->OMSetRenderTargets(BUFFER_COUNT, nullRTV, NULL);
+
+	for (int i = 0; i < BUFFER_COUNT; i++) {
+		Context->CSSetShaderResources(i, 1, &shaderResourceViewArray[i]);
+	}
+
+	for (GameComponent* gameComponent : Components)
+	{
+		auto* particles = dynamic_cast<ParticleSystemComponent*>(gameComponent);
+		if (!particles)
+			continue;
+		particles->Compute(Context);
+	}
+	
+	Context->OMSetRenderTargets(BUFFER_COUNT, renderTargetViewArray, depthStencilView);
+	for (GameComponent* gameComponent : Components)
+	{
+		auto* particles = dynamic_cast<ParticleSystemComponent*>(gameComponent);
+		if (!particles)
+			continue;
 		Render(gameComponent, view_matrix, projection_matrix, vertexShader, pixelShader, cam_world);
 	}
 
@@ -51,7 +80,6 @@ void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameCompon
 
 	for (int i = 0; i < BUFFER_COUNT; i++) {
 		Context->PSSetShaderResources(i, 1, &shaderResourceViewArray[i]);
-		Context->CSSetShaderResources(i, 1, &shaderResourceViewArray[i]);
 	}
 
 	SetShadowMaps(4);

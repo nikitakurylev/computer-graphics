@@ -84,7 +84,6 @@ private:
     void Sort(ID3D11DeviceContext* context);
     bool SortInitial(ID3D11DeviceContext* context, unsigned int maxSize);
     bool SortIncremental(ID3D11DeviceContext* context, unsigned int presorted, unsigned int maxSize);
-    void Emit(ID3D11DeviceContext* context);
     void Simulate(ID3D11DeviceContext* context);
 public:
     static constexpr int MAX_PARTICLE_COUNT = 100000;
@@ -93,6 +92,8 @@ public:
     ParticleSystemComponent(Game* game);
 
     virtual void Draw(ID3D11Device* device, ID3D11DeviceContext* context) override;
+    void Emit(ID3D11DeviceContext* context);
+    virtual void Compute(ID3D11DeviceContext* context);
     virtual void Update(float deltaTime) override;
     virtual void Initialize(ID3D11Device* device, ID3D11DeviceContext* context) override;
     virtual void Reload(ID3D11DeviceContext* context);

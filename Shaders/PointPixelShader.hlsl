@@ -52,7 +52,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     dyn = dyn_color.xyz * (dyn_diffuse + dyn_specular) / pow(dist, 2);
     
     float4 col = float4(dyn, 1);
-    col.rgb = (1 - pow(dist / dyn_k.x, 3)) * pow(col.rgb, 1 / 2.2f);
+    col.rgb = /*(1 - pow(dist / dyn_k.x, 3)) **/ pow(col.rgb, 1 / 2.2f);
     return col;
 
 }

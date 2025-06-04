@@ -54,6 +54,7 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
         float3 randomValues1 = g_RandomBuffer.SampleLevel(g_samWrapLinear, uv2, 0).xyz;
 
         particle.positon = emitterProp.position.xyz;
+        particle.positon.y += 0.5f;
         particle.velocity.y = 2 + randomValues0.b * 0.1;
         particle.velocity += float3(W, 0.0, 0.0) * randomValues0.r + float3(0.0, 0.0, H) * randomValues0.g;
         particle.age = emitterProp.particleLifeSpan + randomValues0.b * emitterProp.particleLifeSpan;

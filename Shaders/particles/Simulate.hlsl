@@ -18,6 +18,9 @@ AppendStructuredBuffer<uint> deadParticleIndex : register(u1);
 RWStructuredBuffer<ParticleIndexElement> indexBuffer : register(u2);
 RWBuffer<uint> indirectDrawArgs : register(u3);
 
+Texture2D NormalMap : register(t0);
+Texture2D DepthMap : register(t3);
+
 cbuffer FrameTimeCB : register(b1)
 {
     float4 g_frameTime;
@@ -84,32 +87,36 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 
         float3 vNewPosition = particle.positon;
         
-        vNewPosition = particle.positon + (particle.velocity * g_frameTime.x);
+        particle.velocity.y -= GRAVITY * g_frameTime.x * 0.1;
      
-        float4 viewPos = mul(float4(vNewPosition, 1.0f), View);
+        float4 viewPos = mul(float4(vNewPosition, 1.0f), ViewProjection);
         float4 ndc = mul(float4(vNewPosition, 1), ViewProjection);
         ndc.xyz /= ndc.w;
     
         if (ndc.x > -1.0 && ndc.x < 1.0 && ndc.y > -1.0 && ndc.y < 1.0)
         {
-            if (vNewPosition.y < 0)
+            float2 texCoord;
+            texCoord.x = (ndc.x * 0.5 + 0.5) * 1280.0;
+            texCoord.y = (-ndc.y * 0.5 + 0.5) * 720.0;
+            int3 sampleIndices = int3(texCoord, 0);
+
+            //float4 material = MaterialMap.Load(int3(texCoord, 0));
+            float depth = DepthMap.Load(sampleIndices);//LinearizeDepth(1.0 / material.y);
+
+            if (viewPos.z > depth)
             {
-                float3 newVelocity = reflect(particle.velocity, float3(0, 1, 0)) * 0.5f;
+                //particle.age = 0;
+                float4 normal = NormalMap.Load(sampleIndices);
+
+                float3 newVelocity = reflect(particle.velocity, normal.xyz);
                 particle.velocity = newVelocity;
-                particle.positon.y = 0;
-                vNewPosition = particle.positon + (particle.velocity * g_frameTime.x);
+                //vNewPosition = particle.positon + (particle.velocity * g_frameTime.x);
             }
-            
-            particle.positon = vNewPosition;
+        }
 
-        }
-        else
-        {
-            particle.positon = vNewPosition;
-        }
+        particle.positon += particle.velocity * g_frameTime.x;
+
         
-        particle.velocity.y -= GRAVITY * g_frameTime.x * 0.1;
-
         if (particle.age <= 0.0f)
         {
             particle.age = -1;

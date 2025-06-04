@@ -26,7 +26,7 @@ void ParticleSystemComponent::Initialize(ID3D11Device* device, ID3D11DeviceConte
     emitterProps_ = {
         {0.0, 0.0, 0.0},
         256,
-        5.0f
+        15.0f
     };
 
     {
@@ -470,16 +470,17 @@ void ParticleSystemComponent::Initialize(ID3D11Device* device, ID3D11DeviceConte
 void ParticleSystemComponent::Update(float deltaTime)
 {
     _deltaTime = deltaTime;
-    GameComponent::Update(deltaTime);
+    world_matrix =
+        //Matrix::CreateScale(scale)
+        //* Matrix::CreateFromQuaternion(rotation)
+        Matrix::CreateTranslation(position)
+        * (parent == nullptr ? Matrix::Identity :
+            //Matrix::CreateFromQuaternion(parent->rotation)
+            Matrix::CreateTranslation(parent->position));
 }
 
 void ParticleSystemComponent::Draw(ID3D11Device* device, ID3D11DeviceContext* context)
 {
-    Emit(context);
-    Simulate(context);
-
-    Sort(context);
-
     context->VSSetShader(vertexShader_, nullptr, 0);
     context->GSSetShader(geometryShader_, nullptr, 0);
 
@@ -506,6 +507,13 @@ void ParticleSystemComponent::Draw(ID3D11Device* device, ID3D11DeviceContext* co
     context->OMSetBlendState(nullptr, nullptr, 0xffffffff);
     context->GSSetShader(nullptr, nullptr, 0);
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+void ParticleSystemComponent::Compute(ID3D11DeviceContext* context)
+{
+    Simulate(context);
+
+    Sort(context);
 }
 
 void ParticleSystemComponent::Reload(ID3D11DeviceContext* context)
