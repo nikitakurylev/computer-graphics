@@ -10,7 +10,7 @@
 #include "RenderingSystem.h"
 
 using namespace DirectX::SimpleMath;
-class GameComponent;
+class GameObject;
 class CubeComponent;
 
 struct ConstantBuffer
@@ -29,7 +29,7 @@ class Game
 {
 public:
 	Game(DisplayWin32* display, InputDevice* input);
-	std::vector<GameComponent*> Components;
+	std::vector<GameObject*> GameObjects;
 	DisplayWin32* Display;
 	InputDevice* Input;
 	RenderingSystem* Render;

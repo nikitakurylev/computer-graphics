@@ -19,28 +19,24 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BallComponent.cpp" />
-    <ClCompile Include="BoxComponent.cpp" />
     <ClCompile Include="CubeComponent.cpp" />
+    <ClCompile Include="Component.cpp" />
     <ClCompile Include="DeferredRenderingSystem.cpp" />
     <ClCompile Include="Delegates.cpp" />
     <ClCompile Include="DisplayWin32.cpp" />
-    <ClCompile Include="EnemyPaddleComponent.cpp" />
     <ClCompile Include="Game.cpp" />
-    <ClCompile Include="GameComponent.cpp" />
+    <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="InputDevice.cpp" />
     <ClCompile Include="KatamariComponent.cpp" />
     <ClCompile Include="ModelComponent.cpp" />
     <ClCompile Include="MySuper3DApp.cpp" />
-    <ClCompile Include="PaddleComponent.cpp" />
     <ClCompile Include="ParticleSystemComponent.cpp" />
-    <ClCompile Include="PlayerPaddleComponent.cpp" />
-    <ClCompile Include="QuadComponent.cpp" />
+    <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RenderingSystem.cpp" />
     <ClCompile Include="SimpleTexturedDirectx11\ModelLoader.cpp" />
     <ClCompile Include="SimpleTexturedDirectx11\TextureLoader.cpp" />
     <ClCompile Include="SphereComponent.cpp" />
-    <ClCompile Include="TriangleComponent.cpp" />
+    <ClCompile Include="Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="DebugShader.hlsl" />
@@ -68,33 +64,29 @@
     <FxCompile Include="SimpleTexturedDirectx11\VertexShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BallComponent.h" />
-    <ClInclude Include="BoxComponent.h" />
     <ClInclude Include="CascadeData.h" />
     <ClInclude Include="CubeComponent.h" />
+    <ClInclude Include="Component.h" />
     <ClInclude Include="DeferredRenderingSystem.h" />
     <ClInclude Include="Delegates.h" />
     <ClInclude Include="DisplayWin32.h" />
-    <ClInclude Include="EnemyPaddleComponent.h" />
     <ClInclude Include="Game.h" />
-    <ClInclude Include="GameComponent.h" />
+    <ClInclude Include="GameObject.h" />
     <ClInclude Include="InputDevice.h" />
     <ClInclude Include="KatamariComponent.h" />
     <ClInclude Include="Keys.h" />
     <ClInclude Include="LightsParams.h" />
     <ClInclude Include="ModelComponent.h" />
     <ClInclude Include="OffsetColor.h" />
-    <ClInclude Include="PaddleComponent.h" />
     <ClInclude Include="ParticleSystemComponent.h" />
-    <ClInclude Include="PlayerPaddleComponent.h" />
-    <ClInclude Include="QuadComponent.h" />
+    <ClInclude Include="Renderer.h" />
     <ClInclude Include="RenderingSystem.h" />
     <ClInclude Include="SimpleTexturedDirectx11\Mesh.h" />
     <ClInclude Include="SimpleTexturedDirectx11\ModelLoader.h" />
     <ClInclude Include="SimpleTexturedDirectx11\SafeRelease.hpp" />
     <ClInclude Include="SimpleTexturedDirectx11\TextureLoader.h" />
     <ClInclude Include="SphereComponent.h" />
-    <ClInclude Include="TriangleComponent.h" />
+    <ClInclude Include="Transform.h" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="Models\soccer_ball.mtl">

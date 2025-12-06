@@ -1,6 +1,7 @@
 #include "RenderingSystem.h"
-#include "GameComponent.h"
+#include "GameObject.h"
 #include "CubeComponent.h"
+#include "Renderer.h"
 #include "ParticleSystemComponent.h"
 #include "DisplayWin32.h"
 #include <d3d11.h>
@@ -10,7 +11,7 @@ RenderingSystem::RenderingSystem(CubeComponent* cubes) : debug_cube(cubes)
 {
 }
 
-void RenderingSystem::Draw(DisplayWin32* display, std::vector<GameComponent*> Components, Matrix view_matrix, Matrix projection_matrix, LightsParams dynamicLights[10], CascadeData* cascadeData, Vector3 cam_world)
+void RenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject*> Components, Matrix view_matrix, Matrix projection_matrix, LightsParams dynamicLights[10], CascadeData* cascadeData, Vector3 cam_world)
 {
 	Context->ClearState();
 	Context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -33,25 +34,25 @@ void RenderingSystem::Draw(DisplayWin32* display, std::vector<GameComponent*> Co
 	UpdateCascadeBuffer(cascadeData);
 	SetShadowMaps(1);
 
-	for (GameComponent* gameComponent : Components)
+	for (GameObject* gameComponent : Components)
 	{
 		Render(gameComponent, view_matrix, projection_matrix, vertexShader, pixelShader, cam_world);
 	}
 
-	if (cascadeData->debug.x == 1) {
-		Context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
-		for (int i = 0; i < 4; i++)
-		{
-			Render(&debug_cube[i], view_matrix, projection_matrix, debugVertexShader, debugPixelShader, cam_world);
-		}
-	}
+	//if (cascadeData->debug.x == 1) {
+	//	Context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+	//	for (int i = 0; i < 4; i++)
+	//	{
+	//		Render(&debug_cube[i], view_matrix, projection_matrix, debugVertexShader, debugPixelShader, cam_world);
+	//	}
+	//}
 
 	Context->OMSetRenderTargets(0, nullptr, nullptr);
 
 	SwapChain->Present(1, /*DXGI_PRESENT_DO_NOT_WAIT*/ 0);
 }
 
-void RenderingSystem::RenderDepthMaps(CascadeData* cascadeData, std::vector<GameComponent*> Components, const Matrix& view_matrix, Vector3 cam_world) {
+void RenderingSystem::RenderDepthMaps(CascadeData* cascadeData, std::vector<GameObject*> Components, const Matrix& view_matrix, Vector3 cam_world) {
 	RenderDepthMap(0, cascadeData, Components, view_matrix, cam_world);
 	RenderDepthMap(1, cascadeData, Components, view_matrix, cam_world);
 	RenderDepthMap(2, cascadeData, Components, view_matrix, cam_world);
@@ -76,12 +77,18 @@ void RenderingSystem::SetColorSampler() {
 	Context->CSSetSamplers(0, 1, &TexSamplerState);
 }
 
-void RenderingSystem::Render(GameComponent* gameComponent, Matrix view, Matrix projection, ID3D11VertexShader* vertex, ID3D11PixelShader* pixel, Vector3 cam_world)
+void RenderingSystem::Render(GameObject* gameObject, Matrix view, Matrix projection, ID3D11VertexShader* vertex, ID3D11PixelShader* pixel, Vector3 cam_world)
 {
-	UpdateTransformBuffer(gameComponent->world_matrix, view, projection, cam_world);
-	Context->VSSetShader(vertex, 0, 0);
-	Context->PSSetShader(pixel, 0, 0);
-	gameComponent->Draw(Device, Context);
+	auto world_matrix = gameObject->GetTransform()->GetMatrix();
+	for (Component* gameComponent : gameObject->GetComponents()) {
+		auto renderer = dynamic_cast<Renderer*>(gameComponent);
+		if (!renderer)
+			continue;
+		UpdateTransformBuffer(world_matrix, view, projection, cam_world);
+		Context->VSSetShader(vertex, 0, 0);
+		Context->PSSetShader(pixel, 0, 0);
+		renderer->Draw(Device, Context);
+	}
 }
 
 void RenderingSystem::UpdateTransformBuffer(Matrix world_matrix, Matrix view, Matrix projection, Vector3 cam_world) {
@@ -100,7 +107,7 @@ void RenderingSystem::UpdateTransformBuffer(Matrix world_matrix, Matrix view, Ma
 	Context->CSSetConstantBuffers(0, 1, &constantBuffer);
 }
 
-void RenderingSystem::Initialize(DisplayWin32* Display)
+void RenderingSystem::Initialize(DisplayWin32* Display, std::vector<GameObject*> GameObjects)
 {
 	D3D_FEATURE_LEVEL featureLevel[] = { D3D_FEATURE_LEVEL_11_1 };
 
@@ -302,8 +309,17 @@ void RenderingSystem::Initialize(DisplayWin32* Display)
 		pixel_shader_buffer->GetBufferPointer(), pixel_shader_buffer->GetBufferSize(),
 		nullptr, &debugPixelShader);
 
-	for (int i = 0; i < 4; i++)
-		debug_cube[i].Initialize(Device, Context);
+	//for (int i = 0; i < 4; i++)
+	//	debug_cube[i].Initialize(Device, Context);
+
+	for (GameObject* gameObject : GameObjects) {
+		for (Component* gameComponent : gameObject->GetComponents()) {
+			auto renderer = dynamic_cast<Renderer*>(gameComponent);
+			if (!renderer)
+				continue;
+			renderer->Initialize(Device, Context);
+		}
+	}
 }
 
 void RenderingSystem::InitDepthMap(int index, float resolution, DisplayWin32* Display)
@@ -367,12 +383,12 @@ HRESULT RenderingSystem::CompileShaderFromFile(LPCWSTR pFileName, const D3D_SHAD
 	return result;
 }
 
-void RenderingSystem::RenderDepthMap(int index, CascadeData* cascadeData, std::vector<GameComponent*> Components, const Matrix& view_matrix, Vector3 cam_world)
+void RenderingSystem::RenderDepthMap(int index, CascadeData* cascadeData, std::vector<GameObject*> Components, const Matrix& view_matrix, Vector3 cam_world)
 {
 	auto corners = GetFrustrumCornersWorldSpace(directional_light_projection[index], view_matrix);
 	auto view = GetCascadeView(corners, index, cascadeData->direction);
 	auto projection = GetCascadeProjection(view, corners, index);
-	debug_cube[index].UpdateWorldMatrix();
+	//debug_cube[index].UpdateWorldMatrix();
 	cascadeData->ViewProj[index] = view * projection;
 
 	float black[] = { 0.0f, 0.0f, 0.0f };
@@ -384,11 +400,11 @@ void RenderingSystem::RenderDepthMap(int index, CascadeData* cascadeData, std::v
 
 	Context->IASetInputLayout(layout);
 
-	for (GameComponent* gameComponent : Components)
+	for (GameObject* gameComponent : Components)
 	{
-		auto* particles = dynamic_cast<ParticleSystemComponent*>(gameComponent);
+		/*auto* particles = dynamic_cast<ParticleSystemComponent*>(gameComponent);
 		if (particles)
-			continue;
+			continue;*/
 		Render(gameComponent, view, projection, depthVertexShader, depthPixelShader, cam_world);
 	}
 
@@ -431,9 +447,9 @@ Matrix RenderingSystem::GetCascadeView(const std::vector<Vector4>& corners, int 
 		center + direction,
 		Vector3::Up
 	);
-	debug_cube[index].position = center;
+	//debug_cube[index].position = center;
 	auto a = lightView.ToEuler();
-	debug_cube[index].rotation = Quaternion::CreateFromYawPitchRoll(a.x, a.y, 0);
+	//debug_cube[index].rotation = Quaternion::CreateFromYawPitchRoll(a.x, a.y, 0);
 
 	return lightView;
 }
@@ -463,7 +479,7 @@ Matrix RenderingSystem::GetCascadeProjection(const Matrix& lightView, const std:
 	minZ = (minZ < 0) ? minZ * zMult : minZ / zMult;
 	maxZ = (maxZ < 0) ? maxZ / zMult : maxZ * zMult;
 
-	debug_cube[index].scale = Vector3(maxX - minX, maxY - minY, maxZ - minZ);
+	//debug_cube[index].scale = Vector3(maxX - minX, maxY - minY, maxZ - minZ);
 
 	auto lightProjection = Matrix::CreateOrthographicOffCenter(minX, maxX, minY, maxY, minZ, maxZ);
 

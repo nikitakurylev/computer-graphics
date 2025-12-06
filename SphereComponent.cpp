@@ -1,13 +1,11 @@
 #include "SphereComponent.h"
 #include <directxmath.h>
 #include <iostream>
-#include "GameComponent.h"
+#include "Component.h"
 #include "Game.h"
 
-SphereComponent::SphereComponent(Game* game, LightsParams* light) : GameComponent(game), light(light)
+SphereComponent::SphereComponent(LightsParams* light) : light(light)
 {
-	immovable = true;
-	position.y = -10000000000;
 }
 
 void SphereComponent::Initialize(ID3D11Device* device, ID3D11DeviceContext* context)
@@ -93,22 +91,30 @@ void SphereComponent::Draw(ID3D11Device* device, ID3D11DeviceContext* context)
 	context->DrawIndexed(2400, 0, 0);
 }
 
+void SphereComponent::Start() 
+{
+	auto transform = gameObject->GetTransform();
+	transform->immovable = true;
+	transform->position.y = -10000000000;
+}
+
 void SphereComponent::Update(float deltaTime)
 {
-	position += velocity * deltaTime;
-	light->direction.x = position.x;
-	light->direction.y = position.y;
-	light->direction.z = position.z;
-	collider.Center = position;
+	auto transform = gameObject->GetTransform();
+	transform->position += velocity * deltaTime;
+	light->direction.x = transform->position.x;
+	light->direction.y = transform->position.y;
+	light->direction.z = transform->position.z;
+	collider.Center = transform->position;
 
-	for (GameComponent* object : game->Components)
+	for (GameObject* object : gameObject->GetGame()->GameObjects)
 	{
-		if (object == this || object->immovable || !collider.Contains(object->position + Vector3::Up))
+		if (object == gameObject || object->GetTransform()->immovable || !collider.Contains(object->GetTransform()->position + Vector3::Up))
 			continue;
-		object->position.y = -10000000000;
-		position.y = -10000000000;
+		object->GetTransform()->position.y = -10000000000;
+		transform->position.y = -10000000000;
 		velocity = Vector3();
 	}
 
-	GameComponent::Update(deltaTime);
+	Component::Update(deltaTime);
 }

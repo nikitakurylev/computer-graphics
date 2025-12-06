@@ -1,5 +1,4 @@
 // MySuper3DApp.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
 
 
 #include "Game.h"
@@ -33,38 +32,46 @@ int main()
 
 	SphereComponent* bullets[10];
 	for (int i = 0; i < 10; i++) {
-		auto sun1 = new SphereComponent(&game, &game.dynamicLights[i]);
-		sun1->color = Vector4(1, 1, 0, 1);
-		game.Components.push_back(sun1);
-		bullets[i] = sun1;
+		auto bulletGameObject = new GameObject(&game);
+		auto bulletComponent = new SphereComponent(&game.dynamicLights[i]);
+		bulletGameObject->AddComponent(bulletComponent);
+		game.GameObjects.push_back(bulletGameObject);
+		bullets[i] = bulletComponent;
 	}
 
-	auto sun = KatamariComponent(&game, ball, bullets);
-	auto floor = ModelComponent(&game, ground);
-	floor.immovable = true;
+	auto katamariComponent = KatamariComponent(ball, bullets);
+	auto katamariGameObject = GameObject(&game);
+	katamariGameObject.AddComponent(&katamariComponent);
+	auto floorComponent = ModelComponent(ground);
+	auto floorGameObject = GameObject(&game);
+	floorGameObject.AddComponent(&floorComponent);
+	floorGameObject.GetTransform()->immovable = true;
 	//sun.scale = Vector3(0.5f, 0.5f, 0.5f);
 	
-	game.Components.push_back(&sun);
-	game.Components.push_back(&floor);
+	game.GameObjects.push_back(&katamariGameObject);
+	game.GameObjects.push_back(&floorGameObject);
 	int count = 10;
 	int width = sqrt(count * 20);
 	for (int i = 0; i < count; i++) {
-		auto sun1 = new ModelComponent(&game, models[rand() % 2]);
-		sun1->position = Vector3(rand() % width - (width / 2), 0, rand() % width - (width / 2));
-		game.Components.push_back(sun1);
+		auto clutterComponent = new ModelComponent(models[rand() % 2]);
+		auto clutterGameObject = new GameObject(&game);
+		clutterGameObject->AddComponent(clutterComponent);
+		clutterGameObject->GetTransform()->position = Vector3(rand() % width - (width / 2), 0, rand() % width - (width / 2));
+		game.GameObjects.push_back(clutterGameObject);
 	}
 
-	auto huge = new ModelComponent(&game, chair);
-	huge->scale *= 50;
-	huge->position = Vector3(-50, 0, 51);
-	game.Components.push_back(huge);
+	auto hugeComponent = ModelComponent(chair);
+	auto hugeGameObject = GameObject(&game);
+	hugeGameObject.AddComponent(&hugeComponent);
+	hugeGameObject.GetTransform()->scale *= 50;
+	hugeGameObject.GetTransform()->position = Vector3(-50, 0, 51);
+	game.GameObjects.push_back(&hugeGameObject);
 
-	auto particles = new ParticleSystemComponent(&game);
-	particles->position = Vector3(-40, 0, 40);
-	game.Components.push_back(particles);
-	auto particles1 = new ParticleSystemComponent(&game);
-	particles1->position = Vector3(-30, 0, 40);
-	game.Components.push_back(particles1);
+	auto particlesComponent = ParticleSystemComponent();
+	auto particlesGameObject = GameObject(&game);
+	particlesGameObject.AddComponent(&particlesComponent);
+	particlesGameObject.GetTransform()->position = Vector3(-40, 0, 40);
+	game.GameObjects.push_back(&particlesGameObject);
 
 	//game.Components.push_back(&sky);
 	game.Initialize();
@@ -78,14 +85,3 @@ int main()
 	}
 	game.Run();
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file

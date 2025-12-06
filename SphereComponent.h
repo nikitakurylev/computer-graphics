@@ -1,14 +1,15 @@
 #pragma once
-#include "GameComponent.h"
 #include "LightsParams.h"
+#include "Renderer.h"
 using namespace DirectX;
 
-class SphereComponent : public GameComponent
+class SphereComponent : public Renderer
 {
 public:
-	SphereComponent(Game* game, LightsParams* light);
+	SphereComponent(LightsParams* light);
 	Vector3 velocity;
 	void Draw(ID3D11Device* device, ID3D11DeviceContext* context) override;
+	void Start() override;
 	void Update(float deltaTime) override;
 	void Initialize(ID3D11Device* device, ID3D11DeviceContext* context) override;
 	ID3D11ShaderResourceView* texture;

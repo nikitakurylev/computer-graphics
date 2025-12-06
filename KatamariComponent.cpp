@@ -1,16 +1,23 @@
 #include "KatamariComponent.h"
 #include "SphereComponent.h"
 
-KatamariComponent::KatamariComponent(Game* game, ModelLoader* model, SphereComponent* bullets[10]) : ModelComponent(game, model)
+KatamariComponent::KatamariComponent(ModelLoader* model, SphereComponent* bullets[10]) : ModelComponent(model)
 {
-	position.y = collider.Radius = 1.0f;
 	_bullets = bullets;
-	immovable = true;
+	speed = 1;
+}
+
+void KatamariComponent::Start() 
+{
+	auto transform = gameObject->GetTransform();
+	transform->position.y = collider.Radius = 1.0f;
+	transform->immovable = true;
 }
 
 void KatamariComponent::Update(float deltaTime)
 {
 	auto acceleration = Vector3();
+	auto game = gameObject->GetGame();
 	auto camera_matrix = game->GetCameraMatrix();
 	auto right = camera_matrix.Right();
 	right.y = 0;
@@ -32,9 +39,10 @@ void KatamariComponent::Update(float deltaTime)
 		acceleration -= forward;
 	}
 	
+	auto transform = gameObject->GetTransform();
 	if (game->Input->IsKeyDown(Keys::E)) {
 		if (!shootButtonDown) {
-			_bullets[currentBullet % 10]->position = position;
+			_bullets[currentBullet % 10]->gameObject->GetTransform()->position = transform->position;
 			_bullets[currentBullet % 10]->velocity = -right * 10;
 			currentBullet = (currentBullet + 1) % 10;
 			shootButtonDown = true;
@@ -42,7 +50,7 @@ void KatamariComponent::Update(float deltaTime)
 	}
 	else if (game->Input->IsKeyDown(Keys::R)) {
 		if (!shootButtonDown) {
-			_bullets[currentBullet % 10]->position = position;
+			_bullets[currentBullet % 10]->gameObject->GetTransform()->position = transform->position;
 			_bullets[currentBullet % 10]->velocity = Vector3::Zero;
 			currentBullet = (currentBullet + 1) % 10;
 			shootButtonDown = true;
@@ -66,35 +74,36 @@ void KatamariComponent::Update(float deltaTime)
 
 	velocity += acceleration;
 
-	rotation *= Quaternion::CreateFromAxisAngle(Vector3::Right, velocity.z * deltaTime)
+	transform->rotation *= Quaternion::CreateFromAxisAngle(Vector3::Right, velocity.z * deltaTime)
 		* Quaternion::CreateFromAxisAngle(Vector3::Forward, velocity.x * deltaTime);
 
-	position += velocity * deltaTime;
-	if (position.y < collider.Radius) {
-		position.y = collider.Radius;
+	transform->position += velocity * deltaTime;
+	if (transform->position.y < collider.Radius) {
+		transform->position.y = collider.Radius;
 		velocity.y = 0;
 		isGrounded = true;
 	}
-	game->cam_pos = position;
+	game->cam_pos = transform->position;
 
-	collider.Center = position;
+	collider.Center = transform->position;
 
-	GameComponent::Update(deltaTime);
+	Component::Update(deltaTime);
 
-	for (GameComponent* object : game->Components)
+	for (GameObject* object : game->GameObjects)
 	{
-		if (object == this || object->immovable || !collider.Contains(object->position + Vector3::Up))
+		auto otherTransform = object->GetTransform();
+		if (object == gameObject || otherTransform->immovable || !collider.Contains(otherTransform->position + Vector3::Up))
 			continue;
-		auto newMatrix = object->world_matrix * 
-			(Matrix::CreateFromQuaternion(rotation) * Matrix::CreateTranslation(position)).Invert();
-		newMatrix.Decompose(object->scale, object->rotation, object->position);
+		auto newMatrix = otherTransform->GetMatrix() *
+			(Matrix::CreateFromQuaternion(transform->rotation) * Matrix::CreateTranslation(transform->position)).Invert();
+		newMatrix.Decompose(otherTransform->scale, otherTransform->rotation, otherTransform->position);
 
-		object->immovable = true;
+		otherTransform->immovable = true;
 		const float growth = 0.1f;
 		speed += growth;
 		collider.Radius += growth / 2;
-		position.y += growth / 2;
-		scale = Vector3::One * max(collider.Radius / 2.0f, 1.0f);
-		object->parent = this;
+		transform->position.y += growth / 2;
+		transform->scale = Vector3::One * max(collider.Radius / 2.0f, 1.0f);
+		otherTransform->parent = transform;
 	}
 }

@@ -1,7 +1,7 @@
 #include "Game.h"
 #include <d3d11.h>
 #include <iostream>
-#include "GameComponent.h"
+#include "GameObject.h"
 #include "CubeComponent.h"
 #include <d3dcompiler.h>
 #include "SimpleMath.h"
@@ -13,10 +13,10 @@ using namespace DirectX::SimpleMath;
 Game::Game(DisplayWin32* display, InputDevice* input) : Display(display), Input(input)
 {
 	auto cubes = new CubeComponent[4]{
-	CubeComponent(this),
-	CubeComponent(this),
-	CubeComponent(this),
-	CubeComponent(this)
+	CubeComponent(),
+	CubeComponent(),
+	CubeComponent(),
+	CubeComponent()
 	};
 	cubes[0].SetColor(1, 0, 1);
 	cubes[1].SetColor(1, 1, 0);
@@ -130,7 +130,7 @@ void Game::Run()
 		cascadeData.view_pos = Vector4(cam_world);
 
 		Update(deltaTime);
-		Render->Draw(Display, Components, view_matrix, projection_matrix, dynamicLights, &cascadeData, cam_world);
+		Render->Draw(Display, GameObjects, view_matrix, projection_matrix, dynamicLights, &cascadeData, cam_world);
 	}
 
 	std::cout << "Hello World!\n";
@@ -138,9 +138,9 @@ void Game::Run()
 
 void Game::Update(float deltaTime)
 {
-	for (GameComponent* gameComponent : Components)
+	for (GameObject* gameObject : GameObjects)
 	{
-		gameComponent->Update(deltaTime);
+		gameObject->Update(deltaTime);
 	}
 }
 
@@ -178,10 +178,10 @@ void Game::Initialize()
 		dynamicLights[i].k = Vector4(20, 100.0f, 1.2f, 0);
 	}
 
-	Render->Initialize(Display);
+	Render->Initialize(Display, GameObjects);
 
-	for (GameComponent* gameComponent : Components)
+	for (GameObject* gameObject : GameObjects)
 	{
-		gameComponent->Initialize(Render->Device, Render->Context);
+		gameObject->Start();
 	}
 }

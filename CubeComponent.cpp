@@ -1,10 +1,9 @@
 #include "CubeComponent.h"
 #include <directxmath.h>
 #include <iostream>
-#include "GameComponent.h"
 #include "Game.h"
 
-CubeComponent::CubeComponent(Game* game) : GameComponent(game)
+CubeComponent::CubeComponent()
 {
 	SetSize(0.5f, 0.5f, 0.5f);
 }

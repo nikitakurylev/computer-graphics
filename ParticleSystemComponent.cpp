@@ -17,7 +17,7 @@ int align(int value, int alignment)
     return (value + (alignment - 1)) & ~(alignment - 1);
 }
 
-ParticleSystemComponent::ParticleSystemComponent(Game* game) : GameComponent(game)
+ParticleSystemComponent::ParticleSystemComponent()
 {
 }
 
@@ -470,13 +470,6 @@ void ParticleSystemComponent::Initialize(ID3D11Device* device, ID3D11DeviceConte
 void ParticleSystemComponent::Update(float deltaTime)
 {
     _deltaTime = deltaTime;
-    world_matrix =
-        //Matrix::CreateScale(scale)
-        //* Matrix::CreateFromQuaternion(rotation)
-        Matrix::CreateTranslation(position)
-        * (parent == nullptr ? Matrix::Identity :
-            //Matrix::CreateFromQuaternion(parent->rotation)
-            Matrix::CreateTranslation(parent->position));
 }
 
 void ParticleSystemComponent::Draw(ID3D11Device* device, ID3D11DeviceContext* context)

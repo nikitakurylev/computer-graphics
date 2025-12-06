@@ -6,8 +6,8 @@ class DeferredRenderingSystem : public RenderingSystem
 {
 public:
 	DeferredRenderingSystem(CubeComponent* cubes);
-	virtual void Draw(DisplayWin32* display, std::vector<GameComponent*> Components, Matrix view_matrix, Matrix projection_matrix, LightsParams dynamicLights[10], CascadeData* cascadeData, Vector3 cam_world) override;
-	virtual void Initialize(DisplayWin32* Display) override;
+	virtual void Draw(DisplayWin32* display, std::vector<GameObject*> Components, Matrix view_matrix, Matrix projection_matrix, LightsParams dynamicLights[10], CascadeData* cascadeData, Vector3 cam_world) override;
+	virtual void Initialize(DisplayWin32* Display, std::vector<GameObject*> GameObjects) override;
 private:
 	void SetDefferedSetup(int textureWidth, int textureHeight);
 

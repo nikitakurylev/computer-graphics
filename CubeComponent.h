@@ -1,12 +1,12 @@
 #pragma once
-#include "GameComponent.h"
+#include "Renderer.h"
 #include "LightsParams.h"
 using namespace DirectX;
 
-class CubeComponent : public GameComponent
+class CubeComponent : public Renderer
 {
 public:
-	CubeComponent(Game* game);
+	CubeComponent();
 	void Draw(ID3D11Device* device, ID3D11DeviceContext* context) override;
 	void Initialize(ID3D11Device* device, ID3D11DeviceContext* context) override;
 	void Translate(float x, float y, float z);

@@ -4,7 +4,8 @@
 class KatamariComponent : public ModelComponent
 {
 public:
-	KatamariComponent(Game* game, ModelLoader* model, SphereComponent* bullets[10]);
+	KatamariComponent(ModelLoader* model, SphereComponent* bullets[10]);
+	void Start() override;
 	void Update(float deltaTime) override;
 private:
 	SphereComponent** _bullets;
@@ -13,5 +14,6 @@ private:
 	int currentBullet;
 	bool shootButtonDown;
 	bool isGrounded;
+	float speed;
 };
 

@@ -5,7 +5,7 @@ DeferredRenderingSystem::DeferredRenderingSystem(CubeComponent* cubes) : Renderi
 {
 }
 
-void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameComponent*> Components, Matrix view_matrix, Matrix projection_matrix, LightsParams dynamicLights[10], CascadeData* cascadeData, Vector3 cam_world)
+void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject*> Components, Matrix view_matrix, Matrix projection_matrix, LightsParams dynamicLights[10], CascadeData* cascadeData, Vector3 cam_world)
 {
 	const float color[4] = { 0,0,0,0 };
 	const float skyColor[4] = { 0.054f, 0.149f, 0.49f,0 };
@@ -35,13 +35,13 @@ void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameCompon
 	Context->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	Context->IASetInputLayout(layout);
-	for (GameComponent* gameComponent : Components)
+	for (GameObject* gameComponent : Components)
 	{
-		auto* particles = dynamic_cast<ParticleSystemComponent*>(gameComponent);
-		if (particles) {
-			particles->Emit(Context);
-			continue;
-		}
+		//auto* particles = dynamic_cast<ParticleSystemComponent*>(gameComponent);
+		//if (particles) {
+		//	particles->Emit(Context);
+		//	continue;
+		//}
 		Render(gameComponent, view_matrix, projection_matrix, vertexShader, pixelShader, cam_world);
 	}
 	ID3D11RenderTargetView* nullRTV[BUFFER_COUNT] = {NULL, NULL, NULL, NULL };
@@ -51,20 +51,20 @@ void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameCompon
 		Context->CSSetShaderResources(i, 1, &shaderResourceViewArray[i]);
 	}
 
-	for (GameComponent* gameComponent : Components)
-	{
-		auto* particles = dynamic_cast<ParticleSystemComponent*>(gameComponent);
-		if (!particles)
-			continue;
-		particles->Compute(Context);
-	}
+	//for (GameComponent* gameComponent : Components)
+	//{
+	//	auto* particles = dynamic_cast<ParticleSystemComponent*>(gameComponent);
+	//	if (!particles)
+	//		continue;
+	//	particles->Compute(Context);
+	//}
 	
 	Context->OMSetRenderTargets(BUFFER_COUNT, renderTargetViewArray, depthStencilView);
-	for (GameComponent* gameComponent : Components)
+	for (GameObject* gameComponent : Components)
 	{
-		auto* particles = dynamic_cast<ParticleSystemComponent*>(gameComponent);
-		if (!particles)
-			continue;
+		//auto* particles = dynamic_cast<ParticleSystemComponent*>(gameComponent);
+		//if (!particles)
+		//	continue;
 		Render(gameComponent, view_matrix, projection_matrix, vertexShader, pixelShader, cam_world);
 	}
 
@@ -156,11 +156,11 @@ void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameCompon
 	SwapChain->Present(0, 0);
 }
 
-void DeferredRenderingSystem::Initialize(DisplayWin32* Display)
+void DeferredRenderingSystem::Initialize(DisplayWin32* Display, std::vector<GameObject*> GameObjects)
 {
 	vertexShaderName = L"./Shaders/DeferredVertexShader.hlsl";
 	pixelShaderName = L"./Shaders/DeferredPixelShader.hlsl";
-	RenderingSystem::Initialize(Display);
+	RenderingSystem::Initialize(Display, GameObjects);
 
 	ID3DBlob* vertexShaderByteCode = nullptr;
 	ID3DBlob* pixelShaderByteCode = nullptr;

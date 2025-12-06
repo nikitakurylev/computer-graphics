@@ -1,5 +1,5 @@
 #pragma once
-#include "GameComponent.h"
+#include "Renderer.h"
 #include <SimpleMath.h>
 #include <d3d.h>
 #include <d3d11.h>
@@ -23,7 +23,7 @@ struct alignas(16) SBCounterS
     alignas(16) UINT deadCounter;
 };
 
-class ParticleSystemComponent : public GameComponent
+class ParticleSystemComponent : public Renderer
 {
 private:
     float _deltaTime;
@@ -89,7 +89,7 @@ public:
     static constexpr int MAX_PARTICLE_COUNT = 100000;
     static constexpr int X_NUMTHREADS = 1024;
 
-    ParticleSystemComponent(Game* game);
+    ParticleSystemComponent();
 
     virtual void Draw(ID3D11Device* device, ID3D11DeviceContext* context) override;
     void Emit(ID3D11DeviceContext* context);
