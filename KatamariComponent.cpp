@@ -1,7 +1,7 @@
 #include "KatamariComponent.h"
 #include "SphereComponent.h"
 
-KatamariComponent::KatamariComponent(ModelLoader* model, SphereComponent* bullets[10]) : ModelComponent(model)
+KatamariComponent::KatamariComponent(SphereComponent* bullets[10])
 {
 	_bullets = bullets;
 	speed = 1;

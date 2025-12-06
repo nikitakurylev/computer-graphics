@@ -1,10 +1,10 @@
 #pragma once
-#include "ModelComponent.h"
+#include "Component.h"
 #include "SphereComponent.h"
-class KatamariComponent : public ModelComponent
+class KatamariComponent : public Component
 {
 public:
-	KatamariComponent(ModelLoader* model, SphereComponent* bullets[10]);
+	KatamariComponent(SphereComponent* bullets[10]);
 	void Start() override;
 	void Update(float deltaTime) override;
 private:

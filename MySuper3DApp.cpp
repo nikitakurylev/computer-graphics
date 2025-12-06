@@ -39,8 +39,10 @@ int main()
 		bullets[i] = bulletComponent;
 	}
 
-	auto katamariComponent = KatamariComponent(ball, bullets);
+	auto katamariComponent = KatamariComponent(bullets);
+	auto katamariModel = ModelComponent(ball);
 	auto katamariGameObject = GameObject(&game);
+	katamariGameObject.AddComponent(&katamariModel);
 	katamariGameObject.AddComponent(&katamariComponent);
 	auto floorComponent = ModelComponent(ground);
 	auto floorGameObject = GameObject(&game);
