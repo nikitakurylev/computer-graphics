@@ -11,7 +11,7 @@ RenderingSystem::RenderingSystem(CubeComponent* cubes) : debug_cube(cubes)
 {
 }
 
-void RenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject*> Components, Matrix view_matrix, Matrix projection_matrix, LightsParams dynamicLights[10], CascadeData* cascadeData, Vector3 cam_world)
+void RenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject*> Components, Matrix view_matrix, Matrix projection_matrix, CascadeData* cascadeData, Vector3 cam_world)
 {
 	Context->ClearState();
 	Context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -26,7 +26,7 @@ void RenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject*> Compo
 	Context->OMSetRenderTargets(1, &RenderView, depth_stencil_view[3]);
 	Context->RSSetViewports(1, &viewport);
 
-	Context->UpdateSubresource(dynamicLightBuffer, 0, nullptr, dynamicLights, 0, 0);
+	//Context->UpdateSubresource(dynamicLightBuffer, 0, nullptr, dynamicLights, 0, 0);
 
 	Context->VSSetConstantBuffers(1, 1, &lightTransformBuffer);
 
@@ -210,15 +210,15 @@ void RenderingSystem::Initialize(DisplayWin32* Display, std::vector<GameObject*>
 
 	res = Device->CreateBuffer(&constBufDesc, nullptr, &lightTransformBuffer);
 
-	D3D11_BUFFER_DESC dynamicLightBufDesc = {};
-	dynamicLightBufDesc.ByteWidth = sizeof(LightsParams) * 10;
-	dynamicLightBufDesc.Usage = D3D11_USAGE_DEFAULT;
-	dynamicLightBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	dynamicLightBufDesc.CPUAccessFlags = 0;
-	dynamicLightBufDesc.MiscFlags = 0;
-	dynamicLightBufDesc.StructureByteStride = 0;
+	//D3D11_BUFFER_DESC dynamicLightBufDesc = {};
+	//dynamicLightBufDesc.ByteWidth = sizeof(LightsParams) * 10;
+	//dynamicLightBufDesc.Usage = D3D11_USAGE_DEFAULT;
+	//dynamicLightBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	//dynamicLightBufDesc.CPUAccessFlags = 0;
+	//dynamicLightBufDesc.MiscFlags = 0;
+	//dynamicLightBufDesc.StructureByteStride = 0;
 
-	res = Device->CreateBuffer(&dynamicLightBufDesc, nullptr, &dynamicLightBuffer);
+	//res = Device->CreateBuffer(&dynamicLightBufDesc, nullptr, &dynamicLightBuffer);
 
 	D3D11_SAMPLER_DESC samplerDesc;
 	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -386,7 +386,7 @@ HRESULT RenderingSystem::CompileShaderFromFile(LPCWSTR pFileName, const D3D_SHAD
 void RenderingSystem::RenderDepthMap(int index, CascadeData* cascadeData, std::vector<GameObject*> Components, const Matrix& view_matrix, Vector3 cam_world)
 {
 	auto corners = GetFrustrumCornersWorldSpace(directional_light_projection[index], view_matrix);
-	auto view = GetCascadeView(corners, index, cascadeData->direction);
+	auto view = GetCascadeView(corners, index, cascadeData->position);
 	auto projection = GetCascadeProjection(view, corners, index);
 	//debug_cube[index].UpdateWorldMatrix();
 	cascadeData->ViewProj[index] = view * projection;

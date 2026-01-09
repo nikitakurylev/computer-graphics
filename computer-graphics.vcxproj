@@ -31,11 +31,12 @@
     <ClCompile Include="ModelComponent.cpp" />
     <ClCompile Include="MySuper3DApp.cpp" />
     <ClCompile Include="ParticleSystemComponent.cpp" />
+    <ClCompile Include="PointLightComponent.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RenderingSystem.cpp" />
     <ClCompile Include="SimpleTexturedDirectx11\ModelLoader.cpp" />
     <ClCompile Include="SimpleTexturedDirectx11\TextureLoader.cpp" />
-    <ClCompile Include="SphereComponent.cpp" />
+    <ClCompile Include="BulletComponent.cpp" />
     <ClCompile Include="Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -75,17 +76,17 @@
     <ClInclude Include="InputDevice.h" />
     <ClInclude Include="KatamariComponent.h" />
     <ClInclude Include="Keys.h" />
-    <ClInclude Include="LightsParams.h" />
     <ClInclude Include="ModelComponent.h" />
     <ClInclude Include="OffsetColor.h" />
     <ClInclude Include="ParticleSystemComponent.h" />
+    <ClInclude Include="PointLightComponent.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="RenderingSystem.h" />
     <ClInclude Include="SimpleTexturedDirectx11\Mesh.h" />
     <ClInclude Include="SimpleTexturedDirectx11\ModelLoader.h" />
     <ClInclude Include="SimpleTexturedDirectx11\SafeRelease.hpp" />
     <ClInclude Include="SimpleTexturedDirectx11\TextureLoader.h" />
-    <ClInclude Include="SphereComponent.h" />
+    <ClInclude Include="BulletComponent.h" />
     <ClInclude Include="Transform.h" />
   </ItemGroup>
   <ItemGroup>
@@ -104,6 +105,7 @@
     <CopyFileToFolders Include="Models\chair01.mtl">
       <FileType>Document</FileType>
     </CopyFileToFolders>
+    <None Include="Models\untitled.glb" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

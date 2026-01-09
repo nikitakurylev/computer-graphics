@@ -1,7 +1,7 @@
 #include "KatamariComponent.h"
-#include "SphereComponent.h"
+#include "BulletComponent.h"
 
-KatamariComponent::KatamariComponent(SphereComponent* bullets[10])
+KatamariComponent::KatamariComponent(BulletComponent* bullets[10])
 {
 	_bullets = bullets;
 	speed = 1;

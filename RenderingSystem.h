@@ -15,7 +15,7 @@ class RenderingSystem
 {
 public:
 	RenderingSystem(CubeComponent* cubes);
-	virtual void Draw(DisplayWin32* display, std::vector<GameObject*> Components, Matrix view_matrix, Matrix projection_matrix, LightsParams dynamicLights[10], CascadeData* cascadeData, Vector3 cam_world);
+	virtual void Draw(DisplayWin32* display, std::vector<GameObject*> Components, Matrix view_matrix, Matrix projection_matrix, CascadeData* cascadeData, Vector3 cam_world);
 	virtual void Initialize(DisplayWin32* Display, std::vector<GameObject*> GameObjects);
 	ID3D11Device* Device;
 	ID3D11DeviceContext* Context;

@@ -1,12 +1,11 @@
 #pragma once
-#include "LightsParams.h"
 #include "Renderer.h"
 using namespace DirectX;
 
-class SphereComponent : public Renderer
+class BulletComponent : public Renderer
 {
 public:
-	SphereComponent(LightsParams* light);
+	BulletComponent();
 	Vector3 velocity;
 	void Draw(ID3D11Device* device, ID3D11DeviceContext* context) override;
 	void Start() override;
@@ -26,6 +25,5 @@ private:
 	BoundingSphere collider;
 	Vertex points[420];
 	int indeces[2400];
-	LightsParams* light;
 };
 

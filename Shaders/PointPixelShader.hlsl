@@ -52,6 +52,7 @@ PixelShaderOutput main(VertexToPixel input) : SV_TARGET
     const float3 dyn_light_direction = normalize(dyn_position.xyz - world_pos.xyz);
     const float3 dyn_reflection_vector = normalize(reflect(dyn_light_direction, normal));
     const float3 dyn_diffuse = max(0, dot(dyn_light_direction, normal)) * textureColor.xyz;
+    //dyn_k.y is shininess
     const float3 dyn_specular = pow(max(0, dot(-view_direction, dyn_reflection_vector)), dyn_k.y) * dyn_k.z;
 
     dyn = dyn_color.xyz * (dyn_diffuse + dyn_specular) / pow(dist, 2);

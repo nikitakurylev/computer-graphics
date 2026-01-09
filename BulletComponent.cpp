@@ -1,14 +1,14 @@
-#include "SphereComponent.h"
+#include "BulletComponent.h"
 #include <directxmath.h>
 #include <iostream>
 #include "Component.h"
 #include "Game.h"
 
-SphereComponent::SphereComponent(LightsParams* light) : light(light)
+BulletComponent::BulletComponent()
 {
 }
 
-void SphereComponent::Initialize(ID3D11Device* device, ID3D11DeviceContext* context)
+void BulletComponent::Initialize(ID3D11Device* device, ID3D11DeviceContext* context)
 {
 	constexpr float thau = 6.28318530718f;
 	for (auto j = 0; j <= 20; j++)
@@ -81,7 +81,7 @@ void SphereComponent::Initialize(ID3D11Device* device, ID3D11DeviceContext* cont
 	device->CreateBuffer(&indexBufDesc, &indexData, &ib);
 }
 
-void SphereComponent::Draw(ID3D11Device* device, ID3D11DeviceContext* context) 
+void BulletComponent::Draw(ID3D11Device* device, ID3D11DeviceContext* context) 
 {
 	UINT strides[] = { sizeof(Vertex) };
 	UINT offsets[] = { 0 };
@@ -91,20 +91,17 @@ void SphereComponent::Draw(ID3D11Device* device, ID3D11DeviceContext* context)
 	context->DrawIndexed(2400, 0, 0);
 }
 
-void SphereComponent::Start() 
+void BulletComponent::Start() 
 {
 	auto transform = gameObject->GetTransform();
 	transform->immovable = true;
 	transform->position.y = -10000000000;
 }
 
-void SphereComponent::Update(float deltaTime)
+void BulletComponent::Update(float deltaTime)
 {
 	auto transform = gameObject->GetTransform();
 	transform->position += velocity * deltaTime;
-	light->direction.x = transform->position.x;
-	light->direction.y = transform->position.y;
-	light->direction.z = transform->position.z;
 	collider.Center = transform->position;
 
 	for (GameObject* object : gameObject->GetGame()->GameObjects)

@@ -130,7 +130,7 @@ void Game::Run()
 		cascadeData.view_pos = Vector4(cam_world);
 
 		Update(deltaTime);
-		Render->Draw(Display, GameObjects, view_matrix, projection_matrix, dynamicLights, &cascadeData, cam_world);
+		Render->Draw(Display, GameObjects, view_matrix, projection_matrix, &cascadeData, cam_world);
 	}
 
 	std::cout << "Hello World!\n";
@@ -167,16 +167,8 @@ void Game::Initialize()
 	const auto directional_light_direction = Vector4(dir.x, dir.y, dir.z, 1);
 
 	cascadeData.color = Vector4(0.054f, 0.149f, 0.49f, 0);
-	cascadeData.direction = directional_light_direction;
+	cascadeData.position = directional_light_direction;
 	cascadeData.k = Vector4(0.1f, 100.0f, 1.2f, 0);
-
-	for (int i = 0; i < 10; i++) {
-		dynamicLights[i].direction = Vector4(i, 3, 0, 0);
-		dynamicLights[i].color = Vector4(i % 2, 1, 1 - i % 2, 1);
-		if (i >= 5)
-			dynamicLights[i].color *= 10;
-		dynamicLights[i].k = Vector4(20, 100.0f, 1.2f, 0);
-	}
 
 	Render->Initialize(Display, GameObjects);
 

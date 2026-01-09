@@ -1,14 +1,14 @@
 #pragma once
 #include "Component.h"
-#include "SphereComponent.h"
+#include "BulletComponent.h"
 class KatamariComponent : public Component
 {
 public:
-	KatamariComponent(SphereComponent* bullets[10]);
+	KatamariComponent(BulletComponent* bullets[10]);
 	void Start() override;
 	void Update(float deltaTime) override;
 private:
-	SphereComponent** _bullets;
+	BulletComponent** _bullets;
 	BoundingSphere collider;
 	Vector3 velocity;
 	int currentBullet;

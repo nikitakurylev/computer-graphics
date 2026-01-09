@@ -39,7 +39,6 @@ public:
 	void Run();
 	void Update(float deltaTime);
 	Matrix GetCameraMatrix();
-	LightsParams dynamicLights[10];
 	Matrix view_matrix;
 	Matrix projection_matrix;
 private:

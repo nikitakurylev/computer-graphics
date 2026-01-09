@@ -1,6 +1,5 @@
 #pragma once
 #include "Renderer.h"
-#include "LightsParams.h"
 using namespace DirectX;
 
 class CubeComponent : public Renderer

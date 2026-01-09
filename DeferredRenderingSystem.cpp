@@ -1,11 +1,12 @@
 #include "DeferredRenderingSystem.h"
 #include "ParticleSystemComponent.h"
+#include "PointLightComponent.h"
 
 DeferredRenderingSystem::DeferredRenderingSystem(CubeComponent* cubes) : RenderingSystem(cubes)
 {
 }
 
-void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject*> Components, Matrix view_matrix, Matrix projection_matrix, LightsParams dynamicLights[10], CascadeData* cascadeData, Vector3 cam_world)
+void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject*> Components, Matrix view_matrix, Matrix projection_matrix, CascadeData* cascadeData, Vector3 cam_world)
 {
 	const float color[4] = { 0,0,0,0 };
 	const float skyColor[4] = { 0.054f, 0.149f, 0.49f,0 };
@@ -60,12 +61,12 @@ void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject
 	//}
 	
 	Context->OMSetRenderTargets(BUFFER_COUNT, renderTargetViewArray, depthStencilView);
-	for (GameObject* gameComponent : Components)
+	for (GameObject* gameObject : Components)
 	{
 		//auto* particles = dynamic_cast<ParticleSystemComponent*>(gameComponent);
 		//if (!particles)
 		//	continue;
-		Render(gameComponent, view_matrix, projection_matrix, vertexShader, pixelShader, cam_world);
+		Render(gameObject, view_matrix, projection_matrix, vertexShader, pixelShader, cam_world);
 	}
 
 	
@@ -100,45 +101,48 @@ void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject
 	CascadeData pointLightData;
 	pointLightData.view_pos = Vector4(cam_world);
 
-	for (int i = 0; i < 5; i++)
+	for (GameObject* gameObject : Components)
 	{
-		pointLightData.color = dynamicLights[i].color;
-		pointLightData.direction = dynamicLights[i].direction;
-		pointLightData.k = dynamicLights[i].k;
-		UpdateCascadeBuffer(&pointLightData);
-		auto world_matrix = 
-			Matrix::CreateScale(dynamicLights[i].k.x * 2 * Vector3::One) *
-			Matrix::CreateTranslation(Vector3(dynamicLights[i].direction)) *
-			Matrix::Identity;
-		UpdateTransformBuffer(world_matrix, view_matrix, projection_matrix, cam_world);
-		UINT strides[] = { sizeof(Vertex) };
-		UINT offsets[] = { 0 };
-		Context->IASetVertexBuffers(0, 1, &sphereVertexBuffer, strides, offsets);
-		Context->IASetIndexBuffer(sphereIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-		Context->DrawIndexed(2400, 0, 0);
+		for (Component* gameComponent : gameObject->GetComponents()) {
+			auto light = dynamic_cast<PointLightComponent*>(gameComponent);
+			if (!light)
+				continue;
+			auto transform = gameObject->GetTransform();
+			pointLightData.color = light->color;
+			pointLightData.position = Vector4(transform->position);
+			pointLightData.k = Vector4(light->radius, 100 /*shininess*/, 1.2, 0);
+			UpdateCascadeBuffer(&pointLightData);
+			auto world_matrix = Matrix::CreateScale(light->radius * 2 * Vector3::One) * transform->GetMatrix();
+			UpdateTransformBuffer(world_matrix, view_matrix, projection_matrix, cam_world);
+			UINT strides[] = { sizeof(Vertex) };
+			UINT offsets[] = { 0 };
+			Context->IASetVertexBuffers(0, 1, &sphereVertexBuffer, strides, offsets);
+			Context->IASetIndexBuffer(sphereIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+			Context->DrawIndexed(2400, 0, 0);
+		}
 	}
 
 	Context->VSSetShader(spotVertexShader, 0, 0);
 	Context->PSSetShader(spotPixelShader, 0, 0);
 
-	for (int i = 5; i < 10; i++)
-	{
-		pointLightData.color = dynamicLights[i].color;
-		pointLightData.direction = dynamicLights[i].direction;
-		pointLightData.k = dynamicLights[i].k;
-		UpdateCascadeBuffer(&pointLightData);
-		auto world_matrix =
-			Matrix::CreateScale(dynamicLights[i].k.x * 2 * Vector3::One) *
-			Matrix::CreateFromYawPitchRoll(0, i - 5, i - 5) *
-			Matrix::CreateTranslation(Vector3(dynamicLights[i].direction)) *
-			Matrix::Identity;
-		UpdateTransformBuffer(world_matrix, view_matrix, projection_matrix, cam_world);
-		UINT strides[] = { sizeof(Vertex) };
-		UINT offsets[] = { 0 };
-		Context->IASetVertexBuffers(0, 1, &coneVertexBuffer, strides, offsets);
-		Context->IASetIndexBuffer(coneIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-		Context->DrawIndexed(117, 0, 0);
-	}
+	//for (int i = 5; i < 10; i++)
+	//{
+	//	pointLightData.color = dynamicLights[i].color;
+	//	pointLightData.position = dynamicLights[i].direction;
+	//	pointLightData.k = dynamicLights[i].k;
+	//	UpdateCascadeBuffer(&pointLightData);
+	//	auto world_matrix =
+	//		Matrix::CreateScale(dynamicLights[i].k.x * 2 * Vector3::One) *
+	//		Matrix::CreateFromYawPitchRoll(0, i - 5, i - 5) *
+	//		Matrix::CreateTranslation(Vector3(dynamicLights[i].direction)) *
+	//		Matrix::Identity;
+	//	UpdateTransformBuffer(world_matrix, view_matrix, projection_matrix, cam_world);
+	//	UINT strides[] = { sizeof(Vertex) };
+	//	UINT offsets[] = { 0 };
+	//	Context->IASetVertexBuffers(0, 1, &coneVertexBuffer, strides, offsets);
+	//	Context->IASetIndexBuffer(coneIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	//	Context->DrawIndexed(117, 0, 0);
+	//}
 
 	Context->ClearRenderTargetView(RenderView, color);
 	Context->OMSetRenderTargets(1, &RenderView, NULL);

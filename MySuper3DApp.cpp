@@ -5,6 +5,7 @@
 #include "ModelComponent.h"
 #include "KatamariComponent.h"
 #include "ParticleSystemComponent.h"
+#include "PointLightComponent.h"
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -30,20 +31,24 @@ int main()
 
 	ModelLoader* models[3] = {chair, steve, tree};
 
-	SphereComponent* bullets[10];
+	BulletComponent* bullets[10];
 	for (int i = 0; i < 10; i++) {
 		auto bulletGameObject = new GameObject(&game);
-		auto bulletComponent = new SphereComponent(&game.dynamicLights[i]);
+		auto bulletComponent = new BulletComponent();
+		auto lightComponent = new PointLightComponent(Vector4(1,1,1,1), 20);
 		bulletGameObject->AddComponent(bulletComponent);
+		bulletGameObject->AddComponent(lightComponent);
 		game.GameObjects.push_back(bulletGameObject);
 		bullets[i] = bulletComponent;
 	}
 
 	auto katamariComponent = KatamariComponent(bullets);
 	auto katamariModel = ModelComponent(ball);
+	auto katamariLight = PointLightComponent(Vector4(1, 1, 1, 1), 20);
 	auto katamariGameObject = GameObject(&game);
 	katamariGameObject.AddComponent(&katamariModel);
 	katamariGameObject.AddComponent(&katamariComponent);
+	katamariGameObject.AddComponent(&katamariLight);
 	auto floorComponent = ModelComponent(ground);
 	auto floorGameObject = GameObject(&game);
 	floorGameObject.AddComponent(&floorComponent);
