@@ -7,6 +7,8 @@
 #include "ParticleSystemComponent.h"
 #include "PointLightComponent.h"
 #include "DeferredRenderingSystem.h"
+#include "SimpleTexturedDirectx11/ModelLoader.h"
+#include "SimpleTexturedDirectx11/SceneLoader.h"
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -24,6 +26,7 @@ int main()
 	auto game = Game(&window, &inputDevice, &render);
 
 	auto modelLoader = ModelLoader(window.hWnd, render.Device, render.Context);
+	auto sceneLoader = SceneLoader(&game, window.hWnd, render.Device, render.Context);
 	auto ball = modelLoader.Load("soccer_ball.obj");
 	auto ground = modelLoader.Load("ground.obj");
 	auto chair = modelLoader.Load("chair01.obj");
@@ -54,7 +57,6 @@ int main()
 	auto floorGameObject = GameObject(&game);
 	floorGameObject.AddComponent(&floorComponent);
 	floorGameObject.GetTransform()->immovable = true;
-	//sun.scale = Vector3(0.5f, 0.5f, 0.5f);
 	
 	game.GameObjects.push_back(&katamariGameObject);
 	game.GameObjects.push_back(&floorGameObject);
@@ -81,7 +83,15 @@ int main()
 	//particlesGameObject.GetTransform()->position = Vector3(-40, 0, 40);
 	//game.GameObjects.push_back(&particlesGameObject);
 
-	//game.Components.push_back(&sky);
+	auto sceneObjects = sceneLoader.Load("untitled.glb");
+
+	for (GameObject* gameObject : *sceneObjects)
+	{
+		game.GameObjects.push_back(gameObject);
+	}
+
+	sceneObjects->at(sceneObjects->size() - 1)->GetTransform()->immovable = true;
+
 	game.Initialize();
 
 	for (int i = 0; i < 10; i++) {

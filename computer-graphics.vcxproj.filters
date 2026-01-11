@@ -72,6 +72,9 @@
     <ClCompile Include="BulletComponent.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="SimpleTexturedDirectx11\SceneLoader.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\MyVeryFirstShader.hlsl">
@@ -170,12 +173,12 @@
     <ClInclude Include="BulletComponent.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="SimpleTexturedDirectx11\SceneLoader.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="Models\untitled.glb">
-      <Filter>Файлы ресурсов</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="Models\chair01.obj">
@@ -239,6 +242,9 @@
       <Filter>Файлы ресурсов</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="Models\soccer_ball_diffuse.tif">
+      <Filter>Файлы ресурсов</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="Models\untitled.glb">
       <Filter>Файлы ресурсов</Filter>
     </CopyFileToFolders>
   </ItemGroup>

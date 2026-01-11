@@ -1,6 +1,6 @@
 #pragma once
 #include "Renderer.h"
-#include "SimpleTexturedDirectx11/ModelLoader.h"
+#include "SimpleTexturedDirectx11/Mesh.h"
 class ModelComponent : public Renderer
 {
 public:
