@@ -4,10 +4,10 @@
 class ModelComponent : public Renderer
 {
 public:
-	ModelComponent(ModelLoader* model);
+	ModelComponent(std::vector<Mesh>* meshes);
 	void Draw(ID3D11Device* device, ID3D11DeviceContext* context) override;
 	void Initialize(ID3D11Device* device, ID3D11DeviceContext* context) override;
 private:
-	ModelLoader* ourModel;
+	std::vector<Mesh>* _meshes;
 	std::string fileName;
 };

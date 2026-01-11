@@ -1,12 +1,12 @@
 #include "ModelLoader.h"
 
-ModelLoader::ModelLoader() :
-        dev_(nullptr),
-        devcon_(nullptr),
+ModelLoader::ModelLoader(HWND hwnd, ID3D11Device* dev, ID3D11DeviceContext* devcon) :
+        dev_(dev),
+        devcon_(devcon),
         meshes_(),
         directory_(),
         textures_loaded_(),
-        hwnd_(nullptr) {
+        hwnd_(hwnd) {
     // empty
 }
 
@@ -15,7 +15,7 @@ ModelLoader::~ModelLoader() {
     // empty
 }
 
-bool ModelLoader::Load(HWND hwnd, ID3D11Device * dev, ID3D11DeviceContext * devcon, std::string filename) {
+std::vector<Mesh>* ModelLoader::Load(std::string filename) {
 	Assimp::Importer importer;
 	TCHAR buffer[MAX_PATH] = { 0 };
 	GetModuleFileName(NULL, buffer, MAX_PATH);
@@ -27,24 +27,19 @@ bool ModelLoader::Load(HWND hwnd, ID3D11Device * dev, ID3D11DeviceContext * devc
 
 	if (pScene == nullptr) {
 		auto a = importer.GetErrorString();
-		return false;
+		Close();
+		return new std::vector<Mesh>();
 	}
 
 	this->directory_ = filename.substr(0, filename.find_last_of("/\\"));
 
-	this->dev_ = dev;
-	this->devcon_ = devcon;
-	this->hwnd_ = hwnd;
-
 	processNode(pScene->mRootNode, pScene);
 
-	return true;
-}
+	auto result = new std::vector<Mesh>(meshes_);
 
-void ModelLoader::Draw(ID3D11DeviceContext * devcon) {
-	for (size_t i = 0; i < meshes_.size(); ++i ) {
-		meshes_[i].Draw(devcon);
-	}
+	Close();
+
+	return result;
 }
 
 Mesh ModelLoader::processMesh(aiMesh * mesh, const aiScene * scene) {
@@ -129,12 +124,13 @@ std::vector<Texture> ModelLoader::loadMaterialTextures(aiMaterial * mat, aiTextu
 }
 
 void ModelLoader::Close() {
-	for (auto& t : textures_loaded_)
-		t.Release();
+	//for (auto& t : textures_loaded_)
+	//	t.Release();
 
-	for (size_t i = 0; i < meshes_.size(); i++) {
-		meshes_[i].Close();
-	}
+	//for (size_t i = 0; i < meshes_.size(); i++) {
+	//	meshes_[i].Close();
+	//}
+	meshes_ = std::vector<Mesh>();
 }
 
 void ModelLoader::processNode(aiNode * node, const aiScene * scene) {

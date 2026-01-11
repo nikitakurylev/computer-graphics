@@ -17,11 +17,10 @@ using namespace DirectX;
 class ModelLoader
 {
 public:
-	ModelLoader();
+	ModelLoader(HWND hwnd, ID3D11Device* dev, ID3D11DeviceContext* devcon);
 	~ModelLoader();
 
-	bool Load(HWND hwnd, ID3D11Device* dev, ID3D11DeviceContext* devcon, std::string filename);
-	void Draw(ID3D11DeviceContext* devcon);
+	std::vector<Mesh>* Load(std::string filename);
 
 	void Close();
 	std::vector<Texture> textures_loaded_;

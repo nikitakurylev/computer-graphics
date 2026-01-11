@@ -14,9 +14,9 @@ class CubeComponent;
 class RenderingSystem
 {
 public:
-	RenderingSystem(CubeComponent* cubes);
+	RenderingSystem(DisplayWin32* Display, LPCWSTR vertexShaderName, LPCWSTR pixelShaderName);
 	virtual void Draw(DisplayWin32* display, std::vector<GameObject*> Components, Matrix view_matrix, Matrix projection_matrix, CascadeData* cascadeData, Vector3 cam_world);
-	virtual void Initialize(DisplayWin32* Display, std::vector<GameObject*> GameObjects);
+	virtual void Initialize(std::vector<GameObject*> GameObjects);
 	ID3D11Device* Device;
 	ID3D11DeviceContext* Context;
 protected:
@@ -44,7 +44,6 @@ private:
 	Matrix GetCascadeProjection(const Matrix& lightView, const std::vector<Vector4>& corners, int index);
 	ID3D11VertexShader* debugVertexShader;
 	ID3D11PixelShader* debugPixelShader;
-	CubeComponent* debug_cube;
 	Matrix directional_light_projection[4];
 	D3D11_VIEWPORT viewport_depth_directional_light_[4];
 	ID3D11RenderTargetView* render_target_view_depth_directional_light[4];

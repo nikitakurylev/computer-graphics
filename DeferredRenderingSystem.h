@@ -5,9 +5,8 @@ const int BUFFER_COUNT = 4;
 class DeferredRenderingSystem : public RenderingSystem
 {
 public:
-	DeferredRenderingSystem(CubeComponent* cubes);
+	DeferredRenderingSystem(DisplayWin32* Display);
 	virtual void Draw(DisplayWin32* display, std::vector<GameObject*> Components, Matrix view_matrix, Matrix projection_matrix, CascadeData* cascadeData, Vector3 cam_world) override;
-	virtual void Initialize(DisplayWin32* Display, std::vector<GameObject*> GameObjects) override;
 private:
 	void SetDefferedSetup(int textureWidth, int textureHeight);
 

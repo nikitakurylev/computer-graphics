@@ -2,10 +2,6 @@
 #include "ParticleSystemComponent.h"
 #include "PointLightComponent.h"
 
-DeferredRenderingSystem::DeferredRenderingSystem(CubeComponent* cubes) : RenderingSystem(cubes)
-{
-}
-
 void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject*> Components, Matrix view_matrix, Matrix projection_matrix, CascadeData* cascadeData, Vector3 cam_world)
 {
 	const float color[4] = { 0,0,0,0 };
@@ -48,9 +44,9 @@ void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject
 	ID3D11RenderTargetView* nullRTV[BUFFER_COUNT] = {NULL, NULL, NULL, NULL };
 	Context->OMSetRenderTargets(BUFFER_COUNT, nullRTV, NULL);
 
-	for (int i = 0; i < BUFFER_COUNT; i++) {
-		Context->CSSetShaderResources(i, 1, &shaderResourceViewArray[i]);
-	}
+	//for (int i = 0; i < BUFFER_COUNT; i++) {
+	//	Context->CSSetShaderResources(i, 1, &shaderResourceViewArray[i]);
+	//}
 
 	//for (GameComponent* gameComponent : Components)
 	//{
@@ -160,12 +156,8 @@ void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject
 	SwapChain->Present(0, 0);
 }
 
-void DeferredRenderingSystem::Initialize(DisplayWin32* Display, std::vector<GameObject*> GameObjects)
+DeferredRenderingSystem::DeferredRenderingSystem(DisplayWin32* Display) : RenderingSystem(Display, L"./Shaders/DeferredVertexShader.hlsl", L"./Shaders/DeferredPixelShader.hlsl")
 {
-	vertexShaderName = L"./Shaders/DeferredVertexShader.hlsl";
-	pixelShaderName = L"./Shaders/DeferredPixelShader.hlsl";
-	RenderingSystem::Initialize(Display, GameObjects);
-
 	ID3DBlob* vertexShaderByteCode = nullptr;
 	ID3DBlob* pixelShaderByteCode = nullptr;
 	ID3DBlob* pointVertexShaderByteCode = nullptr;
@@ -173,7 +165,7 @@ void DeferredRenderingSystem::Initialize(DisplayWin32* Display, std::vector<Game
 	ID3DBlob* spotVertexShaderByteCode = nullptr;
 	ID3DBlob* spotPixelShaderByteCode = nullptr;
 	ID3DBlob* gammaCorrectionByteCode = nullptr;
-	
+
 	auto res = CompileShaderFromFile(L"./Shaders/DirVertexShader.hlsl", 0, "main", "vs_4_0", &vertexShaderByteCode);
 	res = CompileShaderFromFile(L"./Shaders/DirPixelShader.hlsl", 0, "main", "ps_4_0", &pixelShaderByteCode);
 	res = CompileShaderFromFile(L"./Shaders/PointVertexShader.hlsl", 0, "main", "vs_4_0", &pointVertexShaderByteCode);
@@ -181,7 +173,7 @@ void DeferredRenderingSystem::Initialize(DisplayWin32* Display, std::vector<Game
 	res = CompileShaderFromFile(L"./Shaders/SpotVertexShader.hlsl", 0, "main", "vs_4_0", &spotVertexShaderByteCode);
 	res = CompileShaderFromFile(L"./Shaders/SpotPixelShader.hlsl", 0, "main", "ps_4_0", &spotPixelShaderByteCode);
 	res = CompileShaderFromFile(L"./Shaders/GammaCorrection.hlsl", 0, "main", "ps_4_0", &gammaCorrectionByteCode);
-	
+
 	Device->CreateVertexShader(
 		vertexShaderByteCode->GetBufferPointer(),
 		vertexShaderByteCode->GetBufferSize(),

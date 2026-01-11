@@ -7,10 +7,6 @@
 #include <d3d11.h>
 #include <d3dcompiler.h>
 
-RenderingSystem::RenderingSystem(CubeComponent* cubes) : debug_cube(cubes)
-{
-}
-
 void RenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject*> Components, Matrix view_matrix, Matrix projection_matrix, CascadeData* cascadeData, Vector3 cam_world)
 {
 	Context->ClearState();
@@ -107,7 +103,7 @@ void RenderingSystem::UpdateTransformBuffer(Matrix world_matrix, Matrix view, Ma
 	Context->CSSetConstantBuffers(0, 1, &constantBuffer);
 }
 
-void RenderingSystem::Initialize(DisplayWin32* Display, std::vector<GameObject*> GameObjects)
+RenderingSystem::RenderingSystem(DisplayWin32* Display, LPCWSTR vertexShaderName, LPCWSTR pixelShaderName) : vertexShaderName(vertexShaderName), pixelShaderName(pixelShaderName)
 {
 	D3D_FEATURE_LEVEL featureLevel[] = { D3D_FEATURE_LEVEL_11_1 };
 
@@ -311,7 +307,10 @@ void RenderingSystem::Initialize(DisplayWin32* Display, std::vector<GameObject*>
 
 	//for (int i = 0; i < 4; i++)
 	//	debug_cube[i].Initialize(Device, Context);
+}
 
+void RenderingSystem::Initialize(std::vector<GameObject*> GameObjects)
+{
 	for (GameObject* gameObject : GameObjects) {
 		for (Component* gameComponent : gameObject->GetComponents()) {
 			auto renderer = dynamic_cast<Renderer*>(gameComponent);

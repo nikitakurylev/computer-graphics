@@ -6,6 +6,7 @@
 #include "KatamariComponent.h"
 #include "ParticleSystemComponent.h"
 #include "PointLightComponent.h"
+#include "DeferredRenderingSystem.h"
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -19,17 +20,17 @@ int main()
 
 	auto window = DisplayWin32::Instance();
 	auto inputDevice = InputDevice();
-	auto game = Game(&window, &inputDevice);
+	auto render = DeferredRenderingSystem(&window);
+	auto game = Game(&window, &inputDevice, &render);
 
-	auto ball = new ModelLoader;
-	auto ground = new ModelLoader;
-	
-	auto chair = new ModelLoader;
-	auto steve = new ModelLoader;
-	auto tree = new ModelLoader;
-	
+	auto modelLoader = ModelLoader(window.hWnd, render.Device, render.Context);
+	auto ball = modelLoader.Load("soccer_ball.obj");
+	auto ground = modelLoader.Load("ground.obj");
+	auto chair = modelLoader.Load("chair01.obj");
+	auto steve = modelLoader.Load("steve.obj");
+	auto tree = modelLoader.Load("tree.obj");
 
-	ModelLoader* models[3] = {chair, steve, tree};
+	std::vector<Mesh>* models[3] = {chair, steve, tree};
 
 	BulletComponent* bullets[10];
 	for (int i = 0; i < 10; i++) {
@@ -74,21 +75,17 @@ int main()
 	hugeGameObject.GetTransform()->position = Vector3(-50, 0, 51);
 	game.GameObjects.push_back(&hugeGameObject);
 
-	auto particlesComponent = ParticleSystemComponent();
-	auto particlesGameObject = GameObject(&game);
-	particlesGameObject.AddComponent(&particlesComponent);
-	particlesGameObject.GetTransform()->position = Vector3(-40, 0, 40);
-	game.GameObjects.push_back(&particlesGameObject);
+	//auto particlesComponent = ParticleSystemComponent();
+	//auto particlesGameObject = GameObject(&game);
+	//particlesGameObject.AddComponent(&particlesComponent);
+	//particlesGameObject.GetTransform()->position = Vector3(-40, 0, 40);
+	//game.GameObjects.push_back(&particlesGameObject);
 
 	//game.Components.push_back(&sky);
 	game.Initialize();
-	chair->Load(game.Display->hWnd, game.Render->Device, game.Render->Context, "chair01.obj");
-	ball->Load(game.Display->hWnd, game.Render->Device, game.Render->Context, "soccer_ball.obj");
-	ground->Load(game.Display->hWnd, game.Render->Device, game.Render->Context, "ground.obj");
-	steve->Load(game.Display->hWnd, game.Render->Device, game.Render->Context, "steve.obj");
-	tree->Load(game.Display->hWnd, game.Render->Device, game.Render->Context, "tree.obj");
+
 	for (int i = 0; i < 10; i++) {
-		bullets[i]->texture = ball->textures_loaded_[0].texture;
+		bullets[i]->texture = ball->at(0).textures_[0].texture;
 	}
 	game.Run();
 }

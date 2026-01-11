@@ -28,7 +28,7 @@ struct ConstantBuffer
 class Game
 {
 public:
-	Game(DisplayWin32* display, InputDevice* input);
+	Game(DisplayWin32* display, InputDevice* input, RenderingSystem* render);
 	std::vector<GameObject*> GameObjects;
 	DisplayWin32* Display;
 	InputDevice* Input;

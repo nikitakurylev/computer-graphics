@@ -10,20 +10,8 @@
 
 using namespace DirectX::SimpleMath;
 
-Game::Game(DisplayWin32* display, InputDevice* input) : Display(display), Input(input)
+Game::Game(DisplayWin32* display, InputDevice* input, RenderingSystem* render) : Display(display), Input(input), Render(render)
 {
-	auto cubes = new CubeComponent[4]{
-	CubeComponent(),
-	CubeComponent(),
-	CubeComponent(),
-	CubeComponent()
-	};
-	cubes[0].SetColor(1, 0, 1);
-	cubes[1].SetColor(1, 1, 0);
-	cubes[2].SetColor(0, 1, 1);
-	cubes[3].SetColor(1, 0, 0);
-
-	Render = new DeferredRenderingSystem(cubes);
 }
 
 void Game::Run()
@@ -170,7 +158,7 @@ void Game::Initialize()
 	cascadeData.position = directional_light_direction;
 	cascadeData.k = Vector4(0.1f, 100.0f, 1.2f, 0);
 
-	Render->Initialize(Display, GameObjects);
+	Render->Initialize(GameObjects);
 
 	for (GameObject* gameObject : GameObjects)
 	{
