@@ -92,7 +92,8 @@ void KatamariComponent::Update(float deltaTime)
 	for (GameObject* object : game->GameObjects)
 	{
 		auto otherTransform = object->GetTransform();
-		if (object == gameObject || otherTransform->immovable || !collider.Contains(otherTransform->position + Vector3::Up))
+		auto otherWorldPosition = otherTransform->GetMatrix().Translation();
+		if (object == gameObject || otherTransform->immovable || !collider.Contains(otherWorldPosition + Vector3::Up))
 			continue;
 		auto newMatrix = otherTransform->GetMatrix() *
 			(Matrix::CreateFromQuaternion(transform->rotation) * Matrix::CreateTranslation(transform->position)).Invert();

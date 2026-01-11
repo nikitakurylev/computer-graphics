@@ -189,8 +189,6 @@ void SceneLoader::processLight(aiLight* light, GameObject* gameObject, const aiS
 	default:
 		break;
 	}
-
-	gameObjects_.push_back(gameObject);
 }
 
 ID3D11ShaderResourceView* SceneLoader::loadEmbeddedTexture(const aiTexture* embeddedTexture) {

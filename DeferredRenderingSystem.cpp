@@ -104,11 +104,11 @@ void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject
 			if (!light)
 				continue;
 			auto transform = gameObject->GetTransform();
+			auto world_matrix = Matrix::CreateScale(light->radius * 2 * Vector3::One) * transform->GetMatrix();
 			pointLightData.color = light->color;
-			pointLightData.position = Vector4(transform->position);
+			pointLightData.position = Vector4(world_matrix.Translation());
 			pointLightData.k = Vector4(light->radius, 100 /*shininess*/, 1.2, 0);
 			UpdateCascadeBuffer(&pointLightData);
-			auto world_matrix = Matrix::CreateScale(light->radius * 2 * Vector3::One) * transform->GetMatrix();
 			UpdateTransformBuffer(world_matrix, view_matrix, projection_matrix, cam_world);
 			UINT strides[] = { sizeof(Vertex) };
 			UINT offsets[] = { 0 };

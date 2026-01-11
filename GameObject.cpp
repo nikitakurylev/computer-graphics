@@ -8,6 +8,8 @@ GameObject::GameObject(Game* game) : game(game)
 
 void GameObject::Start()
 {
+	transform.Update();
+	
 	for (Component* component : components)
 	{
 		component->Start();
