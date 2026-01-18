@@ -35,6 +35,7 @@ private:
 
 	void processNode(aiNode* node, Transform* parent, const aiScene* scene);
 	void processLight(aiLight* light, GameObject* gameObject, const aiScene* scene);
+	void processAnimation(aiNodeAnim* animation, GameObject* gameObject);
 	Mesh processMesh(aiMesh* mesh, const aiScene* scene);
 	std::vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName, const aiScene* scene);
 	ID3D11ShaderResourceView* loadEmbeddedTexture(const aiTexture* embeddedTexture);

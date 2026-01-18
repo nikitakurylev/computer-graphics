@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AnimationComponent.cpp" />
     <ClCompile Include="CubeComponent.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="DeferredRenderingSystem.cpp" />
@@ -66,6 +67,7 @@
     <FxCompile Include="SimpleTexturedDirectx11\VertexShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AnimationComponent.h" />
     <ClInclude Include="CascadeData.h" />
     <ClInclude Include="CubeComponent.h" />
     <ClInclude Include="Component.h" />

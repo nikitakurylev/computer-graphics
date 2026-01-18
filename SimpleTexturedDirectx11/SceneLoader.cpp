@@ -1,6 +1,7 @@
 #include "SceneLoader.h"
 #include "../ModelComponent.h"
 #include "../PointLightComponent.h"
+#include "../AnimationComponent.h"
 
 SceneLoader::SceneLoader(Game* game, HWND hwnd, ID3D11Device* dev, ID3D11DeviceContext* devcon) :
 	game_(game),
@@ -62,7 +63,7 @@ Mesh SceneLoader::processMesh(aiMesh* mesh, const aiScene* scene) {
 		vertex.NX = mesh->mNormals[i].x;
 		vertex.NY = mesh->mNormals[i].y;
 		vertex.NZ = mesh->mNormals[i].z;
-
+		
 		if (mesh->mTextureCoords[0]) {
 			vertex.texcoord.x = (float)mesh->mTextureCoords[0][i].x;
 			vertex.texcoord.y = (float)mesh->mTextureCoords[0][i].y;
@@ -141,7 +142,6 @@ void SceneLoader::processNode(aiNode* node, Transform* parent, const aiScene* sc
 
 	auto gameObject = new GameObject(game_);
 
-
 	aiVector3D position;
 	aiQuaternion rotation;
 	aiVector3D scale;
@@ -172,6 +172,14 @@ void SceneLoader::processNode(aiNode* node, Transform* parent, const aiScene* sc
 		}
 	}
 
+	for (UINT i = 0; i < scene->mNumAnimations; i++) {
+		for (UINT j = 0; j < scene->mAnimations[i]->mNumChannels; j++) {
+			if (scene->mAnimations[i]->mChannels[j]->mNodeName == node->mName) {
+				this->processAnimation(scene->mAnimations[i]->mChannels[j], gameObject);
+			}
+		}
+	}
+
 	for (UINT i = 0; i < node->mNumChildren; i++) {
 		this->processNode(node->mChildren[i], transform, scene);
 	}
@@ -189,6 +197,31 @@ void SceneLoader::processLight(aiLight* light, GameObject* gameObject, const aiS
 	default:
 		break;
 	}
+}
+
+void SceneLoader::processAnimation(aiNodeAnim* animation, GameObject* gameObject) {
+	auto positions = std::vector<TimeKey<Vector3>>(animation->mNumPositionKeys);
+
+	for (UINT i = 0; i < animation->mNumPositionKeys; i++) {
+		positions[i] = TimeKey<Vector3>(animation->mPositionKeys[i].mTime / 1000.0,
+			Vector3(animation->mPositionKeys[i].mValue.x, animation->mPositionKeys[i].mValue.y, animation->mPositionKeys[i].mValue.z));
+	}
+	
+	auto scales = std::vector<TimeKey<Vector3>>(animation->mNumScalingKeys);
+
+	for (UINT i = 0; i < animation->mNumScalingKeys; i++) {
+		scales[i] = TimeKey<Vector3>(animation->mScalingKeys[i].mTime / 1000.0,
+			Vector3(animation->mScalingKeys[i].mValue.x, animation->mScalingKeys[i].mValue.y, animation->mScalingKeys[i].mValue.z));
+	}
+	
+	auto rotations = std::vector<TimeKey<Quaternion>>(animation->mNumRotationKeys);
+
+	for (UINT i = 0; i < animation->mNumRotationKeys; i++) {
+		rotations[i] = TimeKey<Quaternion>(animation->mRotationKeys[i].mTime / 1000.0,
+			Quaternion(animation->mRotationKeys[i].mValue.x, animation->mRotationKeys[i].mValue.y, animation->mRotationKeys[i].mValue.z, animation->mRotationKeys[i].mValue.w));
+	}
+
+	gameObject->AddComponent(new AnimationComponent(positions, scales, rotations));
 }
 
 ID3D11ShaderResourceView* SceneLoader::loadEmbeddedTexture(const aiTexture* embeddedTexture) {
