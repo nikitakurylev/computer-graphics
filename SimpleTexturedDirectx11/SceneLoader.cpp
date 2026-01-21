@@ -2,6 +2,7 @@
 #include "../ModelComponent.h"
 #include "../PointLightComponent.h"
 #include "../AnimationComponent.h"
+#include "../KatamariComponent.h"
 
 SceneLoader::SceneLoader(Game* game, HWND hwnd, ID3D11Device* dev, ID3D11DeviceContext* devcon) :
 	game_(game),
@@ -10,8 +11,11 @@ SceneLoader::SceneLoader(Game* game, HWND hwnd, ID3D11Device* dev, ID3D11DeviceC
 	gameObjects_(),
 	directory_(),
 	textures_loaded_(),
-	hwnd_(hwnd) {
-	// empty
+	hwnd_(hwnd),
+	stringToComponent()
+{
+	stringToComponent["KatamariComponent"] = &createInstance<KatamariComponent>;
+	stringToComponent["BulletComponent"] = &createInstance<BulletComponent>;
 }
 
 
@@ -183,6 +187,18 @@ void SceneLoader::processNode(aiNode* node, Transform* parent, const aiScene* sc
 	for (UINT i = 0; i < node->mNumChildren; i++) {
 		this->processNode(node->mChildren[i], transform, scene);
 	}
+	
+	if(node->mMetaData)
+		for (unsigned i = 0; i < node->mMetaData->mNumProperties; i++) {
+			const aiString& key = node->mMetaData->mKeys[i];
+			const aiMetadataEntry& entry = node->mMetaData->mValues[i];
+			if (strcmp(key.C_Str(), "component"))
+				continue;
+
+			aiString value;
+			node->mMetaData->Get(key, value);
+			gameObject->AddComponent(stringToComponent[std::string(value.C_Str())]());
+		}
 
 	gameObjects_.push_back(gameObject);
 }

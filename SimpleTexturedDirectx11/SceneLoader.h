@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <map>
 #include <d3d11_1.h>
 #include <DirectXMath.h>
 
@@ -32,7 +33,8 @@ private:
 	std::string directory_;
 	HWND hwnd_;
 	Game* game_;
-
+	std::map < std::string, Component* (*)()> stringToComponent;
+	template<typename T> static Component* createInstance() { return new T; }
 	void processNode(aiNode* node, Transform* parent, const aiScene* scene);
 	void processLight(aiLight* light, GameObject* gameObject, const aiScene* scene);
 	void processAnimation(aiNodeAnim* animation, GameObject* gameObject);

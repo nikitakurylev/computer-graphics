@@ -46,7 +46,7 @@ int main()
 		bullets[i] = bulletComponent;
 	}
 
-	auto katamariComponent = KatamariComponent(bullets);
+	auto katamariComponent = KatamariComponent();
 	auto katamariModel = ModelComponent(ball);
 	auto katamariLight = PointLightComponent(Vector4(1, 1, 1, 1), 20);
 	auto katamariGameObject = GameObject(&game);

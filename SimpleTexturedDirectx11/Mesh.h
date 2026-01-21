@@ -54,7 +54,12 @@ public:
         devcon->IASetVertexBuffers(0, 1, &VertexBuffer_, &stride, &offset);
         devcon->IASetIndexBuffer(IndexBuffer_, DXGI_FORMAT_R32_UINT, 0);
 
-        devcon->PSSetShaderResources(0, 1, &textures_[0].texture);
+        if (textures_.empty()) {
+            ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
+            devcon->PSSetShaderResources(0, 1, nullSRV);
+        }
+        else
+            devcon->PSSetShaderResources(0, 1, &textures_[0].texture);
 
         devcon->DrawIndexed(static_cast<UINT>(indices_.size()), 0, 0);
     }
