@@ -1,8 +1,8 @@
-﻿using System.Runtime.CompilerServices;
+﻿using Core;
 
 namespace Scripting
 {
-    public class Class1
+    public class MovementComponent : Component
     {
 /*        [MethodImpl(MethodImplOptions.InternalCall)]
         extern static string gimme();*/
