@@ -9,7 +9,8 @@
 #include "DeferredRenderingSystem.h"
 #include "SimpleTexturedDirectx11/ModelLoader.h"
 #include "SimpleTexturedDirectx11/SceneLoader.h"
-#include "MonoEngine.h"
+#include "ScriptingEngine.h"
+#include "Logger.hpp"
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -24,9 +25,11 @@ int main()
 	auto window = DisplayWin32::Instance();
 	auto inputDevice = InputDevice();
 	auto render = DeferredRenderingSystem(&window);
-	auto monoEngine = ScriptingEngine(true);
+	auto logger = ConsoleLogger();
+	auto monoEngine = ScriptingEngine(&logger);
 	auto game = Game(&window, &inputDevice, &render, &monoEngine);
 
+	monoEngine.Init();
 	monoEngine.GatherComponents();
 
 	auto modelLoader = ModelLoader(window.hWnd, render.Device, render.Context);

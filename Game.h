@@ -8,7 +8,7 @@
 #include "SimpleMath.h"
 #include "CascadeData.h"
 #include "RenderingSystem.h"
-#include "MonoEngine.h"
+#include "ScriptingEngine.h"
 
 using namespace DirectX::SimpleMath;
 class GameObject;
@@ -55,6 +55,6 @@ private:
 
 	Vector3 directional_light_position_;
 	CascadeData cascadeData;
-	ScriptingEngine* monoEngine;
+	ScriptingEngine* scriptingEngine;
 };
 

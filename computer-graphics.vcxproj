@@ -21,8 +21,9 @@
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="InputDevice.cpp" />
     <ClCompile Include="KatamariComponent.cpp" />
+    <ClCompile Include="Logger.cpp" />
     <ClCompile Include="ModelComponent.cpp" />
-    <ClCompile Include="MonoEngine.cpp" />
+    <ClCompile Include="ScriptingEngine.cpp" />
     <ClCompile Include="MySuper3DApp.cpp" />
     <ClCompile Include="ParticleSystemComponent.cpp" />
     <ClCompile Include="PointLightComponent.cpp" />
@@ -72,8 +73,9 @@
     <ClInclude Include="InputDevice.h" />
     <ClInclude Include="KatamariComponent.h" />
     <ClInclude Include="Keys.h" />
+    <ClInclude Include="Logger.hpp" />
     <ClInclude Include="ModelComponent.h" />
-    <ClInclude Include="MonoEngine.h" />
+    <ClInclude Include="ScriptingEngine.h" />
     <ClInclude Include="OffsetColor.h" />
     <ClInclude Include="ParticleSystemComponent.h" />
     <ClInclude Include="PointLightComponent.h" />

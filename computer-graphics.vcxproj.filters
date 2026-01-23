@@ -78,7 +78,10 @@
     <ClCompile Include="AnimationComponent.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="MonoEngine.cpp">
+    <ClCompile Include="ScriptingEngine.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Logger.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
@@ -185,10 +188,13 @@
     <ClInclude Include="AnimationComponent.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="MonoEngine.h">
+    <ClInclude Include="ScriptingEngine.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="ScriptingComponentLayout.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
