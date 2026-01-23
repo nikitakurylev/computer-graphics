@@ -10,7 +10,7 @@
 
 #include "MonoEngine.h"
 
-MonoEngine::MonoEngine(bool verbose = true)
+ScriptingEngine::ScriptingEngine(bool verbose = true)
 {
 	this->verbose = verbose;
 
@@ -32,16 +32,14 @@ MonoEngine::MonoEngine(bool verbose = true)
 		throw std::runtime_error(std::string("Failed to load image from domain assembly at path: "));
 }
 
-MonoEngine::~MonoEngine()
+ScriptingEngine::~ScriptingEngine()
 {
 	mono_jit_cleanup(domain);
 }
 
-void MonoEngine::GatherComponents()
+void ScriptingEngine::GatherComponents()
 {
 	MonoClass* baseComponentClass = mono_class_from_name(image, base_component_namespace, base_component_class_name);
-
-	std::vector<MonoClass*> gatheredComponents;
 
 	if (!baseComponentClass)
 		throw std::runtime_error(
@@ -68,22 +66,45 @@ void MonoEngine::GatherComponents()
 
 		mono_metadata_decode_row(typeDefTable, i, cols, MONO_TYPEDEF_SIZE);
 		
-		const char* name = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAME]);
-		const char* name_space = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAMESPACE]);
+		std::string name = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAME]);
+		std::string name_space = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAMESPACE]);
 		
-		gatheredClass = mono_class_from_name(image, name_space, name);
+		gatheredClass = mono_class_from_name(image, name_space.c_str(), name.c_str());
 
-		if (strcmp(name, base_component_class_name) == 0 &&
-			strcmp(name_space, base_component_namespace) == 0)
+		if (name == base_component_class_name && 
+			name_space == base_component_namespace)
 			continue;
 
 		if (mono_class_is_assignable_from(baseComponentClass, gatheredClass))
 		{
-			gatheredComponents.push_back(gatheredClass);
+			MonoMethodDesc* start_method_descriptor = mono_method_desc_new((name_space + ":Start").c_str(), true);
+			MonoMethodDesc* update_method_descriptor = mono_method_desc_new((name_space + ":Update").c_str(), true);
+
+			MonoMethod* start_method = nullptr; 
+			MonoMethod* update_method = nullptr; 
+
+			if (start_method_descriptor)
+				start_method = mono_method_desc_search_in_class(start_method_descriptor, gatheredClass);
+
+			if (update_method_descriptor)
+				update_method = mono_method_desc_search_in_class(update_method_descriptor, gatheredClass);
+
+			ScriptingComponentLayout gathered_component_layout = ScriptingComponentLayout(gatheredClass, name_space, name, start_method, update_method);
+			gathered_component_layouts.push_back(gathered_component_layout);
 
 			if (verbose)
-				std::cout << "Gathered component class (namespace=" << name_space << "), (name=" << name << ")\n";
+				std::cout << gathered_component_layout.GetDescription() << std::endl;
 		}
 	}
 }
 
+void ScriptingEngine::CallUpdateComponents()
+{
+	// Layout inside of scripting component, API through scripting component, not layout
+	// objects are not here, there must be parsed from scene
+
+	for (ScriptingComponentLayout component : gathered_component_layouts)
+	{
+		//mono_method_desc_search_in_class()
+	}
+}

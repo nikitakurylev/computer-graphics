@@ -29,7 +29,7 @@ struct ConstantBuffer
 class Game
 {
 public:
-	Game(DisplayWin32* display, InputDevice* input, RenderingSystem* render, MonoEngine* monoEngine);
+	Game(DisplayWin32* display, InputDevice* input, RenderingSystem* render, ScriptingEngine* monoEngine);
 	std::vector<GameObject*> GameObjects;
 	DisplayWin32* Display;
 	InputDevice* Input;
@@ -55,6 +55,6 @@ private:
 
 	Vector3 directional_light_position_;
 	CascadeData cascadeData;
-	MonoEngine* monoEngine;
+	ScriptingEngine* monoEngine;
 };
 

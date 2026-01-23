@@ -17,5 +17,10 @@ namespace Scripting
 
         }
 
+        void Update()
+        {
+            System.Console.WriteLine("Update"); 
+        }
+
     }
 }

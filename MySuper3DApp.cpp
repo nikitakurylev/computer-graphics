@@ -24,7 +24,7 @@ int main()
 	auto window = DisplayWin32::Instance();
 	auto inputDevice = InputDevice();
 	auto render = DeferredRenderingSystem(&window);
-	auto monoEngine = MonoEngine(true);
+	auto monoEngine = ScriptingEngine(true);
 	auto game = Game(&window, &inputDevice, &render, &monoEngine);
 
 	monoEngine.GatherComponents();

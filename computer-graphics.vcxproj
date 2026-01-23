@@ -79,6 +79,7 @@
     <ClInclude Include="PointLightComponent.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="RenderingSystem.h" />
+    <ClInclude Include="ScriptingComponentLayout.hpp" />
     <ClInclude Include="SimpleTexturedDirectx11\Mesh.h" />
     <ClInclude Include="SimpleTexturedDirectx11\ModelLoader.h" />
     <ClInclude Include="SimpleTexturedDirectx11\SafeRelease.hpp" />

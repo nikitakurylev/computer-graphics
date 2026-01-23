@@ -10,7 +10,7 @@
 
 using namespace DirectX::SimpleMath;
 
-Game::Game(DisplayWin32* display, InputDevice* input, RenderingSystem* render, MonoEngine* mono_engine) : Display(display), Input(input), Render(render)
+Game::Game(DisplayWin32* display, InputDevice* input, RenderingSystem* render, ScriptingEngine* mono_engine) : Display(display), Input(input), Render(render)
 {
 	this->monoEngine = mono_engine;
 }

@@ -1,13 +1,16 @@
 #pragma once
 #include <string>
+#include "ScriptingComponentLayout.hpp"
 #include "mono/jit/jit.h"
 
-class MonoEngine
+class ScriptingEngine
 {
 public:
-	MonoEngine(bool verbose);
-	~MonoEngine();
+	ScriptingEngine(bool verbose);
+	~ScriptingEngine();
+
 	void GatherComponents();
+	void CallUpdateComponents();
 
 private:
 	const char* mono_lib_path = "C:\\Program Files\\Mono\\lib";
@@ -22,6 +25,8 @@ private:
 	MonoAssembly* assembly;
 	MonoDomain* domain;
 	MonoImage* image;
+
+	std::vector<ScriptingComponentLayout> gathered_component_layouts;
 
 	bool verbose;
 };
