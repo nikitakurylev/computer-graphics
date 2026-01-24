@@ -9,6 +9,7 @@
 #include "CascadeData.h"
 #include "RenderingSystem.h"
 #include "ScriptingEngine.h"
+#include "PhysicsSystem.h"
 
 using namespace DirectX::SimpleMath;
 class GameObject;
@@ -34,6 +35,7 @@ public:
 	DisplayWin32* Display;
 	InputDevice* Input;
 	RenderingSystem* Render;
+	PhysicsSystem Physics;
 	Vector3 cam_pos;
 	Vector3 cam_world;
 	void Initialize();

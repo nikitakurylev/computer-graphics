@@ -10,8 +10,8 @@
 
 using namespace DirectX::SimpleMath;
 
-Game::Game(DisplayWin32* display, InputDevice* input, RenderingSystem* render, ScriptingEngine* scriptingEngine) 
-	: Display(display), Input(input), Render(render), scripting_engine(scriptingEngine) {}
+Game::Game(DisplayWin32* display, InputDevice* input, RenderingSystem* render, ScriptingEngine* scriptingEngine)
+	: Display(display), Input(input), Render(render), scripting_engine(scriptingEngine), Physics() {}
 
 void Game::Run()
 {
@@ -106,10 +106,10 @@ void Game::Run()
 				projection_matrix = Matrix::CreateOrthographic(Display->ClientWidth * distance * 0.001f, Display->ClientHeight * distance * 0.001f, 0.01f, 1000);
 			Input->MouseWheelDelta = 0;
 			auto lookAtPoint = cam_pos;
-			cam_world = Vector3(distance, 0, 0); // distance - расстояние от камеры
-			// до точки просмотра
+			cam_world = Vector3(distance, 0, 0); // distance - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+			// пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			Matrix rotMat = Matrix::CreateFromYawPitchRoll(Vector3(0, -cam_rot.y, cam_rot.x));
-			cam_world = Vector3::Transform(cam_world, rotMat) + lookAtPoint; // Финальная позиция камеры
+			cam_world = Vector3::Transform(cam_world, rotMat) + lookAtPoint; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 			view_matrix = Matrix::CreateLookAt(cam_world, lookAtPoint, Vector3::Transform(Vector3::Up, rotMat));
 		}
 
@@ -124,6 +124,7 @@ void Game::Run()
 
 void Game::Update(float deltaTime)
 {
+	Physics.Update(deltaTime);
 	for (GameObject* gameObject : GameObjects)
 	{
 		gameObject->Update(deltaTime);

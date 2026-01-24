@@ -2,7 +2,6 @@
 #include "../ModelComponent.h"
 #include "../PointLightComponent.h"
 #include "../AnimationComponent.h"
-#include "../KatamariComponent.h"
 
 SceneLoader::SceneLoader(Game* game, ScriptingEngine* scriptingEngine, HWND hwnd, ID3D11Device* dev, ID3D11DeviceContext* devcon) :
 	game_(game),
