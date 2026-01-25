@@ -10,6 +10,7 @@
 #include "RenderingSystem.h"
 #include "ScriptingEngine.h"
 #include "PhysicsSystem.h"
+#include "AudioSystem.h"
 
 using namespace DirectX::SimpleMath;
 class GameObject;
@@ -36,6 +37,7 @@ public:
 	InputDevice* Input;
 	RenderingSystem* Render;
 	PhysicsSystem Physics;
+	AudioSystem Audio;
 	Vector3 cam_pos;
 	Vector3 cam_world;
 	void Initialize();

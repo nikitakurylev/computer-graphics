@@ -11,7 +11,7 @@
 using namespace DirectX::SimpleMath;
 
 Game::Game(DisplayWin32* display, InputDevice* input, RenderingSystem* render, ScriptingEngine* scriptingEngine)
-	: Display(display), Input(input), Render(render), scripting_engine(scriptingEngine), Physics() {}
+	: Display(display), Input(input), Render(render), scripting_engine(scriptingEngine), Physics(), Audio() {}
 
 void Game::Run()
 {

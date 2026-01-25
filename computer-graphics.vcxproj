@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AnimationComponent.cpp" />
+    <ClCompile Include="AudioSystem.cpp" />
     <ClCompile Include="CubeComponent.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="DeferredRenderingSystem.cpp" />
@@ -23,6 +24,7 @@
     <ClCompile Include="InputDevice.cpp" />
     <ClCompile Include="KatamariComponent.cpp" />
     <ClCompile Include="Logger.cpp" />
+    <ClCompile Include="miniaudio.c" />
     <ClCompile Include="ModelComponent.cpp" />
     <ClCompile Include="PhysicsComponent.cpp" />
     <ClCompile Include="PhysicsSystem.cpp" />
@@ -80,6 +82,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AnimationComponent.h" />
+    <ClInclude Include="AudioSystem.h" />
     <ClInclude Include="CascadeData.h" />
     <ClInclude Include="CubeComponent.h" />
     <ClInclude Include="Component.h" />
@@ -93,6 +96,7 @@
     <ClInclude Include="KatamariComponent.h" />
     <ClInclude Include="Keys.h" />
     <ClInclude Include="Logger.hpp" />
+    <ClInclude Include="miniaudio.h" />
     <ClInclude Include="MarshalledVector3.hpp" />
     <ClInclude Include="ModelComponent.h" />
     <ClInclude Include="NativeBridge.hpp" />
@@ -201,6 +205,11 @@
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="Models\soccer_ball_diffuse.tif" />
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="shoot.wav">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
