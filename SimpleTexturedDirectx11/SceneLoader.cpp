@@ -2,6 +2,7 @@
 #include "../ModelComponent.h"
 #include "../PointLightComponent.h"
 #include "../AnimationComponent.h"
+#include "../CharacterControllerComponent.h"
 
 SceneLoader::SceneLoader(Game* game, ScriptingEngine* scriptingEngine, HWND hwnd, ID3D11Device* dev, ID3D11DeviceContext* devcon) :
 	game_(game),
@@ -208,6 +209,22 @@ void SceneLoader::processNode(aiNode* node, Transform* parent, const aiScene* sc
 			node->mMetaData->Get(key, value);
 
 			std::string componentName = std::string(value.C_Str());
+			if (componentName == "CharacterControllerComponent") {
+
+				gameObject->AddComponent(new CharacterControllerComponent());
+				continue;
+			}
+			if (componentName == "PhysicsComponent") {
+
+				gameObject->AddComponent(new PhysicsComponent());
+				continue;
+			}
+			if (componentName == "DynamicPhysicsComponent") {
+
+				gameObject->AddComponent(new DynamicPhysicsComponent());
+				continue;
+			}
+				
 			auto scriptingComponent = scripting_engine_->CreateComponentForObjectByName(localUid, componentName);
 			
 			gameObject->AddScriptingComponent(scriptingComponent);

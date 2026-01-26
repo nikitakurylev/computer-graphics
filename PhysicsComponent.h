@@ -13,7 +13,6 @@ protected:
 	q3BodyDef _bodyDef;
 	q3Body* _body;
 private:
-	
 	AxisAngle MatrixToAxisAngle(const Matrix& m);
 };
 

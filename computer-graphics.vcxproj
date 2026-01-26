@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClCompile Include="AnimationComponent.cpp" />
     <ClCompile Include="AudioSystem.cpp" />
+    <ClCompile Include="CharacterControllerComponent.cpp" />
     <ClCompile Include="CubeComponent.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="DeferredRenderingSystem.cpp" />
@@ -84,6 +85,7 @@
     <ClInclude Include="AnimationComponent.h" />
     <ClInclude Include="AudioSystem.h" />
     <ClInclude Include="CascadeData.h" />
+    <ClInclude Include="CharacterControllerComponent.h" />
     <ClInclude Include="CubeComponent.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="DeferredRenderingSystem.h" />

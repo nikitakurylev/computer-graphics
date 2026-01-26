@@ -144,6 +144,9 @@
     <ClCompile Include="miniaudio.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="CharacterControllerComponent.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\MyVeryFirstShader.hlsl">
@@ -333,6 +336,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="AudioSystem.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="CharacterControllerComponent.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="ScriptingTransformLayout.hpp">
