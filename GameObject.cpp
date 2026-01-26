@@ -4,6 +4,8 @@
 GameObject::GameObject(int32_t uid, Game* game, ScriptingTransformComponent* scriptingTransformComponent) : uid_(uid), game(game), scripting_transform_component(scriptingTransformComponent)
 {
 	transform = Transform();
+	receive_transform_from_backend = true;
+	send_transform_to_backend = true;
 }
 
 GameObject::~GameObject()
@@ -18,8 +20,12 @@ GameObject::~GameObject()
 
 void GameObject::Start()
 {
-	transform.position = scripting_transform_component->GetPosition();
-	transform.scale = scripting_transform_component->GetScale();
+	if (receive_transform_from_backend)
+	{
+		transform.position = scripting_transform_component->GetPosition();
+		transform.scale = scripting_transform_component->GetScale();
+	}
+
 	transform.Update();
 	
 	for (Component* component : components)
@@ -31,12 +37,21 @@ void GameObject::Start()
 	{
 		scriptingComponent->Start();
 	}
+
+	if (send_transform_to_backend)
+	{
+		scripting_transform_component->UpdateTransform(transform.position, transform.scale);
+	}
 }
 
 void GameObject::Update(float deltaTime)
 {
-	transform.position = scripting_transform_component->GetPosition();
-	transform.scale = scripting_transform_component->GetScale();
+	if (receive_transform_from_backend)
+	{
+		transform.position = scripting_transform_component->GetPosition();
+		transform.scale = scripting_transform_component->GetScale();
+	}
+
 	transform.Update();
 
 	for (Component* component : components)
@@ -47,6 +62,11 @@ void GameObject::Update(float deltaTime)
 	for (ScriptingComponent* scriptingComponent : scripting_components)
 	{
 		scriptingComponent->Update(deltaTime);
+	}
+
+	if (send_transform_to_backend)
+	{
+		scripting_transform_component->UpdateTransform(transform.position, transform.scale);
 	}
 }
 

@@ -16,6 +16,13 @@ namespace Core
 
         private Transform(Int32 uid, Vector3 position, Vector3 scale)
         {
+            _uid = uid;
+
+            UpdateTransform(position, scale);
+        }
+
+        private void UpdateTransform(Vector3 position, Vector3 scale)
+        {
             this.position = position;
             this.scale = scale;
         }

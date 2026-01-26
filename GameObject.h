@@ -30,5 +30,7 @@ private:
 	std::vector<ScriptingComponent*> scripting_components;
 	Game* game;
 	int32_t uid_;
+	bool receive_transform_from_backend;
+	bool send_transform_to_backend;
 };
 

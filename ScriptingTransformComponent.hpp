@@ -32,6 +32,25 @@ public:
 		return result.ConvertToVector();
 	}
 
+	void UpdateTransform(SimpleMath::Vector3 position, SimpleMath::Vector3 scale)
+	{
+		MarshalledVector3 marshalledPosition;
+		marshalledPosition.x = position.x;
+		marshalledPosition.y = position.y;
+		marshalledPosition.z = position.z;
+
+		MarshalledVector3 marshalledScale;
+		marshalledScale.x = scale.x;
+		marshalledScale.y = scale.y;
+		marshalledScale.z = scale.z;
+
+		void* args[2];
+		args[0] = &marshalledPosition;
+		args[1] = &marshalledScale;
+
+		mono_runtime_invoke(scripting_transform_layout_->update_transform_method, class_instance_, args, NULL);
+	}
+
 private:
 	ScriptingTransformLayout* scripting_transform_layout_;
 	MonoObject* class_instance_;

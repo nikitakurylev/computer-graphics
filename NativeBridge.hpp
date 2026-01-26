@@ -61,7 +61,7 @@ public:
 		void* args[3];
 		args[0] = &uid;
 		args[1] = &marshalledPosition;
-		args[2] = &scale;
+		args[2] = &marshalledScale;
 
 		return mono_runtime_invoke(create_transform_method_, NULL, args, NULL);
 	}

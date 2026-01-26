@@ -32,6 +32,7 @@ public:
 		std::string transformPositionFieldName = "position";
 		std::string transformRotationFieldName = "rotation";
 		std::string transformScaleFieldName = "scale";
+		std::string updateTransformMethodName = coreNamespace + ":" + coreTransformClassName + ":" + "UpdateTransform";
 	};
 
 	ScriptingEngine(ILogger* logger, const Configuration& config = {});

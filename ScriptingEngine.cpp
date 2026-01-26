@@ -223,13 +223,22 @@ void ScriptingEngine::GatherScriptingTransformLayout()
 	MonoClassField* rotationField = mono_class_get_field_from_name(sciptingTransformLayoutClass, config_.transformRotationFieldName.c_str());
 	MonoClassField* scaleField = mono_class_get_field_from_name(sciptingTransformLayoutClass, config_.transformScaleFieldName.c_str());
 
+	MonoMethodDesc* update_transform_method_descriptor = mono_method_desc_new(config_.updateTransformMethodName.c_str(), true);
+
+	MonoMethod* create_transform_method = update_transform_method_descriptor ?
+		mono_method_desc_search_in_class(update_transform_method_descriptor, sciptingTransformLayoutClass) : nullptr;
+
+	if (update_transform_method_descriptor)
+		mono_method_desc_free(update_transform_method_descriptor);
+
 	ScriptingTransformLayout* layout = new ScriptingTransformLayout(
 		sciptingTransformLayoutClass,
 		config_.coreNamespace,
 		config_.coreTransformClassName,
 		positionField,
 		scaleField,
-		rotationField
+		rotationField,
+		create_transform_method
 	);
 
 	scripting_transform_layout_ = layout;
