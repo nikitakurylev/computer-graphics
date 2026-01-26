@@ -10,6 +10,10 @@
 #include "SimpleTexturedDirectx11/ModelLoader.h"
 #include "SimpleTexturedDirectx11/SceneLoader.h"
 
+#include "TestStage1.h"
+#include "TestStage2.h"
+#include "TestStage3.h"
+
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
@@ -18,6 +22,11 @@
 
 int main()
 {
+	// ÒÅÑÒÈĞÎÂÀÍÈÅ İÒÀÏÎÂ
+	AI::RunStage1Tests();
+	AI::RunStage2Tests();
+	AI::RunStage3Tests();
+
 	srand(1);
 
 	auto window = DisplayWin32::Instance();
