@@ -29,7 +29,7 @@ struct ConstantBuffer
 class Game
 {
 public:
-	Game(DisplayWin32* display, InputDevice* input, RenderingSystem* render, ScriptingEngine* monoEngine);
+	Game(DisplayWin32* display, InputDevice* input, RenderingSystem* render, ScriptingEngine* scriptingEngine);
 	std::vector<GameObject*> GameObjects;
 	DisplayWin32* Display;
 	InputDevice* Input;
@@ -42,6 +42,7 @@ public:
 	Matrix GetCameraMatrix();
 	Matrix view_matrix;
 	Matrix projection_matrix;
+	ScriptingEngine* scripting_engine;
 private:
 	std::chrono::time_point<std::chrono::steady_clock> PrevTime;
 	float TotalTime;
@@ -55,6 +56,5 @@ private:
 
 	Vector3 directional_light_position_;
 	CascadeData cascadeData;
-	ScriptingEngine* scriptingEngine;
 };
 

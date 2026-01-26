@@ -26,69 +26,63 @@ int main()
 	auto inputDevice = InputDevice();
 	auto render = DeferredRenderingSystem(&window);
 	auto logger = ConsoleLogger();
-	auto monoEngine = ScriptingEngine(&logger);
-	auto game = Game(&window, &inputDevice, &render, &monoEngine);
+	auto scriptingEngine = ScriptingEngine(&logger);
+	auto game = Game(&window, &inputDevice, &render, &scriptingEngine);
 
-	monoEngine.Init();
-	monoEngine.GatherComponents();
+	scriptingEngine.Init();
+	scriptingEngine.GatherLayouts();
 
-	auto modelLoader = ModelLoader(window.hWnd, render.Device, render.Context);
-	auto sceneLoader = SceneLoader(&game, window.hWnd, render.Device, render.Context);
-	auto ball = modelLoader.Load("soccer_ball.obj");
-	auto ground = modelLoader.Load("ground.obj");
-	auto chair = modelLoader.Load("chair01.obj");
-	auto steve = modelLoader.Load("steve.obj");
-	auto tree = modelLoader.Load("tree.obj");
+//	auto modelLoader = ModelLoader(window.hWnd, render.Device, render.Context);
+	auto sceneLoader = SceneLoader(&game, &scriptingEngine, window.hWnd, render.Device, render.Context);
+	//auto ball = modelLoader.Load("soccer_ball.obj");
+	//auto ground = modelLoader.Load("ground.obj");
+	//auto chair = modelLoader.Load("chair01.obj");
+	//auto steve = modelLoader.Load("steve.obj");
+	//auto tree = modelLoader.Load("tree.obj");
 
-	std::vector<Mesh>* models[3] = {chair, steve, tree};
+	//std::vector<Mesh>* models[3] = {chair, steve, tree};
 
-	BulletComponent* bullets[10];
-	for (int i = 0; i < 10; i++) {
-		auto bulletGameObject = new GameObject(&game);
-		auto bulletComponent = new BulletComponent();
-		auto lightComponent = new PointLightComponent(Vector4(1,1,1,1), 20);
-		bulletGameObject->AddComponent(bulletComponent);
-		bulletGameObject->AddComponent(lightComponent);
-		game.GameObjects.push_back(bulletGameObject);
-		bullets[i] = bulletComponent;
-	}
+	//BulletComponent* bullets[10];
+	//for (int i = 0; i < 10; i++) {
+	//	auto bulletGameObject = new GameObject(&game);
+	//	auto bulletComponent = new BulletComponent();
+	//	auto lightComponent = new PointLightComponent(Vector4(1,1,1,1), 20);
+	//	bulletGameObject->AddComponent(bulletComponent);
+	//	bulletGameObject->AddComponent(lightComponent);
+	//	game.GameObjects.push_back(bulletGameObject);
+	//	bullets[i] = bulletComponent;
+	//}
 
-	auto katamariComponent = KatamariComponent();
-	auto katamariModel = ModelComponent(ball);
-	auto katamariLight = PointLightComponent(Vector4(1, 1, 1, 1), 20);
-	auto katamariGameObject = GameObject(&game);
-	katamariGameObject.AddComponent(&katamariModel);
-	katamariGameObject.AddComponent(&katamariComponent);
-	katamariGameObject.AddComponent(&katamariLight);
-	auto floorComponent = ModelComponent(ground);
-	auto floorGameObject = GameObject(&game);
-	floorGameObject.AddComponent(&floorComponent);
-	floorGameObject.GetTransform()->immovable = true;
+	//auto katamariComponent = KatamariComponent();
+	//auto katamariModel = ModelComponent(ball);
+	//auto katamariLight = PointLightComponent(Vector4(1, 1, 1, 1), 20);
+	//auto katamariGameObject = GameObject(&game);
+	//katamariGameObject.AddComponent(&katamariModel);
+	//katamariGameObject.AddComponent(&katamariComponent);
+	//katamariGameObject.AddComponent(&katamariLight);
+	//auto floorComponent = ModelComponent(ground);
+	//auto floorGameObject = GameObject(&game);
+	//floorGameObject.AddComponent(&floorComponent);
+	//floorGameObject.GetTransform()->immovable = true;
 	
-	game.GameObjects.push_back(&katamariGameObject);
-	game.GameObjects.push_back(&floorGameObject);
-	int count = 10;
-	int width = sqrt(count * 20);
-	for (int i = 0; i < count; i++) {
-		auto clutterComponent = new ModelComponent(models[rand() % 2]);
-		auto clutterGameObject = new GameObject(&game);
-		clutterGameObject->AddComponent(clutterComponent);
-		clutterGameObject->GetTransform()->position = Vector3(rand() % width - (width / 2), 0, rand() % width - (width / 2));
-		game.GameObjects.push_back(clutterGameObject);
-	}
+	//game.GameObjects.push_back(&katamariGameObject);
+	//game.GameObjects.push_back(&floorGameObject);
+	//int count = 10;
+	//int width = sqrt(count * 20);
+	//for (int i = 0; i < count; i++) {
+	//	auto clutterComponent = new ModelComponent(models[rand() % 2]);
+	//	auto clutterGameObject = new GameObject(&game);
+	//	clutterGameObject->AddComponent(clutterComponent);
+	//	clutterGameObject->GetTransform()->position = Vector3(rand() % width - (width / 2), 0, rand() % width - (width / 2));
+	//	game.GameObjects.push_back(clutterGameObject);
+	//}
 
-	auto hugeComponent = ModelComponent(chair);
-	auto hugeGameObject = GameObject(&game);
-	hugeGameObject.AddComponent(&hugeComponent);
-	hugeGameObject.GetTransform()->scale *= 50;
-	hugeGameObject.GetTransform()->position = Vector3(-50, 0, 51);
-	game.GameObjects.push_back(&hugeGameObject);
-
-	//auto particlesComponent = ParticleSystemComponent();
-	//auto particlesGameObject = GameObject(&game);
-	//particlesGameObject.AddComponent(&particlesComponent);
-	//particlesGameObject.GetTransform()->position = Vector3(-40, 0, 40);
-	//game.GameObjects.push_back(&particlesGameObject);
+	//auto hugeComponent = ModelComponent(chair);
+	//auto hugeGameObject = GameObject(&game);
+	//hugeGameObject.AddComponent(&hugeComponent);
+	//hugeGameObject.GetTransform()->scale *= 50;
+	//hugeGameObject.GetTransform()->position = Vector3(-50, 0, 51);
+	//game.GameObjects.push_back(&hugeGameObject);
 
 	auto sceneObjects = sceneLoader.Load("untitled.glb");
 
@@ -97,12 +91,12 @@ int main()
 		game.GameObjects.push_back(gameObject);
 	}
 
-	sceneObjects->at(sceneObjects->size() - 1)->GetTransform()->immovable = true;
+	//sceneObjects->at(sceneObjects->size() - 1)->GetTransform()->immovable = true;
 
 	game.Initialize();
 
-	for (int i = 0; i < 10; i++) {
-		bullets[i]->texture = ball->at(0).textures_[0].texture;
-	}
+	//for (int i = 0; i < 10; i++) {
+	//	bullets[i]->texture = ball->at(0).textures_[0].texture;
+	//}
 	game.Run();
 }

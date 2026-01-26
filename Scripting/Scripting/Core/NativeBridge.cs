@@ -39,7 +39,10 @@ namespace Core
 
             var transform = (Transform)Activator.CreateInstance(
                 typeof(Transform),
-                new {uid, position, scale}
+                BindingFlags.NonPublic | BindingFlags.Instance,
+                null,
+                new object[] { uid, position, scale},
+                null
             );
 
             _createdTransforms.Add(uid, transform);
@@ -63,11 +66,13 @@ namespace Core
 
             var gameObject = (GameObject)Activator.CreateInstance(
                 typeof(GameObject),
-                new {uid, name, transform}
+                BindingFlags.NonPublic | BindingFlags.Instance,
+                null,
+                new object[] { uid, name, transform},
+                null
             );
 
             _createdGameObjects.Add(uid, gameObject);
-            Console.WriteLine($"[BRIDGE] Created gameObject name: '{name}'");
 
             return gameObject;
         }
@@ -82,10 +87,16 @@ namespace Core
 
             if (!_createdGameObjects.TryGetValue(objectUid, out GameObject gameObject))
             {
-                throw new ArgumentException($"[BRIDGE] GameObject type '{componentName}' not found");
+                throw new ArgumentException($"[BRIDGE] GameObject uid '{objectUid}' not found");
             }
 
-            var component = (Component)Activator.CreateInstance(type, new { gameObject, componentName, });
+            var component = (Component)Activator.CreateInstance(
+                type,
+                BindingFlags.Public | BindingFlags.Instance,
+                null,
+                new object[] { gameObject, componentName },
+                null
+            );
 
             Console.WriteLine($"[BRIDGE] Created component type: '{type.Name}'");
 

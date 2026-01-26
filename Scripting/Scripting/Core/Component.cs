@@ -9,6 +9,7 @@ namespace Core
         [DllImport("__Internal")]
         private static extern void ReleaseNativeComponent(IntPtr ptr);
 
+        public Transform transform => gameObject.transform;
         public GameObject gameObject { get; private set; }
         public string name { get; private set; }
 
@@ -20,6 +21,8 @@ namespace Core
         {
             this.gameObject = gameObject;
             this.name = name;
+
+            Console.WriteLine($"Transform created {gameObject.uid} {name}");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

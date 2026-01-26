@@ -6,13 +6,26 @@
 class ScriptingComponentLayout
 {
 public:
-	ScriptingComponentLayout(MonoClass* mono_class, std::string class_namespace, std::string class_name, MonoMethod* start_method = nullptr, MonoMethod* update_method = nullptr) 
+	ScriptingComponentLayout(MonoClass* mono_class, std::string& class_namespace, std::string& class_name, MonoMethod* start_method = nullptr, MonoMethod* update_method = nullptr) 
 		: mono_class(mono_class)
-		, class_namespace(std::move(class_namespace))
-		, class_name(std::move(class_name))
+		, class_namespace(class_namespace)
+		, class_name(class_name)
 		, start_method(start_method)
 		, update_method(update_method)
 	{
+	}
+
+	void Start(MonoObject* classInstance)
+	{
+		mono_runtime_invoke(start_method, classInstance, NULL, NULL);
+	}
+
+	void Update(MonoObject* classInstance, float deltaTime)
+	{
+		void* args[1];
+		args[0] = &deltaTime;
+
+		mono_runtime_invoke(update_method, classInstance, args, NULL);
 	}
 
 	std::string GetDescription() const

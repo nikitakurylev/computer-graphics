@@ -21,6 +21,8 @@ namespace Core
             _uid = uid;
             _name = name;
             _transform = transform;
+
+            Console.WriteLine($"Transform created {uid} {name}");
         }
     }
 }

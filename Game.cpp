@@ -10,10 +10,8 @@
 
 using namespace DirectX::SimpleMath;
 
-Game::Game(DisplayWin32* display, InputDevice* input, RenderingSystem* render, ScriptingEngine* mono_engine) : Display(display), Input(input), Render(render)
-{
-	this->scriptingEngine = mono_engine;
-}
+Game::Game(DisplayWin32* display, InputDevice* input, RenderingSystem* render, ScriptingEngine* scriptingEngine) 
+	: Display(display), Input(input), Render(render), scripting_engine(scriptingEngine) {}
 
 void Game::Run()
 {

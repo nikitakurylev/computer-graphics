@@ -41,7 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MovementComponent.cs" />
+    <Compile Include="BulletComponent.cs" />
     <Compile Include="Core\Component.cs" />
     <Compile Include="Core\GameObject.cs" />
     <Compile Include="Core\NativeBridge.cs" />

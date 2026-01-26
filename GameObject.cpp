@@ -1,29 +1,52 @@
 #include "GameObject.h"
 #include "Component.h"
 
-GameObject::GameObject(Game* game) : game(game)
+GameObject::GameObject(int32_t uid, Game* game, ScriptingTransformComponent* scriptingTransformComponent) : uid_(uid), game(game), scripting_transform_component(scriptingTransformComponent)
 {
 	transform = Transform();
 }
 
+GameObject::~GameObject()
+{
+	for (auto scriptingComponent : scripting_components)
+	{
+		delete scriptingComponent;
+	}
+
+	delete scripting_transform_component;
+}
+
 void GameObject::Start()
 {
+	transform.position = scripting_transform_component->GetPosition();
+	transform.scale = scripting_transform_component->GetScale();
 	transform.Update();
 	
 	for (Component* component : components)
 	{
 		component->Start();
 	}
-}
 
+	for (ScriptingComponent* scriptingComponent : scripting_components)
+	{
+		scriptingComponent->Start();
+	}
+}
 
 void GameObject::Update(float deltaTime)
 {
+	transform.position = scripting_transform_component->GetPosition();
+	transform.scale = scripting_transform_component->GetScale();
 	transform.Update();
 
 	for (Component* component : components)
 	{
 		component->Update(deltaTime);
+	}
+
+	for (ScriptingComponent* scriptingComponent : scripting_components)
+	{
+		scriptingComponent->Update(deltaTime);
 	}
 }
 
@@ -34,6 +57,11 @@ void GameObject::AddComponent(Component* component)
 	
 	component->gameObject = this;
 	components.push_back(component);
+}
+
+void GameObject::AddScriptingComponent(ScriptingComponent* scriptingComponent)
+{
+	scripting_components.push_back(scriptingComponent);
 }
 
 void GameObject::RemoveComponent(Component* component)

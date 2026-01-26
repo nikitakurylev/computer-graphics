@@ -4,8 +4,9 @@
 #include "../AnimationComponent.h"
 #include "../KatamariComponent.h"
 
-SceneLoader::SceneLoader(Game* game, HWND hwnd, ID3D11Device* dev, ID3D11DeviceContext* devcon) :
+SceneLoader::SceneLoader(Game* game, ScriptingEngine* scriptingEngine, HWND hwnd, ID3D11Device* dev, ID3D11DeviceContext* devcon) :
 	game_(game),
+	scripting_engine_(scriptingEngine),
 	dev_(dev),
 	devcon_(devcon),
 	gameObjects_(),
@@ -14,8 +15,7 @@ SceneLoader::SceneLoader(Game* game, HWND hwnd, ID3D11Device* dev, ID3D11DeviceC
 	hwnd_(hwnd),
 	stringToComponent()
 {
-	stringToComponent["KatamariComponent"] = &createInstance<KatamariComponent>;
-	stringToComponent["BulletComponent"] = &createInstance<BulletComponent>;
+	created_game_objects_uid_ = 0;
 }
 
 
@@ -142,20 +142,30 @@ void SceneLoader::Close() {
 	gameObjects_ = std::vector<GameObject*>();
 }
 
-void SceneLoader::processNode(aiNode* node, Transform* parent, const aiScene* scene) {
+void SceneLoader::processNode(aiNode* node, Transform* parent, const aiScene* scene) 
+{
+	aiVector3D aiPosition;
+	aiQuaternion aiRotation;
+	aiVector3D aiScale;
 
-	auto gameObject = new GameObject(game_);
+	node->mTransformation.Decompose(aiScale, aiRotation, aiPosition);
 
-	aiVector3D position;
-	aiQuaternion rotation;
-	aiVector3D scale;
+	auto position = Vector3(aiPosition.x, aiPosition.y, aiPosition.z);
+	auto scale = Vector3(aiScale.x, aiScale.y, aiScale.z);
 
-	node->mTransformation.Decompose(scale, rotation, position);
+	int32_t localUid = created_game_objects_uid_;
+	std::string gameObjectName = std::string("GameObject") + std::to_string(localUid);
+	
+	auto scriptingTransformComponent = scripting_engine_->CreateScriptingTransformComponent(localUid, position, scale);
+	scripting_engine_->CreateScriptingGameObject(localUid, gameObjectName);
+	
+	auto gameObject = new GameObject(localUid, game_, scriptingTransformComponent);
+	created_game_objects_uid_++;
 
 	auto transform = gameObject->GetTransform();
-	transform->position = Vector3(position.x, position.y, position.z);
-	transform->scale = Vector3(scale.x, scale.y, scale.z);
-	transform->rotation = Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
+	transform->position = position;
+	transform->scale = scale;
+	transform->rotation = Quaternion(aiRotation.x, aiRotation.y, aiRotation.z, aiRotation.w);
 	transform->parent = parent;
 
 	if (node->mNumMeshes > 0) {
@@ -197,7 +207,11 @@ void SceneLoader::processNode(aiNode* node, Transform* parent, const aiScene* sc
 
 			aiString value;
 			node->mMetaData->Get(key, value);
-			gameObject->AddComponent(stringToComponent[std::string(value.C_Str())]());
+
+			std::string componentName = std::string(value.C_Str());
+			auto scriptingComponent = scripting_engine_->CreateComponentForObjectByName(localUid, componentName);
+			
+			gameObject->AddScriptingComponent(scriptingComponent);
 		}
 
 	gameObjects_.push_back(gameObject);

@@ -74,7 +74,10 @@
     <ClInclude Include="KatamariComponent.h" />
     <ClInclude Include="Keys.h" />
     <ClInclude Include="Logger.hpp" />
+    <ClInclude Include="MarshalledVector3.hpp" />
     <ClInclude Include="ModelComponent.h" />
+    <ClInclude Include="NativeBridge.hpp" />
+    <ClInclude Include="ScriptingComponent.hpp" />
     <ClInclude Include="ScriptingEngine.h" />
     <ClInclude Include="OffsetColor.h" />
     <ClInclude Include="ParticleSystemComponent.h" />
@@ -82,6 +85,8 @@
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="RenderingSystem.h" />
     <ClInclude Include="ScriptingComponentLayout.hpp" />
+    <ClInclude Include="ScriptingTransformComponent.hpp" />
+    <ClInclude Include="ScriptingTransformLayout.hpp" />
     <ClInclude Include="SimpleTexturedDirectx11\Mesh.h" />
     <ClInclude Include="SimpleTexturedDirectx11\ModelLoader.h" />
     <ClInclude Include="SimpleTexturedDirectx11\SafeRelease.hpp" />
@@ -166,7 +171,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">

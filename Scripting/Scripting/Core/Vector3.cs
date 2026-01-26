@@ -1,8 +1,10 @@
 ﻿using Scripting.Utils;
 using System;
+using System.Runtime.InteropServices;
 
 namespace Core
 {
+    [StructLayout(LayoutKind.Sequential)]
     public struct Vector3 : IEquatable<Vector3>
     {
         public float x;
