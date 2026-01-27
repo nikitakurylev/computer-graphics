@@ -1,9 +1,21 @@
 #include "DeferredRenderingSystem.h"
 #include "ParticleSystemComponent.h"
 #include "PointLightComponent.h"
+#include <iostream>
+#include <DirectXMath.h>
+#include "FrustumCulling.h"
+
+using namespace DirectX;
 
 void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject*> Components, Matrix view_matrix, Matrix projection_matrix, CascadeData* cascadeData, Vector3 cam_world)
 {
+	#ifdef DEBUG_CULLING
+	static bool firstFrame = true;
+	if (firstFrame) {
+		std::cout << "[Debug] DEFERRED RENDERING: Draw called, Components.size() = " << Components.size() << std::endl;
+		firstFrame = false;
+	}
+	#endif
 	const float color[4] = { 0,0,0,0 };
 	const float skyColor[4] = { 0.054f, 0.149f, 0.49f,0 };
 	int i;
@@ -31,6 +43,63 @@ void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject
 	//Clear the depth buffer
 	Context->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
+	Matrix viewProj = view_matrix * projection_matrix;
+
+	manualFrustumCuller.ExtractPlanes(viewProj);
+	
+	#ifdef DEBUG_CULLING
+	static int printCount = 0;
+	if (printCount < 1) {
+		std::cout << "\n[Manual Frustum Culling] Camera: (" << cam_world.x << ", " << cam_world.y << ", " << cam_world.z << ")" << std::endl;
+		manualFrustumCuller.PrintDebugInfo();
+		
+		BoundingBox testBox;
+		testBox.Center = Vector3(0, 1, 0);
+		testBox.Extents = Vector3(0.5f, 0.5f, 0.5f);
+		bool testVisible = manualFrustumCuller.IntersectsAABB(testBox);
+		std::cout << "[Test] AABB at (0,1,0): " << (testVisible ? "VISIBLE" : "CULLED") << std::endl;
+		
+		printCount++;
+	}
+	#endif
+	
+	debugRenderedCount = 0;
+	debugCulledCount = 0;
+	debugTotalCount = 0;
+	
+	#ifdef DEBUG_CULLING
+	static int debugFrameCount = 0;
+	if (debugFrameCount++ % 120 == 0) {
+		std::cout << "\n[Debug] === Frame Statistics ===" << std::endl;
+		std::cout << "[Debug] Total GameObjects: " << Components.size() << std::endl;
+		
+		int totalComponents = 0;
+		int totalRenderers = 0;
+		for (GameObject* go : Components) {
+			auto comps = go->GetComponents();
+			totalComponents += comps.size();
+			for (Component* comp : comps) {
+				if (dynamic_cast<Renderer*>(comp)) {
+					totalRenderers++;
+				}
+			}
+		}
+		std::cout << "[Debug] Total Components: " << totalComponents << ", Renderers: " << totalRenderers << std::endl;
+		std::cout << "[Debug] AABB Visualization: " << (debugShowAABB ? "ON (F1)" : "OFF (F1 to toggle)") << std::endl;
+		
+		if (debugTotalCount > 0) {
+			float culledPercent = (debugCulledCount * 100.0f) / debugTotalCount;
+			std::cout << "[Debug] Culling: Rendered=" << debugRenderedCount 
+			          << ", Culled=" << debugCulledCount 
+			          << ", Total=" << debugTotalCount 
+			          << " (" << culledPercent << "% culled)" << std::endl;
+		} else {
+			std::cout << "[Debug] WARNING: No objects were tested for culling in geometry pass!" << std::endl;
+		}
+		std::cout << "[Debug] =======================\n" << std::endl;
+	}
+	#endif
+
 	Context->IASetInputLayout(layout);
 	for (GameObject* gameComponent : Components)
 	{
@@ -39,7 +108,7 @@ void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject
 		//	particles->Emit(Context);
 		//	continue;
 		//}
-		Render(gameComponent, view_matrix, projection_matrix, vertexShader, pixelShader, cam_world);
+		Render(gameComponent, view_matrix, projection_matrix, vertexShader, pixelShader, cam_world, true, false);
 	}
 	ID3D11RenderTargetView* nullRTV[BUFFER_COUNT] = {NULL, NULL, NULL, NULL };
 	Context->OMSetRenderTargets(BUFFER_COUNT, nullRTV, NULL);
@@ -62,7 +131,7 @@ void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject
 		//auto* particles = dynamic_cast<ParticleSystemComponent*>(gameComponent);
 		//if (!particles)
 		//	continue;
-		Render(gameObject, view_matrix, projection_matrix, vertexShader, pixelShader, cam_world);
+		Render(gameObject, view_matrix, projection_matrix, vertexShader, pixelShader, cam_world, true, false);
 	}
 
 	
@@ -80,6 +149,7 @@ void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject
 	}
 
 	SetShadowMaps(4);
+	BindEnvironmentResources(8);
 
 	UpdateCascadeBuffer(cascadeData);
 
@@ -139,6 +209,28 @@ void DeferredRenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject
 	//	Context->IASetIndexBuffer(coneIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	//	Context->DrawIndexed(117, 0, 0);
 	//}
+
+	if (debugShowAABB) {
+		for (GameObject* gameObject : Components)
+		{
+			for (Component* gameComponent : gameObject->GetComponents()) {
+				auto renderer = dynamic_cast<Renderer*>(gameComponent);
+				if (!renderer)
+					continue;
+
+				BoundingBox aabb;
+				if (!renderer->GetGlobalAABB(aabb))
+					continue;
+
+				Vector3 extent = aabb.Extents;
+				if (!(extent.x > 0.0f && extent.y > 0.0f && extent.z > 0.0f))
+					continue;
+
+				bool intersects = manualFrustumCuller.IntersectsAABB(aabb);
+				RenderDebugAABB(aabb, view_matrix, projection_matrix, cam_world, !intersects);
+			}
+		}
+	}
 
 	Context->ClearRenderTargetView(RenderView, color);
 	Context->OMSetRenderTargets(1, &RenderView, NULL);
@@ -363,6 +455,8 @@ void DeferredRenderingSystem::SetDefferedSetup(int textureWidth, int textureHeig
 			norm.Normalize();
 			points[j * 20 + i].normal = -norm;
 			points[j * 20 + i].texCoord = Vector2(0, 0);
+			points[j * 20 + i].tangent = Vector3::Zero;
+			points[j * 20 + i].bitangent = Vector3::Zero;
 		}
 	}
 
@@ -385,7 +479,8 @@ void DeferredRenderingSystem::SetDefferedSetup(int textureWidth, int textureHeig
 	vertexBufDesc.CPUAccessFlags = 0;
 	vertexBufDesc.MiscFlags = 0;
 	vertexBufDesc.StructureByteStride = 0;
-	vertexBufDesc.ByteWidth = sizeof(Vertex) * std::size(points);
+	const UINT sphereVertexCount = static_cast<UINT>(sizeof(points) / sizeof(points[0]));
+	vertexBufDesc.ByteWidth = sizeof(Vertex) * sphereVertexCount;
 
 	D3D11_SUBRESOURCE_DATA vertexData = {};
 	vertexData.pSysMem = points;
@@ -394,7 +489,7 @@ void DeferredRenderingSystem::SetDefferedSetup(int textureWidth, int textureHeig
 
 	Device->CreateBuffer(&vertexBufDesc, &vertexData, &sphereVertexBuffer);
 
-	auto indexCount = std::size(indeces);
+	auto indexCount = static_cast<UINT>(sizeof(indeces) / sizeof(indeces[0]));
 	D3D11_BUFFER_DESC indexBufDesc = {};
 	indexBufDesc.Usage = D3D11_USAGE_DEFAULT;
 	indexBufDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
@@ -413,6 +508,10 @@ void DeferredRenderingSystem::SetDefferedSetup(int textureWidth, int textureHeig
 	Vertex conePoints[21];
 	int coneIndeces[117];
 	conePoints[0].position = Vector3::Zero;
+	conePoints[0].normal = Vector3::Up;
+	conePoints[0].texCoord = Vector2(0, 0);
+	conePoints[0].tangent = Vector3::Zero;
+	conePoints[0].bitangent = Vector3::Zero;
 
 	for (auto i = 1; i < 21; i++)
 	{
@@ -427,6 +526,8 @@ void DeferredRenderingSystem::SetDefferedSetup(int textureWidth, int textureHeig
 		norm.Normalize();
 		conePoints[i].normal = -norm;
 		conePoints[i].texCoord = Vector2(0, 0);
+		conePoints[i].tangent = Vector3::Zero;
+		conePoints[i].bitangent = Vector3::Zero;
 	}
 
 	for (auto i = 0; i < 20; i++)
@@ -452,7 +553,8 @@ void DeferredRenderingSystem::SetDefferedSetup(int textureWidth, int textureHeig
 	vertexBufDesc.CPUAccessFlags = 0;
 	vertexBufDesc.MiscFlags = 0;
 	vertexBufDesc.StructureByteStride = 0;
-	vertexBufDesc.ByteWidth = sizeof(Vertex) * std::size(conePoints);
+	const UINT coneVertexCount = static_cast<UINT>(sizeof(conePoints) / sizeof(conePoints[0]));
+	vertexBufDesc.ByteWidth = sizeof(Vertex) * coneVertexCount;
 
 	vertexData.pSysMem = conePoints;
 	vertexData.SysMemPitch = 0;
@@ -460,7 +562,7 @@ void DeferredRenderingSystem::SetDefferedSetup(int textureWidth, int textureHeig
 
 	Device->CreateBuffer(&vertexBufDesc, &vertexData, &coneVertexBuffer);
 
-	indexCount = std::size(coneIndeces);
+	indexCount = static_cast<UINT>(sizeof(coneIndeces) / sizeof(coneIndeces[0]));
 	indexBufDesc.Usage = D3D11_USAGE_DEFAULT;
 	indexBufDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	indexBufDesc.CPUAccessFlags = 0;

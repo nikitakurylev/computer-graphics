@@ -18,13 +18,13 @@ struct VOut
 };
 
 // The entry point for our vertex shader
-VOut main(float4 pos : POSITION, float4 norm : NORMAL, float2 texcoord : TEXCOORD)
+VOut main(float4 pos : POSITION, float3 norm : NORMAL, float2 texcoord : TEXCOORD, float3 tangent : TANGENT, float3 bitangent : BINORMAL)
 {
     VOut output;
 
     output.pos = mul(float4(pos.xyz, 1), ViewProjection);
     output.down = normalize(mul(float4(0, -1, 0, 1), World) - mul(float4(0, 0, 0, 1), World));
-    output.depth_pos = output.pos.z;
+    output.depth_pos = float4(output.pos.z, 0.0f, 0.0f, 0.0f);
 
     return output;
 }

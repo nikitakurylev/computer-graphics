@@ -1,6 +1,7 @@
 #include "Game.h"
 #include <d3d11.h>
 #include <iostream>
+#include <algorithm>
 #include "GameObject.h"
 #include "CubeComponent.h"
 #include <d3dcompiler.h>
@@ -10,14 +11,12 @@
 
 using namespace DirectX::SimpleMath;
 
-Game::Game(DisplayWin32* display, InputDevice* input, RenderingSystem* render) : Display(display), Input(input), Render(render)
-{
-}
+Game::Game(DisplayWin32* display, InputDevice* input, RenderingSystem* render, ScriptingEngine* scriptingEngine)
+	: Display(display), Input(input), Render(render), scripting_engine(scriptingEngine), Physics(), Audio() {}
 
 void Game::Run()
 {
 	unsigned int frameCount = 0;
-
 
 	MSG msg = {};
 	bool isExitRequested = false;
@@ -102,16 +101,16 @@ void Game::Run()
 			const auto up_direction = Vector3::Transform(Vector3::Up, rotation);
 			view_matrix = Matrix::CreateLookAt(Vector3(cam_pos), target, up_direction);
 		}
-		else {
-			distance = max(1.0f, distance - Input->MouseWheelDelta * 0.01f);
-			if (ortho && Input->MouseWheelDelta != 0)
+	else {
+		distance = std::max(1.0f, distance - Input->MouseWheelDelta * 0.01f);
+		if (ortho && Input->MouseWheelDelta != 0)
 				projection_matrix = Matrix::CreateOrthographic(Display->ClientWidth * distance * 0.001f, Display->ClientHeight * distance * 0.001f, 0.01f, 1000);
 			Input->MouseWheelDelta = 0;
 			auto lookAtPoint = cam_pos;
-			cam_world = Vector3(distance, 0, 0); // distance - ðàññòîÿíèå îò êàìåðû
-			// äî òî÷êè ïðîñìîòðà
+			cam_world = Vector3(distance, 0, 0); // distance - Ñ€Ð°ÑÑÑ‚Ð¾ÑÐ½Ð¸Ðµ Ð¾Ñ‚ ÐºÐ°Ð¼ÐµÑ€Ñ‹
+			// Ð´Ð¾ Ñ‚Ð¾Ñ‡ÐºÐ¸ Ð¿Ñ€Ð¾ÑÐ¼Ð¾Ñ‚Ñ€Ð°
 			Matrix rotMat = Matrix::CreateFromYawPitchRoll(Vector3(0, -cam_rot.y, cam_rot.x));
-			cam_world = Vector3::Transform(cam_world, rotMat) + lookAtPoint; // Ôèíàëüíàÿ ïîçèöèÿ êàìåðû
+			cam_world = Vector3::Transform(cam_world, rotMat) + lookAtPoint; // Ð¤Ð¸Ð½Ð°Ð»ÑŒÐ½Ð°Ñ Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ñ ÐºÐ°Ð¼ÐµÑ€Ñ‹
 			view_matrix = Matrix::CreateLookAt(cam_world, lookAtPoint, Vector3::Transform(Vector3::Up, rotMat));
 		}
 
@@ -119,13 +118,57 @@ void Game::Run()
 
 		Update(deltaTime);
 		Render->Draw(Display, GameObjects, view_matrix, projection_matrix, &cascadeData, cam_world);
+
+		RenderDebugUI();
 	}
 
-	std::cout << "Hello World!\n";
+}
+
+void Game::RenderDebugUI()
+{
+	static bool showAABB = false;
+	static bool f1WasPressed = false;
+	#ifdef DEBUG_CULLING
+	static int frameCounter = 0;
+	#endif
+	
+	// Toggle AABB visualization with F1 key
+	if (Input->IsKeyDown(Keys::F1)) {
+		if (!f1WasPressed) {
+			showAABB = !showAABB;
+			Render->SetDebugAABBMode(showAABB);
+			#ifdef DEBUG_CULLING
+			std::cout << "\n========================================" << std::endl;
+			std::cout << "[F1 PRESSED] AABB Visualization: " << (showAABB ? "ON" : "OFF") << std::endl;
+			std::cout << "Green boxes = visible, Red boxes = culled" << std::endl;
+			std::cout << "========================================\n" << std::endl;
+			#endif
+			f1WasPressed = true;
+		}
+	} else {
+		f1WasPressed = false;
+	}
+	
+	#ifdef DEBUG_CULLING
+	if (++frameCounter >= 60) {
+		int rendered, culled, total;
+		Render->GetCullingStats(rendered, culled, total);
+		
+		float cullingRatio = total > 0 ? (culled * 100.0f) / total : 0.0f;
+		
+		std::cout << "[Frustum Culling] Rendered: " << rendered 
+		          << " | Culled: " << culled 
+		          << " | Total: " << total
+		          << " | Culling: " << cullingRatio << "%" << std::endl;
+		
+		frameCounter = 0;
+	}
+	#endif
 }
 
 void Game::Update(float deltaTime)
 {
+	Physics.Update(deltaTime);
 	for (GameObject* gameObject : GameObjects)
 	{
 		gameObject->Update(deltaTime);
@@ -147,7 +190,7 @@ void Game::Initialize()
 		DirectX::XM_PIDIV2, Display->ClientWidth / (FLOAT)Display->ClientHeight,
 		0.01f, 1000);
 
-	directional_light_position_ = Vector3(20, 100, 20);
+	directional_light_position_ = Vector3(50, 100, 20);
 
 	auto dir = Vector3(-directional_light_position_.x, -directional_light_position_.y, -directional_light_position_.z);
 

@@ -1,14 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|Win32">
-      <Configuration>Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Win32">
-      <Configuration>Release</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
@@ -23,16 +15,39 @@
     <ClCompile Include="AnimationComponent.cpp" />
     <ClCompile Include="Blackboard.cpp" />
     <ClCompile Include="BTNode.cpp" />
+    <ClCompile Include="AudioSystem.cpp" />
+    <ClCompile Include="CharacterControllerComponent.cpp" />
     <ClCompile Include="CubeComponent.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="DeferredRenderingSystem.cpp" />
     <ClCompile Include="Delegates.cpp" />
     <ClCompile Include="DisplayWin32.cpp" />
+    <ClCompile Include="DynamicPhysicsComponent.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="InputDevice.cpp" />
     <ClCompile Include="KatamariComponent.cpp" />
+    <ClCompile Include="Logger.cpp" />
+    <ClCompile Include="miniaudio.c" />
     <ClCompile Include="ModelComponent.cpp" />
+    <ClCompile Include="PhysicsComponent.cpp" />
+    <ClCompile Include="PhysicsSystem.cpp" />
+    <ClCompile Include="qu3e\broadphase\q3BroadPhase.cpp" />
+    <ClCompile Include="qu3e\broadphase\q3DynamicAABBTree.cpp" />
+    <ClCompile Include="qu3e\collision\q3Box.cpp" />
+    <ClCompile Include="qu3e\collision\q3Collide.cpp" />
+    <ClCompile Include="qu3e\common\q3Geometry.cpp" />
+    <ClCompile Include="qu3e\common\q3Memory.cpp" />
+    <ClCompile Include="qu3e\dynamics\q3Body.cpp" />
+    <ClCompile Include="qu3e\dynamics\q3Contact.cpp" />
+    <ClCompile Include="qu3e\dynamics\q3ContactManager.cpp" />
+    <ClCompile Include="qu3e\dynamics\q3ContactSolver.cpp" />
+    <ClCompile Include="qu3e\dynamics\q3Island.cpp" />
+    <ClCompile Include="qu3e\math\q3Mat3.cpp" />
+    <ClCompile Include="qu3e\math\q3Quaternion.cpp" />
+    <ClCompile Include="qu3e\math\q3Vec3.cpp" />
+    <ClCompile Include="qu3e\scene\q3Scene.cpp" />
+    <ClCompile Include="ScriptingEngine.cpp" />
     <ClCompile Include="MySuper3DApp.cpp" />
     <ClCompile Include="ParticleSystemComponent.cpp" />
     <ClCompile Include="PointLightComponent.cpp" />
@@ -69,6 +84,8 @@
     <FxCompile Include="Shaders\PointVertexShader.hlsl" />
     <FxCompile Include="Shaders\SpotPixelShader.hlsl" />
     <FxCompile Include="Shaders\SpotVertexShader.hlsl" />
+    <FxCompile Include="SimpleTexturedDirectx11\DebugLineVertexShader.hlsl" />
+    <FxCompile Include="SimpleTexturedDirectx11\DebugLinePixelShader.hlsl" />
     <FxCompile Include="SimpleTexturedDirectx11\PixelShader.hlsl" />
     <FxCompile Include="SimpleTexturedDirectx11\VertexShader.hlsl" />
   </ItemGroup>
@@ -88,23 +105,57 @@
     <ClInclude Include="BTRetryUntilSuccess.h" />
     <ClInclude Include="BTSelector.h" />
     <ClInclude Include="BTSequence.h" />
+    <ClInclude Include="AudioSystem.h" />
     <ClInclude Include="CascadeData.h" />
+    <ClInclude Include="CharacterControllerComponent.h" />
     <ClInclude Include="CubeComponent.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="DeferredRenderingSystem.h" />
     <ClInclude Include="Delegates.h" />
     <ClInclude Include="DisplayWin32.h" />
+    <ClInclude Include="DynamicPhysicsComponent.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="InputDevice.h" />
     <ClInclude Include="KatamariComponent.h" />
     <ClInclude Include="Keys.h" />
+    <ClInclude Include="Logger.hpp" />
+    <ClInclude Include="miniaudio.h" />
+    <ClInclude Include="MarshalledVector3.hpp" />
     <ClInclude Include="ModelComponent.h" />
+    <ClInclude Include="NativeBridge.hpp" />
+    <ClInclude Include="ScriptingComponent.hpp" />
+    <ClInclude Include="PhysicsComponent.h" />
+    <ClInclude Include="PhysicsSystem.h" />
+    <ClInclude Include="qu3e\broadphase\q3BroadPhase.h" />
+    <ClInclude Include="qu3e\broadphase\q3DynamicAABBTree.h" />
+    <ClInclude Include="qu3e\collision\q3Box.h" />
+    <ClInclude Include="qu3e\collision\q3Collide.h" />
+    <ClInclude Include="qu3e\common\q3Geometry.h" />
+    <ClInclude Include="qu3e\common\q3Memory.h" />
+    <ClInclude Include="qu3e\common\q3Settings.h" />
+    <ClInclude Include="qu3e\common\q3Types.h" />
+    <ClInclude Include="qu3e\dynamics\q3Body.h" />
+    <ClInclude Include="qu3e\dynamics\q3Contact.h" />
+    <ClInclude Include="qu3e\dynamics\q3ContactManager.h" />
+    <ClInclude Include="qu3e\dynamics\q3ContactSolver.h" />
+    <ClInclude Include="qu3e\dynamics\q3Island.h" />
+    <ClInclude Include="qu3e\math\q3Mat3.h" />
+    <ClInclude Include="qu3e\math\q3Math.h" />
+    <ClInclude Include="qu3e\math\q3Quaternion.h" />
+    <ClInclude Include="qu3e\math\q3Transform.h" />
+    <ClInclude Include="qu3e\math\q3Vec3.h" />
+    <ClInclude Include="qu3e\q3.h" />
+    <ClInclude Include="qu3e\scene\q3Scene.h" />
+    <ClInclude Include="ScriptingEngine.h" />
     <ClInclude Include="OffsetColor.h" />
     <ClInclude Include="ParticleSystemComponent.h" />
     <ClInclude Include="PointLightComponent.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="RenderingSystem.h" />
+    <ClInclude Include="ScriptingComponentLayout.hpp" />
+    <ClInclude Include="ScriptingTransformComponent.hpp" />
+    <ClInclude Include="ScriptingTransformLayout.hpp" />
     <ClInclude Include="SimpleTexturedDirectx11\Mesh.h" />
     <ClInclude Include="SimpleTexturedDirectx11\ModelLoader.h" />
     <ClInclude Include="SimpleTexturedDirectx11\SafeRelease.hpp" />
@@ -114,6 +165,7 @@
     <ClInclude Include="TestStage1.h" />
     <ClInclude Include="TestStage2.h" />
     <ClInclude Include="TestStage3.h" />
+    <ClInclude Include="FrustumCulling.h" />
     <ClInclude Include="Transform.h" />
     <ClInclude Include="UtilityAction.h" />
     <ClInclude Include="UtilityConsideration.h" />
@@ -184,6 +236,21 @@
   <ItemGroup>
     <CopyFileToFolders Include="Models\soccer_ball_diffuse.tif" />
   </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="shoot.wav">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="Sounds\jump.wav">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="Sounds\collect.wav">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -192,19 +259,6 @@
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -224,12 +278,6 @@
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -238,49 +286,37 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <VcpkgUseStatic>false</VcpkgUseStatic>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Program Files\Mono\include\mono-2.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalUsingDirectories>
+      </AdditionalUsingDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>mono-2.0-sgen.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Program Files\Mono\lib\mono\4.8-api;C:\Program Files\Mono\lib</AdditionalLibraryDirectories>
+      <ShowProgress>LinkVerbose</ShowProgress>
     </Link>
     <FxCompile>
       <ShaderType>Effect</ShaderType>
       <ShaderModel>5.0</ShaderModel>
     </FxCompile>
+    <ProjectReference>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -290,23 +326,30 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Program Files\Mono\include\mono-2.0</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>mono-2.0-sgen.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Program Files\Mono\lib\mono\4.8-api;C:\Program Files\Mono\lib</AdditionalLibraryDirectories>
+      <ShowProgress>LinkVerbose</ShowProgress>
     </Link>
+    <ProjectReference>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\MeshContentTask.targets" />
-    <Import Project="packages\directxtk_desktop_win10.2025.3.21.2\build\native\directxtk_desktop_win10.targets" Condition="Exists('packages\directxtk_desktop_win10.2025.3.21.2\build\native\directxtk_desktop_win10.targets')" />
+    <Import Project="packages\directxtk_desktop_win10.2025.10.28.2\build\native\directxtk_desktop_win10.targets" Condition="Exists('packages\directxtk_desktop_win10.2025.10.28.2\build\native\directxtk_desktop_win10.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('packages\directxtk_desktop_win10.2025.3.21.2\build\native\directxtk_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\directxtk_desktop_win10.2025.3.21.2\build\native\directxtk_desktop_win10.targets'))" />
+    <Error Condition="!Exists('packages\directxtk_desktop_win10.2025.10.28.2\build\native\directxtk_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\directxtk_desktop_win10.2025.10.28.2\build\native\directxtk_desktop_win10.targets'))" />
   </Target>
 </Project>

@@ -110,4 +110,9 @@ void CubeComponent::SetSize(float x, float y, float z)
 	points[5].position = DirectX::XMFLOAT3(x, -z, -y);
 	points[6].position = DirectX::XMFLOAT3(x, -z, y);
 	points[7].position = DirectX::XMFLOAT3(-x, -z, y);
+
+	for (int i = 0; i < 8; i++) {
+		points[i].tangent = Vector3::Zero;
+		points[i].bitangent = Vector3::Zero;
+	}
 }

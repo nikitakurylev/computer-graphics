@@ -51,6 +51,7 @@ void KatamariComponent::Update(float deltaTime)
 	auto bulletsCount = _bullets.size();
 	if (game->Input->IsKeyDown(Keys::E)) {
 		if (!shootButtonDown) {
+			game->Audio.PlaySoundClip("shoot.wav");
 			_bullets[currentBullet % bulletsCount]->gameObject->GetTransform()->position = transform->position;
 			_bullets[currentBullet % bulletsCount]->velocity = -right * 10;
 			currentBullet = (currentBullet + 1) % bulletsCount;

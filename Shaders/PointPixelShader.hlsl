@@ -8,10 +8,10 @@ cbuffer LightBuffer : register(b0)
     float4 debug;
 }
 
-Texture2D NormalMap : register(t0);
-Texture2D Texture : register(t1);
-Texture2D Position	: register(t2);
-Texture2D Depth	: register(t3);
+Texture2D GBuffer0 : register(t0); // Normal.xyz, Roughness
+Texture2D GBuffer1 : register(t1); // Albedo.rgb, Metallic
+Texture2D GBuffer2 : register(t2); // Position.xyz, AO
+Texture2D GBuffer3 : register(t3); // Depth, Mask
 
 SamplerState Sampler	: register(s0);
 
@@ -26,40 +26,95 @@ struct PixelShaderOutput
     float4 Color : SV_Target0;
 };
 
-PixelShaderOutput main(VertexToPixel input) : SV_TARGET
+static const float PI = 3.14159265f;
+
+float DistributionGGX(float3 n, float3 h, float roughness)
+{
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float nDotH = max(dot(n, h), 0.0f);
+    float nDotH2 = nDotH * nDotH;
+    float denom = (nDotH2 * (a2 - 1.0f) + 1.0f);
+    return a2 / (PI * denom * denom + 1e-5f);
+}
+
+float GeometrySchlickGGX(float nDotV, float roughness)
+{
+    float r = roughness + 1.0f;
+    float k = (r * r) / 8.0f;
+    return nDotV / (nDotV * (1.0f - k) + k + 1e-5f);
+}
+
+float GeometrySmith(float3 n, float3 v, float3 l, float roughness)
+{
+    float nDotV = max(dot(n, v), 0.0f);
+    float nDotL = max(dot(n, l), 0.0f);
+    float ggx2 = GeometrySchlickGGX(nDotV, roughness);
+    float ggx1 = GeometrySchlickGGX(nDotL, roughness);
+    return ggx1 * ggx2;
+}
+
+float3 FresnelSchlick(float cosTheta, float3 F0)
+{
+    return F0 + (1.0f - F0) * pow(1.0f - cosTheta, 5.0f);
+}
+
+PixelShaderOutput main(VertexToPixel input)
 {
     int3 sampleIndices = int3(input.pos.xy, 0);
 
-    float4 textureColor = Texture.Load(sampleIndices);
-    if (textureColor.w == 0)
-        discard;
-    float depth_pos = Depth.Load(sampleIndices).x;
-    
-    if (depth_pos.x > input.depth_pos.x)
-        discard;
-    
-    float3 normal = NormalMap.Load(sampleIndices).xyz;
+    float4 g0 = GBuffer0.Load(sampleIndices);
+    float4 g1 = GBuffer1.Load(sampleIndices);
+    float4 g2 = GBuffer2.Load(sampleIndices);
+    float4 g3 = GBuffer3.Load(sampleIndices);
 
-    float3 world_pos = Position.Load(sampleIndices).xyz;
+    if (g3.y == 0)
+        discard;
+
+    float depth_pos = g3.x;
+    
+    if (depth_pos > input.depth_pos.x)
+        discard;
+    
+    float3 normal = normalize(g0.xyz);
+    float roughness = saturate(g0.w);
+    roughness = max(roughness, 0.04f);
+
+    float3 albedo = g1.xyz;
+    float metallic = saturate(g1.w);
+
+    float3 world_pos = g2.xyz;
     
     const float3 view_direction = normalize(view_pos.xyz - world_pos.xyz);
     
-    float3 dyn;
     float dist = distance(dyn_position.xyz, world_pos.xyz);
     if (dist > dyn_k.x)
         discard;
     
-    const float3 dyn_light_direction = normalize(dyn_position.xyz - world_pos.xyz);
-    const float3 dyn_reflection_vector = normalize(reflect(dyn_light_direction, normal));
-    const float3 dyn_diffuse = max(0, dot(dyn_light_direction, normal)) * textureColor.xyz;
-    //dyn_k.y is shininess
-    const float3 dyn_specular = pow(max(0, dot(-view_direction, dyn_reflection_vector)), dyn_k.y) * dyn_k.z;
+    const float3 light_direction = normalize(dyn_position.xyz - world_pos.xyz);
+    const float3 halfway = normalize(view_direction + light_direction);
 
-    dyn = dyn_color.xyz * (dyn_diffuse + dyn_specular) / pow(dist, 2);
+    float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), albedo, metallic);
+    float3 F = FresnelSchlick(max(dot(halfway, view_direction), 0.0f), F0);
+    float NDF = DistributionGGX(normal, halfway, roughness);
+    float G = GeometrySmith(normal, view_direction, light_direction, roughness);
+
+    float3 numerator = NDF * G * F;
+    float denom = 4.0f * max(dot(normal, view_direction), 0.0f) * max(dot(normal, light_direction), 0.0f) + 1e-4f;
+    float3 specular = numerator / denom;
+
+    float3 kS = F;
+    float3 kD = (1.0f - kS) * (1.0f - metallic);
+
+    float NdotL = max(dot(normal, light_direction), 0.0f);
+    float attenuation = 1.0f / max(dist * dist, 0.01f);
+    float smooth = 1.0f - pow(dist / dyn_k.x, 3.0f);
+    float3 radiance = dyn_color.xyz * dyn_k.z;
+    float3 direct = (kD * albedo / PI + specular) * radiance * NdotL * attenuation;
     
     PixelShaderOutput output;
     
-    output.Color = float4(dyn, 1) * (1 - pow(dist / dyn_k.x, 3));
+    output.Color = float4(direct * smooth, 1);
     return output;
 
 }

@@ -15,7 +15,7 @@ class AnimationComponent : public Component
 public:
 	AnimationComponent(std::vector<TimeKey<Vector3>> positions, std::vector<TimeKey<Vector3>> scales, std::vector<TimeKey<Quaternion>> rotations);
 	void Update(float deltaTime) override;
-
+	bool playing;
 private:
 	float InverseLerp(float a, float b, float t);
 
