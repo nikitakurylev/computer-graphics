@@ -3,7 +3,6 @@
 void Component::Start()
 {
 	gameObject->receive_transform_from_backend = true;
-	gameObject->send_transform_to_backend = true;
 }
 
 void Component::Update(float deltaTime)

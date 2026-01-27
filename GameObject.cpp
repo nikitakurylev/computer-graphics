@@ -5,7 +5,6 @@ GameObject::GameObject(int32_t uid, Game* game, ScriptingTransformComponent* scr
 {
 	transform = Transform();
 	receive_transform_from_backend = true;
-	send_transform_to_backend = false;
 }
 
 GameObject::~GameObject()
@@ -46,6 +45,7 @@ void GameObject::Start()
 
 void GameObject::Update(float deltaTime)
 {
+	auto position = transform.position;
 	if (receive_transform_from_backend)
 	{
 		transform.position = scripting_transform_component->GetPosition();

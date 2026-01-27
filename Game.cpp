@@ -113,6 +113,20 @@ void Game::Run()
 			cam_world = Vector3::Transform(cam_world, rotMat) + lookAtPoint; // Финальная позиция камеры
 			view_matrix = Matrix::CreateLookAt(cam_world, lookAtPoint, Vector3::Transform(Vector3::Up, rotMat));
 		}
+		Matrix camera_world_matrix;
+
+		view_matrix.Invert(camera_world_matrix);
+
+		Vector3 camera_pos;
+		Vector3 camera_scale;
+		Quaternion camera_rotation;
+
+		camera_world_matrix.Decompose(camera_scale, camera_rotation, camera_pos);
+
+		camera_transform->position = camera_pos;
+		camera_transform->scale = camera_scale;
+		camera_transform->rotation = camera_rotation;
+		camera_transform->Update();
 
 		cascadeData.view_pos = Vector4(cam_world);
 

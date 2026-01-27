@@ -11,6 +11,7 @@
 #include "ScriptingEngine.h"
 #include "PhysicsSystem.h"
 #include "AudioSystem.h"
+#include "Transform.h"
 
 using namespace DirectX::SimpleMath;
 class GameObject;
@@ -40,6 +41,7 @@ public:
 	AudioSystem Audio;
 	Vector3 cam_pos;
 	Vector3 cam_world;
+	Transform* camera_transform;
 	void Initialize();
 	void Run();
 	void Update(float deltaTime);

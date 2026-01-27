@@ -51,6 +51,7 @@
     <Compile Include="Core\Vector2.cs" />
     <Compile Include="Core\Vector3.cs" />
     <Compile Include="Utils\MathUtils.cs" />
+    <Compile Include="WinComponent.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

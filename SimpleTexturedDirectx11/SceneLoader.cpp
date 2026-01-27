@@ -607,6 +607,11 @@ void SceneLoader::processNode(aiNode* node, Transform* parent, const aiScene* sc
 				continue;
 			}
 
+			if (key == "camera") {
+				game_->camera_transform = transform;
+				continue;
+			}
+
 			if (key.rfind("component", 0))
 				continue;
 
@@ -617,21 +622,24 @@ void SceneLoader::processNode(aiNode* node, Transform* parent, const aiScene* sc
 			if (componentName == "CharacterControllerComponent") {
 
 				gameObject->AddComponent(new CharacterControllerComponent());
+				gameObject->send_transform_to_backend = true;
 				continue;
 			}
 			if (componentName == "PhysicsComponent") {
 
 				gameObject->AddComponent(new PhysicsComponent());
+				gameObject->send_transform_to_backend = true;
 				continue;
 			}
 			if (componentName == "DynamicPhysicsComponent") {
 
 				gameObject->AddComponent(new DynamicPhysicsComponent());
+				gameObject->send_transform_to_backend = true;
 				continue;
 			}
 				
 			auto scriptingComponent = scripting_engine_->CreateComponentForObjectByName(localUid, componentName);
-			
+			gameObject->send_transform_to_backend = false || gameObject->send_transform_to_backend;
 			gameObject->AddScriptingComponent(scriptingComponent);
 		}
 

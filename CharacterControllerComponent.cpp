@@ -77,7 +77,7 @@ void CharacterControllerComponent::Update(float deltaTime)
 
 	Component::Update(deltaTime);
 
-	for (GameObject* object : game->GameObjects)
+	/*for (GameObject* object : game->GameObjects)
 	{
 		auto otherTransform = object->GetTransform();
 		auto otherWorldPosition = otherTransform->GetMatrix().Translation();
@@ -87,7 +87,7 @@ void CharacterControllerComponent::Update(float deltaTime)
 		for (ScriptingComponent* component : object->GetScriptingComponents()) {
 			game->Audio.PlaySoundClip("collect.wav");
 		}
-	}
+	}*/
 	auto oldRotation = transform->rotation;
 
 	DynamicPhysicsComponent::Update(deltaTime);

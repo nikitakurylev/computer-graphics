@@ -22,14 +22,20 @@ namespace Scripting
             {
                 _player = keyValuePair.Value.Components.FirstOrDefault(c => c is PlayerComponent) as PlayerComponent;
                 if (_player != null)
+                {
+                    _player.TotalCoins++;
                     break;
+                }
             }
         }
 
         void Update(float deltaTime)
         {
             if ((_player.transform.position - transform.position).sqrMagnitude < 1f)
+            {
                 transform.position = new Vector3(0, -1000000, 0);
+                _player.CollectCoin();
+            }
         }
     }
 }
