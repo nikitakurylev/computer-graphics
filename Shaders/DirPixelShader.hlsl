@@ -105,7 +105,7 @@ PixelShaderOutput main(VertexToPixel input)
 
     if (g3.y == 0)
     {
-        output.Color = float4(0.054f, 0.149f, 0.49f, 0);
+        output.Color = float4(0.6, 0.8, 0.8, 0);
         return output;
     }
     
