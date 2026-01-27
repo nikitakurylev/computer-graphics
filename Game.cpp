@@ -197,9 +197,9 @@ void Game::Initialize()
 	dir.Normalize();
 	const auto directional_light_direction = Vector4(dir.x, dir.y, dir.z, 1);
 
-	cascadeData.color = Vector4(0.054f, 0.149f, 0.49f, 0);
+	cascadeData.color = Vector4(1.0f, 0.95f, 0.9f, 0);
 	cascadeData.position = directional_light_direction;
-	cascadeData.k = Vector4(0.1f, 100.0f, 1.2f, 0);
+	cascadeData.k = Vector4(0.3f, 100.0f, 1.2f, 0);
 
 	Render->Initialize(GameObjects);
 

@@ -26,6 +26,8 @@ PixelShaderOutput main(float4 pos : SV_POSITION, float3 norm : NORMALWS, float2 
 	float4 baseColor = AlbedoTexture.Sample(SampleType, texcoord) * baseColorFactor;
 	if(baseColor.a < 0.5f)
         discard;
+        
+    baseColor.rgb = pow(baseColor.rgb, 2.2f);
 
     float ao = AOTexture.Sample(SampleType, texcoord).r * materialParams.z;
     float metallic = MetallicTexture.Sample(SampleType, texcoord).r * materialParams.x;

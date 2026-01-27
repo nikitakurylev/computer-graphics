@@ -183,6 +183,7 @@ PixelShaderOutput main(VertexToPixel input)
 
     float3 finalColor = direct * depthColor + ambient * (1 - debug.x);
 
+    finalColor = pow(saturate(finalColor), 1.0f / 2.2f);
     output.Color = float4(finalColor, 1);
     return output;
 }
