@@ -103,7 +103,7 @@ void BulletComponent::Start()
 void BulletComponent::Update(float deltaTime)
 {
 	auto transform = gameObject->GetTransform();
-	transform->position += velocity * deltaTime;zxfwefelas0pdfklweq[231432458623548045]
+	transform->position += velocity * deltaTime;
 	collider.Center = transform->position;
 
 	for (GameObject* object : gameObject->GetGame()->GameObjects)
