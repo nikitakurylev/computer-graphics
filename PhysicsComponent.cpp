@@ -18,7 +18,9 @@ void PhysicsComponent::Start()
     // Create a box at the origin with width, height, depth = (1.0, 1.0, 1.0)
     // and add it to a rigid body. The transform is defined relative to the owning body
     boxDef.Set(localSpace, q3Vec3(transform->scale.x * 2, transform->scale.y * 2, transform->scale.z * 2));
-    _body->AddBox(boxDef);
+    boxDef.SetFriction(0);
+    boxDef.SetRestitution(0);
+    auto box = _body->AddBox(boxDef);
 }
 
 void PhysicsComponent::Update(float deltaTime)

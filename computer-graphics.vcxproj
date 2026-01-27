@@ -113,7 +113,6 @@
     <ClInclude Include="qu3e\common\q3Memory.h" />
     <ClInclude Include="qu3e\common\q3Settings.h" />
     <ClInclude Include="qu3e\common\q3Types.h" />
-    <ClInclude Include="qu3e\debug\q3Render.h" />
     <ClInclude Include="qu3e\dynamics\q3Body.h" />
     <ClInclude Include="qu3e\dynamics\q3Contact.h" />
     <ClInclude Include="qu3e\dynamics\q3ContactManager.h" />

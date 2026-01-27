@@ -5,7 +5,27 @@ CharacterControllerComponent::CharacterControllerComponent() : DynamicPhysicsCom
 	_bodyDef.lockAxisX = true;
 	_bodyDef.lockAxisZ = true;
 	_bodyDef.lockAxisY = true;
-	speed = 1;
+	speed = 2;
+}
+
+void CharacterControllerComponent::Start()
+{
+	DynamicPhysicsComponent::Start();
+	auto transform = gameObject->GetTransform();
+	auto game = gameObject->GetGame();
+	for (GameObject* object : game->GameObjects) {
+		auto otherTransform = object->GetTransform();
+		auto otherWorldPosition = otherTransform->GetMatrix().Translation();
+		if (otherTransform->parent != transform)
+			continue;
+		for (Component* component : object->GetComponents()) {
+			animation = dynamic_cast<AnimationComponent*>(component);
+			if (animation)
+				break;
+		}
+		break;
+	}
+
 }
 
 void CharacterControllerComponent::Update(float deltaTime)
@@ -38,8 +58,10 @@ void CharacterControllerComponent::Update(float deltaTime)
 	acceleration = Vector3(acceleration.x, 0, acceleration.z) * speed;
 	auto velocity = _body->GetLinearVelocity();
 
-	if (/*isGrounded &&*/ game->Input->IsKeyDown(Keys::Space)) {
-		//isGrounded = false;
+	isGrounded = game->Physics.Raycast(transform->position + Vector3(0, -0.5f, 0), Vector3::Down, 0.01f);
+
+	if (isGrounded && game->Input->IsKeyDown(Keys::Space)) {
+		isGrounded = false;
 		velocity.y = 5;
 	}
 
@@ -60,6 +82,14 @@ void CharacterControllerComponent::Update(float deltaTime)
 		if (object == gameObject || otherTransform->immovable || !collider.Contains(otherWorldPosition + Vector3::Up))
 			continue;
 	}
-	
+	auto oldRotation = transform->rotation;
+
 	DynamicPhysicsComponent::Update(deltaTime);
+
+	auto isWalking = acceleration.LengthSquared() > 0;
+	animation->playing = isWalking;
+	if (isWalking)
+		transform->rotation = Quaternion::Lerp(oldRotation, Quaternion::LookRotation(acceleration, Vector3::Up), deltaTime * 10.0f);
+	else
+		transform->rotation = oldRotation;
 }

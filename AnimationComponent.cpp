@@ -4,13 +4,22 @@ AnimationComponent::AnimationComponent(std::vector<TimeKey<Vector3>> positions, 
 	: _positions(positions), _scales(scales), _rotations(rotations), playbackTime(0)
 {
 	length = max(max(_positions.back().time, _scales.back().time), _rotations.back().time);
+	playing = true;
 }
 
 void AnimationComponent::Update(float deltaTime)
 {
-	playbackTime = std::fmod((playbackTime + deltaTime), length);
-
 	auto transform = gameObject->GetTransform();
+	
+	if (!playing) {
+		transform->position = Vector3::Lerp(transform->position, _positions.front().value, deltaTime * 20.0f);
+		transform->scale = Vector3::Lerp(transform->scale, _scales.front().value, deltaTime * 20.0f);
+		transform->rotation = Quaternion::Lerp(transform->rotation, _rotations.front().value, deltaTime * 20.0f);
+		playbackTime = 0;
+		return;
+	}
+	
+	playbackTime = std::fmod((playbackTime + deltaTime), length);
 
 	int i = 0;
 
