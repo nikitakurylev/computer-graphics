@@ -5,7 +5,7 @@ GameObject::GameObject(int32_t uid, Game* game, ScriptingTransformComponent* scr
 {
 	transform = Transform();
 	receive_transform_from_backend = true;
-	send_transform_to_backend = true;
+	send_transform_to_backend = false;
 }
 
 GameObject::~GameObject()

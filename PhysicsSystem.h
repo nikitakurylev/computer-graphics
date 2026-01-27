@@ -32,13 +32,10 @@ private:
 			return true;
 		}
 
-		void Init(const q3Vec3& spot, const q3Vec3& dir)
+		void Init(q3RaycastData raycast)
 		{
-			data.start = spot;
-			data.dir = q3Normalize(dir);
-			data.t = r32(10000.0);
+			data = raycast;
 			tfinal = FLT_MAX;
-			data.toi = data.t;
 			impactBody = NULL;
 		}
 	};

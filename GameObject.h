@@ -23,6 +23,8 @@ public:
 	Transform* GetTransform() { return &transform; }
 	ScriptingTransformComponent* GetScriptingTransformComponent() { return scripting_transform_component; }
 	Game* GetGame() const { return game; }
+	bool receive_transform_from_backend;
+	bool send_transform_to_backend;
 private:
 	Transform transform;
 	ScriptingTransformComponent* scripting_transform_component;
@@ -30,7 +32,5 @@ private:
 	std::vector<ScriptingComponent*> scripting_components;
 	Game* game;
 	int32_t uid_;
-	bool receive_transform_from_backend;
-	bool send_transform_to_backend;
 };
 

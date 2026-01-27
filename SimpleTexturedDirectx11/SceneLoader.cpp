@@ -577,18 +577,6 @@ void SceneLoader::processNode(aiNode* node, Transform* parent, const aiScene* sc
 	transform->rotation = Quaternion(aiRotation.x, aiRotation.y, aiRotation.z, aiRotation.w);
 	transform->parent = parent;
 
-	if (node->mNumMeshes > 0) {
-
-		auto meshes = new std::vector<Mesh>();
-
-		for (UINT i = 0; i < node->mNumMeshes; i++) {
-			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-			meshes->push_back(this->processMesh(mesh, scene));
-		}
-		auto modelComponent = new ModelComponent(meshes);
-		gameObject->AddComponent(modelComponent);
-	}
-
 	for (UINT i = 0; i < scene->mNumLights; i++) {
 		if (scene->mLights[i]->mName == node->mName) {
 			this->processLight(scene->mLights[i], gameObject, scene);
@@ -606,11 +594,19 @@ void SceneLoader::processNode(aiNode* node, Transform* parent, const aiScene* sc
 	for (UINT i = 0; i < node->mNumChildren; i++) {
 		this->processNode(node->mChildren[i], transform, scene);
 	}
+
+	bool visible = true;
 	
 	if(node->mMetaData)
 		for (unsigned i = 0; i < node->mMetaData->mNumProperties; i++) {
 			const aiString& key = node->mMetaData->mKeys[i];
 			const aiMetadataEntry& entry = node->mMetaData->mValues[i];
+			
+			if (!strcmp(key.C_Str(), "hide")) {
+				visible = false;
+				continue;
+			}
+
 			if (strcmp(key.C_Str(), "component"))
 				continue;
 
@@ -639,6 +635,18 @@ void SceneLoader::processNode(aiNode* node, Transform* parent, const aiScene* sc
 			gameObject->AddScriptingComponent(scriptingComponent);
 		}
 
+	if (visible && node->mNumMeshes > 0) {
+
+		auto meshes = new std::vector<Mesh>();
+
+		for (UINT i = 0; i < node->mNumMeshes; i++) {
+			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+			meshes->push_back(this->processMesh(mesh, scene));
+		}
+		auto modelComponent = new ModelComponent(meshes);
+		gameObject->AddComponent(modelComponent);
+	}
+
 	gameObjects_.push_back(gameObject);
 }
 
@@ -647,7 +655,7 @@ void SceneLoader::processLight(aiLight* light, GameObject* gameObject, const aiS
 	switch (light->mType)
 	{
 	case aiLightSource_POINT:
-		gameObject->AddComponent(new PointLightComponent(Vector4(light->mColorDiffuse.r / 5300, light->mColorDiffuse.g / 5300, light->mColorDiffuse.b / 5300, 1), 10));
+		gameObject->AddComponent(new PointLightComponent(Vector4(light->mColorDiffuse.r / 1000, light->mColorDiffuse.g / 1000, light->mColorDiffuse.b / 1000, 1), 10));
 		break;
 	default:
 		break;

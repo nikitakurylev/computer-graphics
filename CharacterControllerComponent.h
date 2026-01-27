@@ -13,5 +13,6 @@ private:
 	float speed;
 	DirectX::BoundingSphere collider;
 	AnimationComponent* animation;
+	Vector3 spawnPoint;
 };
 

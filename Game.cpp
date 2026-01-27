@@ -190,7 +190,7 @@ void Game::Initialize()
 		DirectX::XM_PIDIV2, Display->ClientWidth / (FLOAT)Display->ClientHeight,
 		0.01f, 1000);
 
-	directional_light_position_ = Vector3(20, 100, 20);
+	directional_light_position_ = Vector3(50, 100, 20);
 
 	auto dir = Vector3(-directional_light_position_.x, -directional_light_position_.y, -directional_light_position_.z);
 

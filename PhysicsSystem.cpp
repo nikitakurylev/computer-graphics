@@ -15,7 +15,7 @@ bool PhysicsSystem::Raycast(Vector3 origin, Vector3 direction, float length)
     q3RaycastData raycast;
     raycast.Set(q3Vec3(origin.x, origin.y, origin.z), q3Vec3(direction.x, direction.y, direction.z), length);
     RaycastCallback callback;
-    callback.Init(raycast.start, raycast.dir);
+    callback.Init(raycast);
     _scene.RayCast(&callback, raycast);
     return callback.impactBody;
 }

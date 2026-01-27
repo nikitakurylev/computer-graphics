@@ -5,6 +5,8 @@ CharacterControllerComponent::CharacterControllerComponent() : DynamicPhysicsCom
 	_bodyDef.lockAxisX = true;
 	_bodyDef.lockAxisZ = true;
 	_bodyDef.lockAxisY = true;
+	_bodyDef.gravityScale = 2;
+	collider.Radius = 0.5f;
 	speed = 2;
 }
 
@@ -12,6 +14,7 @@ void CharacterControllerComponent::Start()
 {
 	DynamicPhysicsComponent::Start();
 	auto transform = gameObject->GetTransform();
+	spawnPoint = transform->position;
 	auto game = gameObject->GetGame();
 	for (GameObject* object : game->GameObjects) {
 		auto otherTransform = object->GetTransform();
@@ -58,11 +61,10 @@ void CharacterControllerComponent::Update(float deltaTime)
 	acceleration = Vector3(acceleration.x, 0, acceleration.z) * speed;
 	auto velocity = _body->GetLinearVelocity();
 
-	isGrounded = game->Physics.Raycast(transform->position + Vector3(0, -0.5f, 0), Vector3::Down, 0.01f);
-
 	if (isGrounded && game->Input->IsKeyDown(Keys::Space)) {
 		isGrounded = false;
-		velocity.y = 5;
+		game->Audio.PlaySoundClip("jump.wav");
+		velocity.y = 7;
 	}
 
 	velocity.x = acceleration.x * speed;
@@ -79,8 +81,15 @@ void CharacterControllerComponent::Update(float deltaTime)
 	{
 		auto otherTransform = object->GetTransform();
 		auto otherWorldPosition = otherTransform->GetMatrix().Translation();
-		if (object == gameObject || otherTransform->immovable || !collider.Contains(otherWorldPosition + Vector3::Up))
+		if (object == gameObject || !collider.Contains(otherWorldPosition))
 			continue;
+
+		for (ScriptingComponent* component : object->GetScriptingComponents()) {
+			otherTransform->position = Vector3(0, 1000000, 0);
+			object->receive_transform_from_backend = false;
+			object->send_transform_to_backend = true;
+			game->Audio.PlaySoundClip("collect.wav");
+		}
 	}
 	auto oldRotation = transform->rotation;
 
@@ -92,4 +101,10 @@ void CharacterControllerComponent::Update(float deltaTime)
 		transform->rotation = Quaternion::Lerp(oldRotation, Quaternion::LookRotation(acceleration, Vector3::Up), deltaTime * 10.0f);
 	else
 		transform->rotation = oldRotation;
+
+	isGrounded = (!game->Input->IsKeyDown(Keys::Space)) && game->Physics.Raycast(transform->position + Vector3(0, -0.4001, 0), Vector3::Down, 0.0001f);
+
+	if (transform->position.y < 0) {
+		_body->SetTransform(q3Vec3(spawnPoint.x, spawnPoint.y, spawnPoint.z));
+	}
 }

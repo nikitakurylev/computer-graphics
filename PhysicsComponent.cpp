@@ -2,6 +2,8 @@
 
 void PhysicsComponent::Start()
 {
+    Component::Start();
+
 	auto transform = gameObject->GetTransform();
 	_bodyDef.position = q3Vec3(transform->position.x, transform->position.y, transform->position.z);
 
