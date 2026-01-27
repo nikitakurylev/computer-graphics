@@ -1,11 +1,18 @@
+﻿#include <algorithm>
+#include <cmath>
+#include <iostream>
 #include "RenderingSystem.h"
 #include "GameObject.h"
 #include "CubeComponent.h"
 #include "Renderer.h"
 #include "ParticleSystemComponent.h"
+#include "PointLightComponent.h"
 #include "DisplayWin32.h"
 #include <d3d11.h>
 #include <d3dcompiler.h>
+#include <DirectXMath.h>
+
+using namespace DirectX;
 
 void RenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject*> Components, Matrix view_matrix, Matrix projection_matrix, CascadeData* cascadeData, Vector3 cam_world)
 {
@@ -22,30 +29,49 @@ void RenderingSystem::Draw(DisplayWin32* display, std::vector<GameObject*> Compo
 	Context->OMSetRenderTargets(1, &RenderView, depth_stencil_view[3]);
 	Context->RSSetViewports(1, &viewport);
 
-	//Context->UpdateSubresource(dynamicLightBuffer, 0, nullptr, dynamicLights, 0, 0);
+	memset(dynamicLights, 0, sizeof(dynamicLights));
+	int lightIndex = 0;
+	for (GameObject* gameObject : Components) {
+		if (lightIndex >= 10) break;
+
+		for (Component* component : gameObject->GetComponents()) {
+			auto* pointLight = dynamic_cast<PointLightComponent*>(component);
+			if (pointLight) {
+				auto transform = gameObject->GetTransform();
+				dynamicLights[lightIndex].dyn_position = Vector4(transform->GetMatrix().Translation());
+				dynamicLights[lightIndex].dyn_color = pointLight->color;
+				dynamicLights[lightIndex].dyn_k = Vector4(pointLight->radius, 100.0f, 1.2f, 0.0f);
+				lightIndex++;
+				break;
+			}
+		}
+	}
+
+	if (dynamicLightBuffer != nullptr) {
+		Context->UpdateSubresource(dynamicLightBuffer, 0, nullptr, dynamicLights, 0, 0);
+	}
 
 	Context->VSSetConstantBuffers(1, 1, &lightTransformBuffer);
-
 	Context->PSSetConstantBuffers(1, 1, &dynamicLightBuffer);
 	UpdateCascadeBuffer(cascadeData);
-	SetShadowMaps(1);
+	SetShadowMaps(5);
+
+	// Extract frustum planes from ViewProjection matrix
+	Matrix viewProj = view_matrix * projection_matrix;
+	manualFrustumCuller.ExtractPlanes(viewProj);
+
+	// Reset debug counters
+	debugRenderedCount = 0;
+	debugCulledCount = 0;
+	debugTotalCount = 0;
 
 	for (GameObject* gameComponent : Components)
 	{
-		Render(gameComponent, view_matrix, projection_matrix, vertexShader, pixelShader, cam_world);
+		Render(gameComponent, view_matrix, projection_matrix, vertexShader, pixelShader, cam_world, true);
 	}
 
-	//if (cascadeData->debug.x == 1) {
-	//	Context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
-	//	for (int i = 0; i < 4; i++)
-	//	{
-	//		Render(&debug_cube[i], view_matrix, projection_matrix, debugVertexShader, debugPixelShader, cam_world);
-	//	}
-	//}
-
 	Context->OMSetRenderTargets(0, nullptr, nullptr);
-
-	SwapChain->Present(1, /*DXGI_PRESENT_DO_NOT_WAIT*/ 0);
+	SwapChain->Present(1, 0);
 }
 
 void RenderingSystem::RenderDepthMaps(CascadeData* cascadeData, std::vector<GameObject*> Components, const Matrix& view_matrix, Vector3 cam_world) {
@@ -73,16 +99,181 @@ void RenderingSystem::SetColorSampler() {
 	Context->CSSetSamplers(0, 1, &TexSamplerState);
 }
 
-void RenderingSystem::Render(GameObject* gameObject, Matrix view, Matrix projection, ID3D11VertexShader* vertex, ID3D11PixelShader* pixel, Vector3 cam_world)
+void RenderingSystem::InitEnvironmentResources() {
+	if (environmentMap_ != nullptr) {
+		return;
+	}
+
+	struct ColorRGBA {
+		unsigned char r, g, b, a;
+	};
+
+	const ColorRGBA sky = { 135, 206, 235, 255 };
+	const ColorRGBA ground = { 20, 30, 20, 255 };
+
+	ColorRGBA faceColors[6] = {
+		sky,
+		sky,
+		sky,
+		ground,
+		sky,
+		sky
+	};
+
+	D3D11_TEXTURE2D_DESC desc = {};
+	desc.Width = 1;
+	desc.Height = 1;
+	desc.MipLevels = 1;
+	desc.ArraySize = 6;
+	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Quality = 0;
+	desc.Usage = D3D11_USAGE_IMMUTABLE;
+	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	desc.CPUAccessFlags = 0;
+	desc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
+
+	D3D11_SUBRESOURCE_DATA initData[6] = {};
+	for (int i = 0; i < 6; i++) {
+		initData[i].pSysMem = &faceColors[i];
+		initData[i].SysMemPitch = sizeof(ColorRGBA);
+	}
+
+	ID3D11Texture2D* cubeTexture = nullptr;
+	if (FAILED(Device->CreateTexture2D(&desc, initData, &cubeTexture))) {
+		return;
+	}
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = desc.Format;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+	srvDesc.TextureCube.MostDetailedMip = 0;
+	srvDesc.TextureCube.MipLevels = 1;
+
+	Device->CreateShaderResourceView(cubeTexture, &srvDesc, &environmentMap_);
+	cubeTexture->Release();
+}
+
+void RenderingSystem::BindEnvironmentResources(int slot) {
+	if (environmentMap_ != nullptr) {
+		Context->PSSetShaderResources(slot, 1, &environmentMap_);
+	}
+}
+
+void RenderingSystem::InitDefaultMaterialResources() {
+	if (defaultWhiteTexture_ != nullptr && defaultNormalTexture_ != nullptr && defaultMaterialBuffer_ != nullptr) {
+		return;
+	}
+
+	const UINT whitePixel = 0xFFFFFFFF;
+	const unsigned char normalPixel[4] = { 128, 128, 255, 255 };
+	D3D11_TEXTURE2D_DESC desc = {};
+	desc.Width = 1;
+	desc.Height = 1;
+	desc.MipLevels = 1;
+	desc.ArraySize = 1;
+	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Quality = 0;
+	desc.Usage = D3D11_USAGE_IMMUTABLE;
+	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	desc.CPUAccessFlags = 0;
+	desc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA subresourceData = {};
+	subresourceData.pSysMem = &whitePixel;
+	subresourceData.SysMemPitch = sizeof(UINT);
+
+	ID3D11Texture2D* texture2D = nullptr;
+	if (SUCCEEDED(Device->CreateTexture2D(&desc, &subresourceData, &texture2D))) {
+		Device->CreateShaderResourceView(texture2D, nullptr, &defaultWhiteTexture_);
+		texture2D->Release();
+	}
+
+	subresourceData.pSysMem = normalPixel;
+	subresourceData.SysMemPitch = 4;
+
+	texture2D = nullptr;
+	if (SUCCEEDED(Device->CreateTexture2D(&desc, &subresourceData, &texture2D))) {
+		Device->CreateShaderResourceView(texture2D, nullptr, &defaultNormalTexture_);
+		texture2D->Release();
+	}
+
+	MaterialBufferData materialData = {};
+	materialData.baseColorFactor = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	materialData.materialParams = Vector4(0.0f, 1.0f, 1.0f, 0.0f);
+
+	D3D11_BUFFER_DESC mbd = {};
+	mbd.ByteWidth = sizeof(MaterialBufferData);
+	mbd.Usage = D3D11_USAGE_DEFAULT;
+	mbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	mbd.CPUAccessFlags = 0;
+	mbd.MiscFlags = 0;
+	mbd.StructureByteStride = 0;
+
+	D3D11_SUBRESOURCE_DATA initData = {};
+	initData.pSysMem = &materialData;
+
+	Device->CreateBuffer(&mbd, &initData, &defaultMaterialBuffer_);
+}
+
+void RenderingSystem::BindDefaultMaterialResources() {
+	if (defaultMaterialBuffer_ != nullptr) {
+		Context->PSSetConstantBuffers(2, 1, &defaultMaterialBuffer_);
+	}
+	if (defaultWhiteTexture_ != nullptr) {
+		ID3D11ShaderResourceView* normalTexture = defaultNormalTexture_ ? defaultNormalTexture_ : defaultWhiteTexture_;
+		ID3D11ShaderResourceView* srvs[] = { defaultWhiteTexture_, defaultWhiteTexture_, defaultWhiteTexture_, defaultWhiteTexture_, normalTexture };
+		Context->PSSetShaderResources(0, 5, srvs);
+	}
+}
+
+void RenderingSystem::Render(GameObject* gameObject, Matrix view, Matrix projection, ID3D11VertexShader* vertex, ID3D11PixelShader* pixel, Vector3 cam_world, bool culling, bool drawDebugAABB)
 {
 	auto world_matrix = gameObject->GetTransform()->GetMatrix();
 	for (Component* gameComponent : gameObject->GetComponents()) {
 		auto renderer = dynamic_cast<Renderer*>(gameComponent);
 		if (!renderer)
 			continue;
+
+		if (culling) {
+			debugTotalCount++;
+		}
+
+		bool isCulled = false;
+
+		if (culling) {
+			BoundingBox aabb;
+			bool hasAABB = renderer->GetGlobalAABB(aabb);
+
+			if (hasAABB) {
+				Vector3 extent = aabb.Extents;
+				bool valid = extent.x > 0.0f && extent.y > 0.0f && extent.z > 0.0f &&
+					!std::isnan(extent.x) && !std::isnan(extent.y) && !std::isnan(extent.z);
+
+				if (valid) {
+					bool intersects = manualFrustumCuller.IntersectsAABB(aabb);
+
+					if (drawDebugAABB && debugShowAABB) {
+						RenderDebugAABB(aabb, view, projection, cam_world, !intersects);
+					}
+
+					if (!intersects) {
+						isCulled = true;
+						debugCulledCount++;
+						continue;
+					}
+				}
+			}
+		}
+
+		if (culling) {
+			debugRenderedCount++;
+		}
 		UpdateTransformBuffer(world_matrix, view, projection, cam_world);
 		Context->VSSetShader(vertex, 0, 0);
 		Context->PSSetShader(pixel, 0, 0);
+		BindDefaultMaterialResources();
 		renderer->Draw(Device, Context);
 	}
 }
@@ -95,7 +286,7 @@ void RenderingSystem::UpdateTransformBuffer(Matrix world_matrix, Matrix view, Ma
 	buffer.InverseProjectionView = buffer.ViewProjection.Invert();
 	buffer.ViewInv = view.Invert();
 	buffer.ProjInv = projection.Invert();
-	buffer.View = projection;
+	buffer.View = view;
 	buffer.Projection = projection;
 	Context->UpdateSubresource(constantBuffer, 0, nullptr, &buffer, 0, 0);
 	Context->VSSetConstantBuffers(0, 1, &constantBuffer);
@@ -140,19 +331,16 @@ RenderingSystem::RenderingSystem(DisplayWin32* Display, LPCWSTR vertexShaderName
 
 	if (FAILED(res))
 	{
-		// Well, that was unexpected
+		// device creation failed
 	}
 
 	ID3D11Texture2D* backTex;
-	res = SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backTex);	// __uuidof(ID3D11Texture2D)
+	res = SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backTex);
 	res = Device->CreateRenderTargetView(backTex, nullptr, &RenderView);
 
 	ID3DBlob* vertexShaderByteCode = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;
 	res = CompileShaderFromFile(vertexShaderName, 0, "main", "vs_4_0", &vertexShaderByteCode);
-
-
-	D3D_SHADER_MACRO Shader_Macros[] = { "TEST", "1", "TCOLOR", "float4(0.0f, 1.0f, 0.0f, 1.0f)", nullptr, nullptr };
 
 	ID3DBlob* pixelShaderByteCode;
 	res = CompileShaderFromFile(pixelShaderName, 0, "main", "ps_4_0", &pixelShaderByteCode);
@@ -170,12 +358,14 @@ RenderingSystem::RenderingSystem(DisplayWin32* Display, LPCWSTR vertexShaderName
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
 	Device->CreateInputLayout(
 		inputElements,
-		3,
+		5,
 		vertexShaderByteCode->GetBufferPointer(),
 		vertexShaderByteCode->GetBufferSize(),
 		&layout);
@@ -206,15 +396,18 @@ RenderingSystem::RenderingSystem(DisplayWin32* Display, LPCWSTR vertexShaderName
 
 	res = Device->CreateBuffer(&constBufDesc, nullptr, &lightTransformBuffer);
 
-	//D3D11_BUFFER_DESC dynamicLightBufDesc = {};
-	//dynamicLightBufDesc.ByteWidth = sizeof(LightsParams) * 10;
-	//dynamicLightBufDesc.Usage = D3D11_USAGE_DEFAULT;
-	//dynamicLightBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	//dynamicLightBufDesc.CPUAccessFlags = 0;
-	//dynamicLightBufDesc.MiscFlags = 0;
-	//dynamicLightBufDesc.StructureByteStride = 0;
+	// Dynamic lights buffer (10 point lights for forward rendering)
+	D3D11_BUFFER_DESC dynamicLightBufDesc = {};
+	dynamicLightBufDesc.ByteWidth = sizeof(PointLightData) * 10;
+	dynamicLightBufDesc.Usage = D3D11_USAGE_DEFAULT;
+	dynamicLightBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	dynamicLightBufDesc.CPUAccessFlags = 0;
+	dynamicLightBufDesc.MiscFlags = 0;
+	dynamicLightBufDesc.StructureByteStride = 0;
 
-	//res = Device->CreateBuffer(&dynamicLightBufDesc, nullptr, &dynamicLightBuffer);
+	res = Device->CreateBuffer(&dynamicLightBufDesc, nullptr, &dynamicLightBuffer);
+
+	memset(dynamicLights, 0, sizeof(dynamicLights));
 
 	D3D11_SAMPLER_DESC samplerDesc;
 	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -232,12 +425,14 @@ RenderingSystem::RenderingSystem(DisplayWin32* Display, LPCWSTR vertexShaderName
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
 	res = Device->CreateSamplerState(&samplerDesc, &TexSamplerState);
-	//samplerDesc.Filter = D3D11_FILTER_MAXIMUM_MIN_MAG_MIP_LINEAR;
 	samplerDesc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
 	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
 	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
 	res = Device->CreateSamplerState(&samplerDesc, &DepthSamplerState);
+
+	InitDefaultMaterialResources();
+	InitEnvironmentResources();
 
 	auto fov = DirectX::XM_PIDIV2;
 	auto aspect = Display->ClientWidth / (FLOAT)Display->ClientHeight;
@@ -260,6 +455,8 @@ RenderingSystem::RenderingSystem(DisplayWin32* Display, LPCWSTR vertexShaderName
 	InitDepthMap(1, 0.5f, Display);
 	InitDepthMap(2, 0.25f, Display);
 	InitDepthMap(3, 1.0f, Display);
+
+	InitDebugLineRenderer();
 
 	ID3DBlob* error_message;
 	ID3DBlob* vertex_shader_buffer;
@@ -304,9 +501,6 @@ RenderingSystem::RenderingSystem(DisplayWin32* Display, LPCWSTR vertexShaderName
 	Device->CreatePixelShader(
 		pixel_shader_buffer->GetBufferPointer(), pixel_shader_buffer->GetBufferSize(),
 		nullptr, &debugPixelShader);
-
-	//for (int i = 0; i < 4; i++)
-	//	debug_cube[i].Initialize(Device, Context);
 }
 
 void RenderingSystem::Initialize(std::vector<GameObject*> GameObjects)
@@ -387,7 +581,6 @@ void RenderingSystem::RenderDepthMap(int index, CascadeData* cascadeData, std::v
 	auto corners = GetFrustrumCornersWorldSpace(directional_light_projection[index], view_matrix);
 	auto view = GetCascadeView(corners, index, cascadeData->position);
 	auto projection = GetCascadeProjection(view, corners, index);
-	//debug_cube[index].UpdateWorldMatrix();
 	cascadeData->ViewProj[index] = view * projection;
 
 	float black[] = { 0.0f, 0.0f, 0.0f };
@@ -401,10 +594,7 @@ void RenderingSystem::RenderDepthMap(int index, CascadeData* cascadeData, std::v
 
 	for (GameObject* gameComponent : Components)
 	{
-		/*auto* particles = dynamic_cast<ParticleSystemComponent*>(gameComponent);
-		if (particles)
-			continue;*/
-		Render(gameComponent, view, projection, depthVertexShader, depthPixelShader, cam_world);
+		Render(gameComponent, view, projection, depthVertexShader, depthPixelShader, cam_world, false);
 	}
 
 	Context->OMSetRenderTargets(1, &RenderView, nullptr);
@@ -424,7 +614,7 @@ std::vector<Vector4> RenderingSystem::GetFrustrumCornersWorldSpace(const Matrix&
 					Vector4::Transform(Vector4(
 						2.0f * x - 1.0f,
 						2.0f * y - 1.0f,
-						z,//2.0f * z - 1.0f,
+						z,
 						1.0f), inv);
 				frustrumCorners.push_back(pt / pt.w);
 			}
@@ -446,9 +636,6 @@ Matrix RenderingSystem::GetCascadeView(const std::vector<Vector4>& corners, int 
 		center + direction,
 		Vector3::Up
 	);
-	//debug_cube[index].position = center;
-	auto a = lightView.ToEuler();
-	//debug_cube[index].rotation = Quaternion::CreateFromYawPitchRoll(a.x, a.y, 0);
 
 	return lightView;
 }
@@ -456,32 +643,157 @@ Matrix RenderingSystem::GetCascadeView(const std::vector<Vector4>& corners, int 
 Matrix RenderingSystem::GetCascadeProjection(const Matrix& lightView, const std::vector<Vector4>& corners, int index)
 {
 	float minX = FLT_MAX;
-	float maxX = FLT_MIN;
+	float maxX = -FLT_MAX;
 	float minY = FLT_MAX;
-	float maxY = FLT_MIN;
+	float maxY = -FLT_MAX;
 	float minZ = FLT_MAX;
-	float maxZ = FLT_MIN;
+	float maxZ = -FLT_MAX;
 
 	for (const auto& v : corners)
 	{
 		const auto trf = Vector4::Transform(v, lightView);
 
-		minX = min(minX, trf.x);
-		maxX = max(maxX, trf.x);
-		minY = min(minY, trf.y);
-		maxY = max(maxY, trf.y);
-		minZ = min(minZ, trf.z);
-		maxZ = max(maxZ, trf.z);
+		minX = std::min(minX, trf.x);
+		maxX = std::max(maxX, trf.x);
+		minY = std::min(minY, trf.y);
+		maxY = std::max(maxY, trf.y);
+		minZ = std::min(minZ, trf.z);
+		maxZ = std::max(maxZ, trf.z);
 	}
 
 	constexpr float zMult = 10.0f;
 	minZ = (minZ < 0) ? minZ * zMult : minZ / zMult;
 	maxZ = (maxZ < 0) ? maxZ / zMult : maxZ * zMult;
 
-	//debug_cube[index].scale = Vector3(maxX - minX, maxY - minY, maxZ - minZ);
-
 	auto lightProjection = Matrix::CreateOrthographicOffCenter(minX, maxX, minY, maxY, minZ, maxZ);
 
 	return lightProjection;
 }
 
+void RenderingSystem::InitDebugLineRenderer()
+{
+	ID3DBlob* vertexBC = nullptr;
+	ID3DBlob* pixelBC = nullptr;
+
+	HRESULT hr1 = CompileShaderFromFile(L"./SimpleTexturedDirectx11/DebugLineVertexShader.hlsl", nullptr, "main", "vs_5_0", &vertexBC);
+	HRESULT hr2 = CompileShaderFromFile(L"./SimpleTexturedDirectx11/DebugLinePixelShader.hlsl", nullptr, "main", "ps_5_0", &pixelBC);
+
+	if (FAILED(hr1) || FAILED(hr2)) {
+		return;
+	}
+
+	Device->CreateVertexShader(vertexBC->GetBufferPointer(), vertexBC->GetBufferSize(), nullptr, &debugLineVertexShader);
+	Device->CreatePixelShader(pixelBC->GetBufferPointer(), pixelBC->GetBufferSize(), nullptr, &debugLinePixelShader);
+
+	D3D11_INPUT_ELEMENT_DESC debugLineLayout[] = {
+		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0}
+	};
+
+	Device->CreateInputLayout(debugLineLayout, 2, vertexBC->GetBufferPointer(), vertexBC->GetBufferSize(), &debugLineInputLayout);
+
+	if (vertexBC) vertexBC->Release();
+	if (pixelBC) pixelBC->Release();
+
+	D3D11_BUFFER_DESC bufferDesc = {};
+	bufferDesc.ByteWidth = sizeof(float) * 7 * 48;
+	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	Device->CreateBuffer(&bufferDesc, nullptr, &debugLineVertexBuffer);
+}
+
+void RenderingSystem::RenderDebugAABB(const BoundingBox& aabb, const Matrix& view, const Matrix& projection, const Vector3& cam_world, bool isCulled)
+{
+	if (!debugLineVertexBuffer) return;
+
+	ID3D11InputLayout* oldLayout = nullptr;
+	ID3D11Buffer* oldVertexBuffer = nullptr;
+	ID3D11Buffer* oldIndexBuffer = nullptr;
+	ID3D11RenderTargetView* oldRenderTargets[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT] = {};
+	ID3D11DepthStencilView* oldDepthStencil = nullptr;
+	DXGI_FORMAT oldIndexFormat;
+	UINT oldStride = 0, oldOffset = 0, oldIndexOffset = 0;
+	ID3D11VertexShader* oldVS = nullptr;
+	ID3D11PixelShader* oldPS = nullptr;
+	ID3D11RasterizerState* oldRS = nullptr;
+	D3D11_PRIMITIVE_TOPOLOGY oldTopology;
+
+	Context->IAGetInputLayout(&oldLayout);
+	Context->IAGetVertexBuffers(0, 1, &oldVertexBuffer, &oldStride, &oldOffset);
+	Context->IAGetIndexBuffer(&oldIndexBuffer, &oldIndexFormat, &oldIndexOffset);
+	Context->OMGetRenderTargets(D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, oldRenderTargets, &oldDepthStencil);
+	Context->VSGetShader(&oldVS, nullptr, nullptr);
+	Context->PSGetShader(&oldPS, nullptr, nullptr);
+	Context->RSGetState(&oldRS);
+	Context->IAGetPrimitiveTopology(&oldTopology);
+
+	XMFLOAT3 corners[8];
+	aabb.GetCorners(corners);
+
+	Vector4 color = isCulled ? Vector4(1.0f, 0.0f, 0.0f, 1.0f) : Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+
+	struct LineVertex {
+		Vector3 position;
+		Vector4 color;
+	};
+
+	LineVertex lines[24];
+	int idx = 0;
+
+	int edges[12][2] = {
+		{0,1}, {1,3}, {3,2}, {2,0},
+		{4,5}, {5,7}, {7,6}, {6,4},
+		{0,4}, {1,5}, {2,6}, {3,7}
+	};
+
+	for (int i = 0; i < 12; i++) {
+		lines[idx].position = Vector3(corners[edges[i][0]].x, corners[edges[i][0]].y, corners[edges[i][0]].z);
+		lines[idx].color = color;
+		idx++;
+
+		lines[idx].position = Vector3(corners[edges[i][1]].x, corners[edges[i][1]].y, corners[edges[i][1]].z);
+		lines[idx].color = color;
+		idx++;
+	}
+
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	if (SUCCEEDED(Context->Map(debugLineVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource))) {
+		memcpy(mappedResource.pData, lines, sizeof(lines));
+		Context->Unmap(debugLineVertexBuffer, 0);
+	}
+
+	UpdateTransformBuffer(Matrix::Identity, view, projection, cam_world);
+
+	UINT stride = sizeof(LineVertex);
+	UINT offset = 0;
+
+	Context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+	Context->IASetInputLayout(debugLineInputLayout);
+	Context->IASetVertexBuffers(0, 1, &debugLineVertexBuffer, &stride, &offset);
+	Context->VSSetShader(debugLineVertexShader, 0, 0);
+	Context->PSSetShader(debugLinePixelShader, 0, 0);
+
+	Context->Draw(24, 0);
+
+	Context->IASetPrimitiveTopology(oldTopology);
+	Context->IASetInputLayout(oldLayout);
+	Context->IASetVertexBuffers(0, 1, &oldVertexBuffer, &oldStride, &oldOffset);
+	Context->IASetIndexBuffer(oldIndexBuffer, oldIndexFormat, oldIndexOffset);
+	Context->OMSetRenderTargets(D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, oldRenderTargets, oldDepthStencil);
+	Context->VSSetShader(oldVS, nullptr, 0);
+	Context->PSSetShader(oldPS, nullptr, 0);
+	Context->RSSetState(oldRS);
+
+	if (oldLayout) oldLayout->Release();
+	if (oldVertexBuffer) oldVertexBuffer->Release();
+	if (oldIndexBuffer) oldIndexBuffer->Release();
+	if (oldDepthStencil) oldDepthStencil->Release();
+	for (int i = 0; i < D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT; i++) {
+		if (oldRenderTargets[i]) oldRenderTargets[i]->Release();
+	}
+	if (oldVS) oldVS->Release();
+	if (oldPS) oldPS->Release();
+	if (oldRS) oldRS->Release();
+}
