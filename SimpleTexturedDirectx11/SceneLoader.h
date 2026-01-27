@@ -1,5 +1,7 @@
 #pragma once
 
+#define NOMINMAX
+
 #include <vector>
 #include <d3d11_1.h>
 #include <DirectXMath.h>
@@ -32,10 +34,18 @@ private:
 	std::string directory_;
 	HWND hwnd_;
 	Game* game_;
+	ID3D11ShaderResourceView* defaultWhiteTexture_;
+	ID3D11ShaderResourceView* defaultNormalTexture_;
 
 	void processNode(aiNode* node, Transform* parent, const aiScene* scene);
 	void processLight(aiLight* light, GameObject* gameObject, const aiScene* scene);
 	Mesh processMesh(aiMesh* mesh, const aiScene* scene);
-	std::vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName, const aiScene* scene);
+	Material loadMaterial(aiMaterial* mat, const aiScene* scene, Texture* outAlbedo);
+	Texture loadMaterialTexture(aiMaterial* mat, aiTextureType type, const char* typeName, const aiScene* scene);
+	Texture loadTextureFromPath(const std::string& path, const char* typeName, ID3D11ShaderResourceView* fallback);
+	Texture loadTextureBySuffix(const std::string& basePath, const std::vector<std::string>& suffixes, const char* typeName, ID3D11ShaderResourceView* fallback);
+	ID3D11ShaderResourceView* getDefaultWhiteTexture();
+	ID3D11ShaderResourceView* getDefaultNormalTexture();
+	std::string resolveTexturePath(const aiString& path) const;
 	ID3D11ShaderResourceView* loadEmbeddedTexture(const aiTexture* embeddedTexture);
 };

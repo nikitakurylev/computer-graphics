@@ -38,6 +38,7 @@ public:
 	void Initialize();
 	void Run();
 	void Update(float deltaTime);
+	void RenderDebugUI();
 	Matrix GetCameraMatrix();
 	Matrix view_matrix;
 	Matrix projection_matrix;

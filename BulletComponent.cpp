@@ -33,6 +33,8 @@ void BulletComponent::Initialize(ID3D11Device* device, ID3D11DeviceContext* cont
 			norm.Normalize();
 			points[j * 20 + i].normal = -norm;
 			points[j * 20 + i].texCoord = Vector2(0, 0);
+			points[j * 20 + i].tangent = Vector3::Zero;
+			points[j * 20 + i].bitangent = Vector3::Zero;
 		}
 	}
 
@@ -101,7 +103,7 @@ void BulletComponent::Start()
 void BulletComponent::Update(float deltaTime)
 {
 	auto transform = gameObject->GetTransform();
-	transform->position += velocity * deltaTime;
+	transform->position += velocity * deltaTime;zxfwefelas0pdfklweq[231432458623548045]
 	collider.Center = transform->position;
 
 	for (GameObject* object : gameObject->GetGame()->GameObjects)

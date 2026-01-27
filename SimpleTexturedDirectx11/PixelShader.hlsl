@@ -1,8 +1,8 @@
 Texture2D diffTexture : register(t0);
-Texture2D DirLightDepthMapTexture1 : register(t1);
-Texture2D DirLightDepthMapTexture2 : register(t2);
-Texture2D DirLightDepthMapTexture3 : register(t3);
-Texture2D DirLightDepthMapTexture4 : register(t4);
+Texture2D DirLightDepthMapTexture1 : register(t5);
+Texture2D DirLightDepthMapTexture2 : register(t6);
+Texture2D DirLightDepthMapTexture3 : register(t7);
+Texture2D DirLightDepthMapTexture4 : register(t8);
 SamplerState SampleType : register(s0);
 SamplerState DepthSampleType : register(s1);
 
@@ -26,6 +26,12 @@ cbuffer LightBuffer : register(b0)
 cbuffer DynamicLightBuffer : register(b1)
 {
     PointLight lights[10];
+}
+
+cbuffer MaterialBuffer : register(b2)
+{
+    float4 baseColorFactor;
+    float4 materialParams;
 }
 
 float sampleDepthMap(float4 pos_in_light_view, Texture2D depthTexture)
@@ -53,12 +59,12 @@ float sampleDepthMap(float4 pos_in_light_view, Texture2D depthTexture)
 
 float4 main(float4 pos : SV_POSITION, float4 norm : NORMAL, float2 texcoord : TEXCOORD0, float4 world_pos : TEXCOORD1, float4 view_pos : TEXCOORD2, float3 camera_direction : TEXCOORD3, float4 depth_pos : TEXCOORD4, float4 pos_in_light_view[4] : TEXCOORD5) : SV_TARGET
 {
-	float4 textureColor = diffTexture.Sample(SampleType, texcoord);
+	float4 textureColor = diffTexture.Sample(SampleType, texcoord) * baseColorFactor;
 	if(textureColor.a < 0.5f)
         discard;
     
     float3 depth = 0;
-    float dist = abs(depth_pos);
+    float dist = abs(depth_pos.x);
     if (dist < 10)
     {
         float d = sampleDepthMap(pos_in_light_view[0], DirLightDepthMapTexture1);
@@ -91,7 +97,7 @@ float4 main(float4 pos : SV_POSITION, float4 norm : NORMAL, float2 texcoord : TE
     const float3 reflection_vector = normalize(reflect(light_direction, normal));
 
     
-    float3 dyn;
+    float3 dyn = 0.0f;
     
     for (int i = 0; i < 10; i++)
     {
@@ -102,8 +108,8 @@ float4 main(float4 pos : SV_POSITION, float4 norm : NORMAL, float2 texcoord : TE
         dyn += lights[i].dyn_color.xyz * (dyn_diffuse + dyn_specular) / pow(distance(lights[i].dyn_position.xyz, world_pos.xyz), 2);
     }
     
-    const float3 diffuse = max(0, dot(light_direction, normal)) * textureColor.xyz;
-    const float3 ambient = textureColor * float4(0.529f, 0.808f, 0.922f, 1.0f) * k.x;
+    const float3 diffuse = max(0, dot(light_direction, normal)) * textureColor.rgb;
+    const float3 ambient = textureColor.rgb * float3(0.529f, 0.808f, 0.922f) * k.x;
     const float3 specular = pow(max(0, dot(-view_direction, reflection_vector)), k.y) * k.z;
 
     float4 col = float4(color.xyz * (diffuse + specular) * depth + dyn + ambient * (1 - debug.x), 1);

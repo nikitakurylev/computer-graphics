@@ -29,14 +29,14 @@ struct VOut {
     float4 pos_in_light_view[4] : TEXCOORD5;
 };
 
-VOut main(float4 pos : POSITION, float4 norm : NORMAL, float2 texcoord : TEXCOORD)
+VOut main(float4 pos : POSITION, float3 norm : NORMAL, float2 texcoord : TEXCOORD, float3 tangent : TANGENT, float3 bitangent : BINORMAL)
 {
 	VOut output;
 
     output.norm = mul(float4(norm.xyz, 0), World);
     output.world_pos = mul(float4(pos.xyz, 1), World);
     output.pos = mul(float4(pos.xyz, 1), ViewProjection);
-    output.depth_pos = output.pos.z;
+    output.depth_pos = float4(output.pos.z, 0.0f, 0.0f, 0.0f);
     output.texcoord = texcoord;
     output.view_pos = ViewPosition;
     for (int i = 0; i < 4; i++)
