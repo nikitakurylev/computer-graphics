@@ -599,15 +599,15 @@ void SceneLoader::processNode(aiNode* node, Transform* parent, const aiScene* sc
 	
 	if(node->mMetaData)
 		for (unsigned i = 0; i < node->mMetaData->mNumProperties; i++) {
-			const aiString& key = node->mMetaData->mKeys[i];
+			const std::string key = std::string(node->mMetaData->mKeys[i].C_Str());
 			const aiMetadataEntry& entry = node->mMetaData->mValues[i];
 			
-			if (!strcmp(key.C_Str(), "hide")) {
+			if (key == "hide") {
 				visible = false;
 				continue;
 			}
 
-			if (strcmp(key.C_Str(), "component"))
+			if (key.rfind("component", 0))
 				continue;
 
 			aiString value;

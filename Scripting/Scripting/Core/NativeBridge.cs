@@ -12,6 +12,8 @@ namespace Core
         private static readonly Dictionary<Int32, GameObject> _createdGameObjects = new Dictionary<Int32, GameObject>();
         private static readonly Dictionary<Int32, Transform> _createdTransforms = new Dictionary<Int32, Transform>();
 
+        public static Dictionary<int, GameObject> CreatedGameObjects => _createdGameObjects;
+
         static NativeBridge()
         {
             Assembly assembly = Assembly.GetExecutingAssembly();
@@ -54,7 +56,7 @@ namespace Core
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static GameObject CreateGameObject(Int32 uid, string name)
         {
-            if (_createdGameObjects.ContainsKey(uid))
+            if (CreatedGameObjects.ContainsKey(uid))
             {
                 throw new ArgumentException($"[BRIDGE] game object with (uid='{uid}'), (name='{name}') already created");
             }
@@ -72,7 +74,7 @@ namespace Core
                 null
             );
 
-            _createdGameObjects.Add(uid, gameObject);
+            CreatedGameObjects.Add(uid, gameObject);
 
             return gameObject;
         }
@@ -85,7 +87,7 @@ namespace Core
                 throw new ArgumentException($"[BRIDGE] Component type '{componentName}' not found");
             }
 
-            if (!_createdGameObjects.TryGetValue(objectUid, out GameObject gameObject))
+            if (!CreatedGameObjects.TryGetValue(objectUid, out GameObject gameObject))
             {
                 throw new ArgumentException($"[BRIDGE] GameObject uid '{objectUid}' not found");
             }

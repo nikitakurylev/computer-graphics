@@ -85,9 +85,6 @@ void CharacterControllerComponent::Update(float deltaTime)
 			continue;
 
 		for (ScriptingComponent* component : object->GetScriptingComponents()) {
-			otherTransform->position = Vector3(0, 1000000, 0);
-			object->receive_transform_from_backend = false;
-			object->send_transform_to_backend = true;
 			game->Audio.PlaySoundClip("collect.wav");
 		}
 	}

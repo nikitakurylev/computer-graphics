@@ -284,7 +284,7 @@ void ScriptingEngine::ProcessClassDefinition(int rowIndex,
 	if (IsBaseComponentClass(name, name_space))
 		return;
 
-	if (mono_class_is_assignable_from(baseComponentClass, gatheredClass))
+	if (gatheredClass != NULL && mono_class_is_assignable_from(baseComponentClass, gatheredClass))
 	{
 		std::string fullStartMethodName = name_space + ":" + name + ":Start";
 		std::string fullUpdateMethodName = name_space + ":" + name + ":Update";

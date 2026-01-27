@@ -21,8 +21,8 @@ namespace Core
         {
             this.gameObject = gameObject;
             this.name = name;
-
-            Console.WriteLine($"Transform created {gameObject.uid} {name}");
+            gameObject.Components.Add(this);
+            Console.WriteLine($"Component created {gameObject.uid} {name}");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
