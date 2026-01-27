@@ -11,7 +11,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AIComponent.cpp" />
     <ClCompile Include="AnimationComponent.cpp" />
+    <ClCompile Include="Blackboard.cpp" />
+    <ClCompile Include="BTNode.cpp" />
     <ClCompile Include="AudioSystem.cpp" />
     <ClCompile Include="CharacterControllerComponent.cpp" />
     <ClCompile Include="CubeComponent.cpp" />
@@ -54,6 +57,9 @@
     <ClCompile Include="SimpleTexturedDirectx11\SceneLoader.cpp" />
     <ClCompile Include="SimpleTexturedDirectx11\TextureLoader.cpp" />
     <ClCompile Include="BulletComponent.cpp" />
+    <ClCompile Include="TestStage1.cpp" />
+    <ClCompile Include="TestStage2.cpp" />
+    <ClCompile Include="TestStage3.cpp" />
     <ClCompile Include="Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -84,7 +90,21 @@
     <FxCompile Include="SimpleTexturedDirectx11\VertexShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AIComponent.h" />
     <ClInclude Include="AnimationComponent.h" />
+    <ClInclude Include="Blackboard.h" />
+    <ClInclude Include="BTAction.h" />
+    <ClInclude Include="BTCompositeNode.h" />
+    <ClInclude Include="BTCondition.h" />
+    <ClInclude Include="BTDecorator.h" />
+    <ClInclude Include="BTInverter.h" />
+    <ClInclude Include="BTNode.h" />
+    <ClInclude Include="BTNodeState.h" />
+    <ClInclude Include="BTParallel.h" />
+    <ClInclude Include="BTRepeat.h" />
+    <ClInclude Include="BTRetryUntilSuccess.h" />
+    <ClInclude Include="BTSelector.h" />
+    <ClInclude Include="BTSequence.h" />
     <ClInclude Include="AudioSystem.h" />
     <ClInclude Include="CascadeData.h" />
     <ClInclude Include="CharacterControllerComponent.h" />
@@ -142,8 +162,14 @@
     <ClInclude Include="SimpleTexturedDirectx11\SceneLoader.h" />
     <ClInclude Include="SimpleTexturedDirectx11\TextureLoader.h" />
     <ClInclude Include="BulletComponent.h" />
+    <ClInclude Include="TestStage1.h" />
+    <ClInclude Include="TestStage2.h" />
+    <ClInclude Include="TestStage3.h" />
     <ClInclude Include="FrustumCulling.h" />
     <ClInclude Include="Transform.h" />
+    <ClInclude Include="UtilityAction.h" />
+    <ClInclude Include="UtilityConsideration.h" />
+    <ClInclude Include="UtilitySelector.h" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="Models\soccer_ball.mtl">
