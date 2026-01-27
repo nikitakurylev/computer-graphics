@@ -1,6 +1,7 @@
 #include "Game.h"
 #include <d3d11.h>
 #include <iostream>
+#include <algorithm>
 #include "GameObject.h"
 #include "CubeComponent.h"
 #include <d3dcompiler.h>
@@ -100,16 +101,16 @@ void Game::Run()
 			const auto up_direction = Vector3::Transform(Vector3::Up, rotation);
 			view_matrix = Matrix::CreateLookAt(Vector3(cam_pos), target, up_direction);
 		}
-		else {
-			distance = max(1.0f, distance - Input->MouseWheelDelta * 0.01f);
-			if (ortho && Input->MouseWheelDelta != 0)
+	else {
+		distance = std::max(1.0f, distance - Input->MouseWheelDelta * 0.01f);
+		if (ortho && Input->MouseWheelDelta != 0)
 				projection_matrix = Matrix::CreateOrthographic(Display->ClientWidth * distance * 0.001f, Display->ClientHeight * distance * 0.001f, 0.01f, 1000);
 			Input->MouseWheelDelta = 0;
 			auto lookAtPoint = cam_pos;
-			cam_world = Vector3(distance, 0, 0); // distance - ���������� �� ������
-			// �� ����� ���������
+			cam_world = Vector3(distance, 0, 0); // distance - расстояние от камеры
+			// до точки просмотра
 			Matrix rotMat = Matrix::CreateFromYawPitchRoll(Vector3(0, -cam_rot.y, cam_rot.x));
-			cam_world = Vector3::Transform(cam_world, rotMat) + lookAtPoint; // ��������� ������� ������
+			cam_world = Vector3::Transform(cam_world, rotMat) + lookAtPoint; // Финальная позиция камеры
 			view_matrix = Matrix::CreateLookAt(cam_world, lookAtPoint, Vector3::Transform(Vector3::Up, rotMat));
 		}
 
@@ -117,9 +118,52 @@ void Game::Run()
 
 		Update(deltaTime);
 		Render->Draw(Display, GameObjects, view_matrix, projection_matrix, &cascadeData, cam_world);
+
+		RenderDebugUI();
 	}
 
-	std::cout << "Hello World!\n";
+}
+
+void Game::RenderDebugUI()
+{
+	static bool showAABB = false;
+	static bool f1WasPressed = false;
+	#ifdef DEBUG_CULLING
+	static int frameCounter = 0;
+	#endif
+	
+	// Toggle AABB visualization with F1 key
+	if (Input->IsKeyDown(Keys::F1)) {
+		if (!f1WasPressed) {
+			showAABB = !showAABB;
+			Render->SetDebugAABBMode(showAABB);
+			#ifdef DEBUG_CULLING
+			std::cout << "\n========================================" << std::endl;
+			std::cout << "[F1 PRESSED] AABB Visualization: " << (showAABB ? "ON" : "OFF") << std::endl;
+			std::cout << "Green boxes = visible, Red boxes = culled" << std::endl;
+			std::cout << "========================================\n" << std::endl;
+			#endif
+			f1WasPressed = true;
+		}
+	} else {
+		f1WasPressed = false;
+	}
+	
+	#ifdef DEBUG_CULLING
+	if (++frameCounter >= 60) {
+		int rendered, culled, total;
+		Render->GetCullingStats(rendered, culled, total);
+		
+		float cullingRatio = total > 0 ? (culled * 100.0f) / total : 0.0f;
+		
+		std::cout << "[Frustum Culling] Rendered: " << rendered 
+		          << " | Culled: " << culled 
+		          << " | Total: " << total
+		          << " | Culling: " << cullingRatio << "%" << std::endl;
+		
+		frameCounter = 0;
+	}
+	#endif
 }
 
 void Game::Update(float deltaTime)

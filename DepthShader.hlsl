@@ -18,7 +18,7 @@ struct PixelShader_Input
     float2 texcoord : TEXCOORD;
 };
 
-PixelShader_Input VSMain(float4 pos : POSITION, float4 norm : NORMAL, float2 texcoord : TEXCOORD)
+PixelShader_Input VSMain(float4 pos : POSITION, float3 norm : NORMAL, float2 texcoord : TEXCOORD, float3 tangent : TANGENT, float3 bitangent : BINORMAL)
 {
     PixelShader_Input output;
     output.pos = mul(float4(pos.xyz, 1), ViewProjection);

@@ -1,8 +1,58 @@
 #include "SceneLoader.h"
 #include "../ModelComponent.h"
 #include "../PointLightComponent.h"
+#include <assimp/material.h>
+#include <algorithm>
+#include <cctype>
+#include <cmath>
+#include <fstream>
+
 #include "../AnimationComponent.h"
 #include "../CharacterControllerComponent.h"
+
+#ifndef AI_MATKEY_BASE_COLOR
+#define AI_MATKEY_BASE_COLOR "$mat.baseColor", 0, 0
+#endif
+#ifndef AI_MATKEY_METALLIC_FACTOR
+#define AI_MATKEY_METALLIC_FACTOR "$mat.metallicFactor", 0, 0
+#endif
+#ifndef AI_MATKEY_ROUGHNESS_FACTOR
+#define AI_MATKEY_ROUGHNESS_FACTOR "$mat.roughnessFactor", 0, 0
+#endif
+#ifndef AI_MATKEY_OCCLUSION_STRENGTH
+#define AI_MATKEY_OCCLUSION_STRENGTH "$mat.occlusionStrength", 0, 0
+#endif
+
+namespace {
+bool FileExists(const std::string& path) {
+	std::ifstream file(path.c_str(), std::ios::binary);
+	return file.good();
+}
+
+std::string ToLower(std::string value) {
+	std::transform(value.begin(), value.end(), value.begin(),
+		[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+	return value;
+}
+
+bool EndsWith(const std::string& value, const std::string& suffix) {
+	if (suffix.size() > value.size()) {
+		return false;
+	}
+	return std::equal(suffix.rbegin(), suffix.rend(), value.rbegin());
+}
+
+std::string StripSuffixCaseInsensitive(const std::string& stem, const std::vector<std::string>& suffixes) {
+	std::string stemLower = ToLower(stem);
+	for (const auto& suffix : suffixes) {
+		std::string suffixLower = ToLower(suffix);
+		if (EndsWith(stemLower, suffixLower)) {
+			return stem.substr(0, stem.size() - suffix.size());
+		}
+	}
+	return stem;
+}
+} // namespace
 
 SceneLoader::SceneLoader(Game* game, ScriptingEngine* scriptingEngine, HWND hwnd, ID3D11Device* dev, ID3D11DeviceContext* devcon) :
 	game_(game),
@@ -13,6 +63,8 @@ SceneLoader::SceneLoader(Game* game, ScriptingEngine* scriptingEngine, HWND hwnd
 	directory_(),
 	textures_loaded_(),
 	hwnd_(hwnd),
+	defaultWhiteTexture_(nullptr),
+	defaultNormalTexture_(nullptr),
 	stringToComponent()
 {
 	created_game_objects_uid_ = 0;
@@ -31,7 +83,8 @@ std::vector<GameObject*>* SceneLoader::Load(std::string filename) {
 	SetCurrentDirectory(std::wstring(buffer).substr(0, pos).c_str());
 	const aiScene* pScene = importer.ReadFile(filename,
 		aiProcess_Triangulate |
-		aiProcess_ConvertToLeftHanded);
+		aiProcess_ConvertToLeftHanded |
+		aiProcess_CalcTangentSpace);
 
 	if (pScene == nullptr) {
 		auto a = importer.GetErrorString();
@@ -39,7 +92,12 @@ std::vector<GameObject*>* SceneLoader::Load(std::string filename) {
 		return new std::vector<GameObject*>();
 	}
 
-	this->directory_ = filename.substr(0, filename.find_last_of("/\\"));
+	auto lastSlash = filename.find_last_of("/\\");
+	if (lastSlash != std::string::npos) {
+		this->directory_ = filename.substr(0, lastSlash);
+	} else {
+		this->directory_.clear();
+	}
 
 	processNode(pScene->mRootNode, nullptr, pScene);
 
@@ -64,13 +122,37 @@ Mesh SceneLoader::processMesh(aiMesh* mesh, const aiScene* scene) {
 		vertex.Y = mesh->mVertices[i].y;
 		vertex.Z = mesh->mVertices[i].z;
 
-		vertex.NX = mesh->mNormals[i].x;
-		vertex.NY = mesh->mNormals[i].y;
-		vertex.NZ = mesh->mNormals[i].z;
-		
+        if (mesh->HasNormals()) {
+            vertex.NX = mesh->mNormals[i].x;
+            vertex.NY = mesh->mNormals[i].y;
+            vertex.NZ = mesh->mNormals[i].z;
+        } else {
+            vertex.NX = 0.0f;
+            vertex.NY = 0.0f;
+            vertex.NZ = 0.0f;
+        }
+
 		if (mesh->mTextureCoords[0]) {
 			vertex.texcoord.x = (float)mesh->mTextureCoords[0][i].x;
 			vertex.texcoord.y = (float)mesh->mTextureCoords[0][i].y;
+		} else {
+			vertex.texcoord = XMFLOAT2(0.0f, 0.0f);
+		}
+
+		if (mesh->HasTangentsAndBitangents()) {
+			vertex.TX = mesh->mTangents[i].x;
+			vertex.TY = mesh->mTangents[i].y;
+			vertex.TZ = mesh->mTangents[i].z;
+			vertex.BX = mesh->mBitangents[i].x;
+			vertex.BY = mesh->mBitangents[i].y;
+			vertex.BZ = mesh->mBitangents[i].z;
+		} else {
+			vertex.TX = 0.0f;
+			vertex.TY = 0.0f;
+			vertex.TZ = 0.0f;
+			vertex.BX = 0.0f;
+			vertex.BY = 0.0f;
+			vertex.BZ = 0.0f;
 		}
 
 		vertices.push_back(vertex);
@@ -83,53 +165,380 @@ Mesh SceneLoader::processMesh(aiMesh* mesh, const aiScene* scene) {
 			indices.push_back(face.mIndices[j]);
 	}
 
+	Material materialData = {};
+	Texture albedoTexture = {};
 	if (mesh->mMaterialIndex >= 0) {
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-
-		std::vector<Texture> diffuseMaps = this->loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", scene);
-		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+		materialData = loadMaterial(material, scene, &albedoTexture);
+	} else {
+		materialData = loadMaterial(nullptr, scene, &albedoTexture);
 	}
 
-	return Mesh(dev_, vertices, indices, textures);
+	if (albedoTexture.texture != nullptr) {
+		textures.push_back(albedoTexture);
+	}
+
+	return Mesh(dev_, vertices, indices, textures, materialData);
 }
 
-std::vector<Texture> SceneLoader::loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName, const aiScene* scene) {
-	std::vector<Texture> textures;
-	for (UINT i = 0; i < mat->GetTextureCount(type); i++) {
-		aiString str;
-		mat->GetTexture(type, i, &str);
-		// Check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
-		bool skip = false;
-		for (UINT j = 0; j < textures_loaded_.size(); j++) {
-			if (std::strcmp(textures_loaded_[j].path.c_str(), str.C_Str()) == 0) {
-				textures.push_back(textures_loaded_[j]);
-				skip = true; // A texture with the same filepath has already been loaded, continue to next one. (optimization)
-				break;
-			}
-		}
-		if (!skip) {   // If texture hasn't been loaded already, load it
-			HRESULT hr;
-			Texture texture;
+Material SceneLoader::loadMaterial(aiMaterial* mat, const aiScene* scene, Texture* outAlbedo) {
+	Material material = {};
+	ID3D11ShaderResourceView* defaultWhite = getDefaultWhiteTexture();
+	ID3D11ShaderResourceView* defaultNormal = getDefaultNormalTexture();
 
-			const aiTexture* embeddedTexture = scene->GetEmbeddedTexture(str.C_Str());
-			if (embeddedTexture != nullptr) {
-				texture.texture = loadEmbeddedTexture(embeddedTexture);
-			}
-			else {
-				std::string filename = std::string(str.C_Str());
-				filename = filename;
-				std::wstring filenamews = std::wstring(filename.begin(), filename.end());
-				hr = CreateWICTextureFromFile(dev_, devcon_, filenamews.c_str(), nullptr, &texture.texture);
-				if (FAILED(hr))
-					MessageBox(hwnd_, L"Texture couldn't be loaded", L"Error!", MB_ICONERROR | MB_OK);
-			}
-			texture.type = typeName;
-			texture.path = str.C_Str();
-			textures.push_back(texture);
-			this->textures_loaded_.push_back(texture);  // Store it as texture loaded for entire model, to ensure we won't unnecesery load duplicate textures.
+	material.albedo = defaultWhite;
+	material.ao = defaultWhite;
+	material.metallic = defaultWhite;
+	material.roughness = defaultWhite;
+	material.normal = defaultNormal;
+	material.baseColorFactor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	material.materialParams = XMFLOAT4(0.0f, 1.0f, 1.0f, 0.0f);
+
+	if (mat != nullptr) {
+		aiColor4D baseColor;
+		if (AI_SUCCESS == aiGetMaterialColor(mat, AI_MATKEY_BASE_COLOR, &baseColor) ||
+			AI_SUCCESS == aiGetMaterialColor(mat, AI_MATKEY_COLOR_DIFFUSE, &baseColor)) {
+			material.baseColorFactor = XMFLOAT4(baseColor.r, baseColor.g, baseColor.b, baseColor.a);
+		}
+
+		float opacity = 1.0f;
+		if (AI_SUCCESS == aiGetMaterialFloat(mat, AI_MATKEY_OPACITY, &opacity)) {
+			material.baseColorFactor.w *= opacity;
+		}
+
+		float metallic = 0.0f;
+		if (AI_SUCCESS == aiGetMaterialFloat(mat, AI_MATKEY_METALLIC_FACTOR, &metallic)) {
+			material.materialParams.x = metallic;
+		}
+
+		float roughness = 1.0f;
+		if (AI_SUCCESS == aiGetMaterialFloat(mat, AI_MATKEY_ROUGHNESS_FACTOR, &roughness)) {
+			material.materialParams.y = roughness;
+		}
+
+		float aoStrength = 1.0f;
+		if (AI_SUCCESS == aiGetMaterialFloat(mat, AI_MATKEY_OCCLUSION_STRENGTH, &aoStrength)) {
+			material.materialParams.z = aoStrength;
+		}
+
+		float shininess = 0.0f;
+		if (material.materialParams.y == 1.0f &&
+			AI_SUCCESS == aiGetMaterialFloat(mat, AI_MATKEY_SHININESS, &shininess) &&
+			shininess > 0.0f) {
+			material.materialParams.y = sqrtf(2.0f / (shininess + 2.0f));
 		}
 	}
-	return textures;
+
+	Texture albedoTexture = loadMaterialTexture(mat, aiTextureType_BASE_COLOR, "texture_albedo", scene);
+	if (albedoTexture.path.empty()) {
+		Texture diffuseTexture = loadMaterialTexture(mat, aiTextureType_DIFFUSE, "texture_diffuse", scene);
+		if (!diffuseTexture.path.empty()) {
+			albedoTexture = diffuseTexture;
+		}
+	}
+	if (outAlbedo != nullptr) {
+		*outAlbedo = albedoTexture;
+	}
+	material.albedo = albedoTexture.texture;
+
+	const std::vector<std::string> metallicSuffixes = {
+		"_metallic", "-metallic", "metallic",
+		"_metal", "-metal", "metal",
+		"_met", "-met", "met",
+		"_metalness", "-metalness", "metalness"
+	};
+	const std::vector<std::string> roughnessSuffixes = {
+		"_roughness", "-roughness", "roughness",
+		"_rough", "-rough", "rough",
+		"_r", "-r", "r"
+	};
+	const std::vector<std::string> aoSuffixes = {
+		"_ao", "-ao", "ao",
+		"_occlusion", "-occlusion", "occlusion",
+		"_occ", "-occ", "occ",
+		"_ambientocclusion", "-ambientocclusion", "ambientocclusion"
+	};
+	const std::vector<std::string> normalSuffixes = {
+		"_normal", "-normal", "normal",
+		"_norm", "-norm", "norm",
+		"_n", "-n", "n",
+		"_normalmap", "-normalmap", "normalmap"
+	};
+
+	Texture aoTexture = loadMaterialTexture(mat, aiTextureType_AMBIENT_OCCLUSION, "texture_ao", scene);
+	if (aoTexture.path.empty()) {
+		Texture lightmapTexture = loadMaterialTexture(mat, aiTextureType_LIGHTMAP, "texture_ao", scene);
+		if (!lightmapTexture.path.empty()) {
+			aoTexture = lightmapTexture;
+		}
+	}
+	if (aoTexture.path.empty()) {
+		aoTexture = loadTextureBySuffix(albedoTexture.path, aoSuffixes, "texture_ao", defaultWhite);
+	}
+	material.ao = aoTexture.texture;
+
+	Texture metallicTexture = loadMaterialTexture(mat, aiTextureType_METALNESS, "texture_metallic", scene);
+	if (metallicTexture.path.empty()) {
+		metallicTexture = loadTextureBySuffix(albedoTexture.path, metallicSuffixes, "texture_metallic", defaultWhite);
+	}
+	material.metallic = metallicTexture.texture;
+
+	Texture roughnessTexture = loadMaterialTexture(mat, aiTextureType_DIFFUSE_ROUGHNESS, "texture_roughness", scene);
+	if (roughnessTexture.path.empty()) {
+		roughnessTexture = loadTextureBySuffix(albedoTexture.path, roughnessSuffixes, "texture_roughness", defaultWhite);
+	}
+	material.roughness = roughnessTexture.texture;
+
+	Texture normalTexture = loadMaterialTexture(mat, aiTextureType_NORMALS, "texture_normal", scene);
+	if (normalTexture.path.empty()) {
+		Texture heightTexture = loadMaterialTexture(mat, aiTextureType_HEIGHT, "texture_normal", scene);
+		if (!heightTexture.path.empty()) {
+			normalTexture = heightTexture;
+		}
+	}
+	if (normalTexture.path.empty()) {
+		normalTexture = loadTextureBySuffix(albedoTexture.path, normalSuffixes, "texture_normal", defaultNormal);
+	}
+	if (normalTexture.path.empty()) {
+		normalTexture.texture = defaultNormal;
+	}
+	material.normal = normalTexture.texture;
+
+	return material;
+}
+
+Texture SceneLoader::loadMaterialTexture(aiMaterial* mat, aiTextureType type, const char* typeName, const aiScene* scene) {
+	Texture texture = {};
+	texture.type = typeName;
+	texture.texture = getDefaultWhiteTexture();
+	texture.path = "";
+
+	if (mat == nullptr || mat->GetTextureCount(type) == 0) {
+		return texture;
+	}
+
+	aiString str;
+	if (mat->GetTexture(type, 0, &str) != AI_SUCCESS) {
+		return texture;
+	}
+
+	const std::string pathKey = resolveTexturePath(str);
+	for (UINT j = 0; j < textures_loaded_.size(); j++) {
+		if (textures_loaded_[j].path == pathKey) {
+			return textures_loaded_[j];
+		}
+	}
+
+	HRESULT hr;
+	const aiTexture* embeddedTexture = scene->GetEmbeddedTexture(str.C_Str());
+	if (embeddedTexture != nullptr) {
+		texture.texture = loadEmbeddedTexture(embeddedTexture);
+	} 
+	else {
+		std::wstring filenamews = std::wstring(pathKey.begin(), pathKey.end());
+		hr = CreateWICTextureFromFile(dev_, devcon_, filenamews.c_str(), nullptr, &texture.texture);
+		if (FAILED(hr))
+			MessageBox(hwnd_, L"Texture couldn't be loaded", L"Error!", MB_ICONERROR | MB_OK);
+	}
+
+	if (texture.texture == nullptr) {
+		texture.texture = getDefaultWhiteTexture();
+		return texture;
+	}
+
+	texture.path = pathKey;
+	textures_loaded_.push_back(texture);
+	return texture;
+}
+
+Texture SceneLoader::loadTextureFromPath(const std::string& path, const char* typeName, ID3D11ShaderResourceView* fallback) {
+	Texture texture = {};
+	texture.type = typeName;
+	texture.texture = fallback;
+	texture.path = "";
+
+	if (path.empty() || path[0] == '*') {
+		return texture;
+	}
+
+	std::string pathKey = path;
+	const bool isAbsolute = (pathKey.size() > 1 && pathKey[1] == ':') ||
+		(!pathKey.empty() && (pathKey[0] == '\\' || pathKey[0] == '/'));
+	if (!isAbsolute && !directory_.empty()) {
+		pathKey = directory_ + "\\" + pathKey;
+	}
+
+	if (!FileExists(pathKey)) {
+		return texture;
+	}
+
+	for (const auto& loaded : textures_loaded_) {
+		if (loaded.path == pathKey) {
+			return loaded;
+		}
+	}
+
+	std::wstring filenamews = std::wstring(pathKey.begin(), pathKey.end());
+	HRESULT hr = CreateWICTextureFromFile(dev_, devcon_, filenamews.c_str(), nullptr, &texture.texture);
+	if (FAILED(hr) || texture.texture == nullptr) {
+		return texture;
+	}
+
+	texture.path = pathKey;
+	textures_loaded_.push_back(texture);
+	return texture;
+}
+
+Texture SceneLoader::loadTextureBySuffix(const std::string& basePath, const std::vector<std::string>& suffixes, const char* typeName, ID3D11ShaderResourceView* fallback) {
+	Texture texture = {};
+	texture.type = typeName;
+	texture.texture = fallback;
+	texture.path = "";
+
+	if (basePath.empty() || basePath[0] == '*') {
+		return texture;
+	}
+
+	const std::vector<std::string> baseSuffixes = {
+		"_basecolor", "-basecolor", "basecolor",
+		"_albedo", "-albedo", "albedo",
+		"_diffuse", "-diffuse", "diffuse",
+		"_color", "-color", "color",
+		"_col", "-col", "col",
+		"_bc", "-bc", "bc"
+	};
+	const std::vector<std::string> exts = { ".png", ".jpg", ".jpeg", ".tga", ".bmp" };
+
+	const size_t slash = basePath.find_last_of("/\\");
+	const std::string dir = (slash == std::string::npos) ? std::string() : basePath.substr(0, slash);
+	const std::string filename = (slash == std::string::npos) ? basePath : basePath.substr(slash + 1);
+	const size_t dot = filename.find_last_of('.');
+	const std::string ext = (dot == std::string::npos) ? std::string() : filename.substr(dot);
+	const std::string stem = (dot == std::string::npos) ? filename : filename.substr(0, dot);
+
+	const std::string baseStem = StripSuffixCaseInsensitive(stem, baseSuffixes);
+	const std::string baseDir = !dir.empty() ? dir : directory_;
+
+	std::vector<std::string> candidateExts;
+	if (!ext.empty()) {
+		candidateExts.push_back(ext);
+	}
+	for (const auto& e : exts) {
+		if (std::find(candidateExts.begin(), candidateExts.end(), e) == candidateExts.end()) {
+			candidateExts.push_back(e);
+		}
+	}
+
+	for (const auto& suffix : suffixes) {
+		for (const auto& candidateExt : candidateExts) {
+			std::string candidate = baseStem + suffix + candidateExt;
+			if (!baseDir.empty()) {
+				candidate = baseDir + "\\" + candidate;
+			}
+			if (FileExists(candidate)) {
+				return loadTextureFromPath(candidate, typeName, fallback);
+			}
+		}
+	}
+
+	return texture;
+}
+
+ID3D11ShaderResourceView* SceneLoader::getDefaultWhiteTexture() {
+	if (defaultWhiteTexture_ != nullptr) {
+		return defaultWhiteTexture_;
+	}
+
+	const UINT whitePixel = 0xFFFFFFFF;
+
+	D3D11_TEXTURE2D_DESC desc = {};
+	desc.Width = 1;
+	desc.Height = 1;
+	desc.MipLevels = 1;
+	desc.ArraySize = 1;
+	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Quality = 0;
+	desc.Usage = D3D11_USAGE_IMMUTABLE;
+	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	desc.CPUAccessFlags = 0;
+	desc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA subresourceData = {};
+	subresourceData.pSysMem = &whitePixel;
+	subresourceData.SysMemPitch = sizeof(UINT);
+
+	ID3D11Texture2D* texture2D = nullptr;
+	HRESULT hr = dev_->CreateTexture2D(&desc, &subresourceData, &texture2D);
+	if (FAILED(hr)) {
+		MessageBox(hwnd_, L"Default texture creation failed", L"Error!", MB_ICONERROR | MB_OK);
+		return nullptr;
+	}
+
+	hr = dev_->CreateShaderResourceView(texture2D, nullptr, &defaultWhiteTexture_);
+	texture2D->Release();
+	if (FAILED(hr)) {
+		MessageBox(hwnd_, L"Default texture SRV creation failed", L"Error!", MB_ICONERROR | MB_OK);
+		return nullptr;
+	}
+
+	return defaultWhiteTexture_;
+}
+
+ID3D11ShaderResourceView* SceneLoader::getDefaultNormalTexture() {
+	if (defaultNormalTexture_ != nullptr) {
+		return defaultNormalTexture_;
+	}
+
+	const unsigned char normalPixel[4] = { 128, 128, 255, 255 };
+
+	D3D11_TEXTURE2D_DESC desc = {};
+	desc.Width = 1;
+	desc.Height = 1;
+	desc.MipLevels = 1;
+	desc.ArraySize = 1;
+	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Quality = 0;
+	desc.Usage = D3D11_USAGE_IMMUTABLE;
+	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	desc.CPUAccessFlags = 0;
+	desc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA subresourceData = {};
+	subresourceData.pSysMem = normalPixel;
+	subresourceData.SysMemPitch = 4;
+
+	ID3D11Texture2D* texture2D = nullptr;
+	HRESULT hr = dev_->CreateTexture2D(&desc, &subresourceData, &texture2D);
+	if (FAILED(hr)) {
+		MessageBox(hwnd_, L"Default normal texture creation failed", L"Error!", MB_ICONERROR | MB_OK);
+		return nullptr;
+	}
+
+	hr = dev_->CreateShaderResourceView(texture2D, nullptr, &defaultNormalTexture_);
+	texture2D->Release();
+	if (FAILED(hr)) {
+		MessageBox(hwnd_, L"Default normal SRV creation failed", L"Error!", MB_ICONERROR | MB_OK);
+		return nullptr;
+	}
+
+	return defaultNormalTexture_;
+}
+
+std::string SceneLoader::resolveTexturePath(const aiString& path) const {
+	std::string pathStr = path.C_Str();
+	if (pathStr.empty() || pathStr[0] == '*') {
+		return pathStr;
+	}
+
+	const bool isAbsolute = (pathStr.size() > 1 && pathStr[1] == ':') ||
+		(!pathStr.empty() && (pathStr[0] == '\\' || pathStr[0] == '/'));
+	if (isAbsolute || directory_.empty()) {
+		return pathStr;
+	}
+
+	return directory_ + "\\" + pathStr;
 }
 
 void SceneLoader::Close() {

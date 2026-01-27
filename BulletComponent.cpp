@@ -33,6 +33,8 @@ void BulletComponent::Initialize(ID3D11Device* device, ID3D11DeviceContext* cont
 			norm.Normalize();
 			points[j * 20 + i].normal = -norm;
 			points[j * 20 + i].texCoord = Vector2(0, 0);
+			points[j * 20 + i].tangent = Vector3::Zero;
+			points[j * 20 + i].bitangent = Vector3::Zero;
 		}
 	}
 
