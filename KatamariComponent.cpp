@@ -1,14 +1,22 @@
 #include "KatamariComponent.h"
 #include "BulletComponent.h"
 
-KatamariComponent::KatamariComponent(BulletComponent* bullets[10])
+KatamariComponent::KatamariComponent() : _bullets()
 {
-	_bullets = bullets;
 	speed = 1;
 }
 
 void KatamariComponent::Start() 
 {
+	for (GameObject* object : gameObject->GetGame()->GameObjects)
+	{
+		for (Component* component : object->GetComponents()) {
+			auto bullet = dynamic_cast<BulletComponent*>(component);
+			if (!bullet)
+				continue;
+			_bullets.push_back(bullet);
+		}
+	}
 	auto transform = gameObject->GetTransform();
 	transform->position.y = collider.Radius = 1.0f;
 	transform->immovable = true;
@@ -40,19 +48,21 @@ void KatamariComponent::Update(float deltaTime)
 	}
 	
 	auto transform = gameObject->GetTransform();
+	auto bulletsCount = _bullets.size();
 	if (game->Input->IsKeyDown(Keys::E)) {
 		if (!shootButtonDown) {
-			_bullets[currentBullet % 10]->gameObject->GetTransform()->position = transform->position;
-			_bullets[currentBullet % 10]->velocity = -right * 10;
-			currentBullet = (currentBullet + 1) % 10;
+			game->Audio.PlaySoundClip("shoot.wav");
+			_bullets[currentBullet % bulletsCount]->gameObject->GetTransform()->position = transform->position;
+			_bullets[currentBullet % bulletsCount]->velocity = -right * 10;
+			currentBullet = (currentBullet + 1) % bulletsCount;
 			shootButtonDown = true;
 		}
 	}
 	else if (game->Input->IsKeyDown(Keys::R)) {
 		if (!shootButtonDown) {
-			_bullets[currentBullet % 10]->gameObject->GetTransform()->position = transform->position;
-			_bullets[currentBullet % 10]->velocity = Vector3::Zero;
-			currentBullet = (currentBullet + 1) % 10;
+			_bullets[currentBullet % bulletsCount]->gameObject->GetTransform()->position = transform->position;
+			_bullets[currentBullet % bulletsCount]->velocity = Vector3::Zero;
+			currentBullet = (currentBullet + 1) % bulletsCount;
 			shootButtonDown = true;
 		}
 	}

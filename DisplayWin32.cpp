@@ -11,6 +11,9 @@ DisplayWin32::DisplayWin32()
 
 #pragma region Window init
 	WNDCLASSEX wc;
+	auto desktopWindow = GetDesktopWindow();
+	RECT desktop;
+	GetWindowRect(desktopWindow, &desktop);
 
 	wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
 	wc.lpfnWndProc = WndProc;
@@ -27,8 +30,8 @@ DisplayWin32::DisplayWin32()
 
 	// Register the window class.
 	RegisterClassEx(&wc);
-	ClientWidth =  1280;
-	ClientHeight = 720;
+	ClientWidth =  desktop.right;
+	ClientHeight = desktop.bottom;
 
 	RECT windowRect = { 0, 0, static_cast<LONG>(ClientWidth), static_cast<LONG>(ClientHeight) };
 	AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
@@ -39,8 +42,8 @@ DisplayWin32::DisplayWin32()
 	auto posY = (GetSystemMetrics(SM_CYSCREEN) - ClientHeight) / 2;
 
 	hWnd = CreateWindowEx(WS_EX_APPWINDOW, applicationName, applicationName,
-		dwStyle,
-		posX, posY,
+		WS_POPUP,
+		0, 0,
 		windowRect.right - windowRect.left,
 		windowRect.bottom - windowRect.top,
 		nullptr, nullptr, hInstance, nullptr);

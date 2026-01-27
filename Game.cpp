@@ -11,14 +11,12 @@
 
 using namespace DirectX::SimpleMath;
 
-Game::Game(DisplayWin32* display, InputDevice* input, RenderingSystem* render) : Display(display), Input(input), Render(render)
-{
-}
+Game::Game(DisplayWin32* display, InputDevice* input, RenderingSystem* render, ScriptingEngine* scriptingEngine)
+	: Display(display), Input(input), Render(render), scripting_engine(scriptingEngine), Physics(), Audio() {}
 
 void Game::Run()
 {
 	unsigned int frameCount = 0;
-
 
 	MSG msg = {};
 	bool isExitRequested = false;
@@ -170,6 +168,7 @@ void Game::RenderDebugUI()
 
 void Game::Update(float deltaTime)
 {
+	Physics.Update(deltaTime);
 	for (GameObject* gameObject : GameObjects)
 	{
 		gameObject->Update(deltaTime);

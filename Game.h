@@ -8,6 +8,9 @@
 #include "SimpleMath.h"
 #include "CascadeData.h"
 #include "RenderingSystem.h"
+#include "ScriptingEngine.h"
+#include "PhysicsSystem.h"
+#include "AudioSystem.h"
 
 using namespace DirectX::SimpleMath;
 class GameObject;
@@ -28,11 +31,13 @@ struct ConstantBuffer
 class Game
 {
 public:
-	Game(DisplayWin32* display, InputDevice* input, RenderingSystem* render);
+	Game(DisplayWin32* display, InputDevice* input, RenderingSystem* render, ScriptingEngine* scriptingEngine);
 	std::vector<GameObject*> GameObjects;
 	DisplayWin32* Display;
 	InputDevice* Input;
 	RenderingSystem* Render;
+	PhysicsSystem Physics;
+	AudioSystem Audio;
 	Vector3 cam_pos;
 	Vector3 cam_world;
 	void Initialize();
@@ -42,6 +47,7 @@ public:
 	Matrix GetCameraMatrix();
 	Matrix view_matrix;
 	Matrix projection_matrix;
+	ScriptingEngine* scripting_engine;
 private:
 	std::chrono::time_point<std::chrono::steady_clock> PrevTime;
 	float TotalTime;

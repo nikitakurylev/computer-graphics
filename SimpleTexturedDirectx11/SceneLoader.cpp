@@ -7,6 +7,9 @@
 #include <cmath>
 #include <fstream>
 
+#include "../AnimationComponent.h"
+#include "../CharacterControllerComponent.h"
+
 #ifndef AI_MATKEY_BASE_COLOR
 #define AI_MATKEY_BASE_COLOR "$mat.baseColor", 0, 0
 #endif
@@ -51,8 +54,9 @@ std::string StripSuffixCaseInsensitive(const std::string& stem, const std::vecto
 }
 } // namespace
 
-SceneLoader::SceneLoader(Game* game, HWND hwnd, ID3D11Device* dev, ID3D11DeviceContext* devcon) :
+SceneLoader::SceneLoader(Game* game, ScriptingEngine* scriptingEngine, HWND hwnd, ID3D11Device* dev, ID3D11DeviceContext* devcon) :
 	game_(game),
+	scripting_engine_(scriptingEngine),
 	dev_(dev),
 	devcon_(devcon),
 	gameObjects_(),
@@ -60,8 +64,10 @@ SceneLoader::SceneLoader(Game* game, HWND hwnd, ID3D11Device* dev, ID3D11DeviceC
 	textures_loaded_(),
 	hwnd_(hwnd),
 	defaultWhiteTexture_(nullptr),
-	defaultNormalTexture_(nullptr) {
-	// empty
+	defaultNormalTexture_(nullptr),
+	stringToComponent()
+{
+	created_game_objects_uid_ = 0;
 }
 
 
@@ -545,21 +551,30 @@ void SceneLoader::Close() {
 	gameObjects_ = std::vector<GameObject*>();
 }
 
-void SceneLoader::processNode(aiNode* node, Transform* parent, const aiScene* scene) {
+void SceneLoader::processNode(aiNode* node, Transform* parent, const aiScene* scene) 
+{
+	aiVector3D aiPosition;
+	aiQuaternion aiRotation;
+	aiVector3D aiScale;
 
-	auto gameObject = new GameObject(game_);
+	node->mTransformation.Decompose(aiScale, aiRotation, aiPosition);
 
+	auto position = Vector3(aiPosition.x, aiPosition.y, aiPosition.z);
+	auto scale = Vector3(aiScale.x, aiScale.y, aiScale.z);
 
-	aiVector3D position;
-	aiQuaternion rotation;
-	aiVector3D scale;
-
-	node->mTransformation.Decompose(scale, rotation, position);
+	int32_t localUid = created_game_objects_uid_;
+	std::string gameObjectName = std::string("GameObject") + std::to_string(localUid);
+	
+	auto scriptingTransformComponent = scripting_engine_->CreateScriptingTransformComponent(localUid, position, scale);
+	scripting_engine_->CreateScriptingGameObject(localUid, gameObjectName);
+	
+	auto gameObject = new GameObject(localUid, game_, scriptingTransformComponent);
+	created_game_objects_uid_++;
 
 	auto transform = gameObject->GetTransform();
-	transform->position = Vector3(position.x, position.y, position.z);
-	transform->scale = Vector3(scale.x, scale.y, scale.z);
-	transform->rotation = Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
+	transform->position = position;
+	transform->scale = scale;
+	transform->rotation = Quaternion(aiRotation.x, aiRotation.y, aiRotation.z, aiRotation.w);
 	transform->parent = parent;
 
 	if (node->mNumMeshes > 0) {
@@ -580,9 +595,49 @@ void SceneLoader::processNode(aiNode* node, Transform* parent, const aiScene* sc
 		}
 	}
 
+	for (UINT i = 0; i < scene->mNumAnimations; i++) {
+		for (UINT j = 0; j < scene->mAnimations[i]->mNumChannels; j++) {
+			if (scene->mAnimations[i]->mChannels[j]->mNodeName == node->mName) {
+				this->processAnimation(scene->mAnimations[i]->mChannels[j], gameObject);
+			}
+		}
+	}
+
 	for (UINT i = 0; i < node->mNumChildren; i++) {
 		this->processNode(node->mChildren[i], transform, scene);
 	}
+	
+	if(node->mMetaData)
+		for (unsigned i = 0; i < node->mMetaData->mNumProperties; i++) {
+			const aiString& key = node->mMetaData->mKeys[i];
+			const aiMetadataEntry& entry = node->mMetaData->mValues[i];
+			if (strcmp(key.C_Str(), "component"))
+				continue;
+
+			aiString value;
+			node->mMetaData->Get(key, value);
+
+			std::string componentName = std::string(value.C_Str());
+			if (componentName == "CharacterControllerComponent") {
+
+				gameObject->AddComponent(new CharacterControllerComponent());
+				continue;
+			}
+			if (componentName == "PhysicsComponent") {
+
+				gameObject->AddComponent(new PhysicsComponent());
+				continue;
+			}
+			if (componentName == "DynamicPhysicsComponent") {
+
+				gameObject->AddComponent(new DynamicPhysicsComponent());
+				continue;
+			}
+				
+			auto scriptingComponent = scripting_engine_->CreateComponentForObjectByName(localUid, componentName);
+			
+			gameObject->AddScriptingComponent(scriptingComponent);
+		}
 
 	gameObjects_.push_back(gameObject);
 }
@@ -597,6 +652,31 @@ void SceneLoader::processLight(aiLight* light, GameObject* gameObject, const aiS
 	default:
 		break;
 	}
+}
+
+void SceneLoader::processAnimation(aiNodeAnim* animation, GameObject* gameObject) {
+	auto positions = std::vector<TimeKey<Vector3>>(animation->mNumPositionKeys);
+
+	for (UINT i = 0; i < animation->mNumPositionKeys; i++) {
+		positions[i] = TimeKey<Vector3>(animation->mPositionKeys[i].mTime / 1000.0,
+			Vector3(animation->mPositionKeys[i].mValue.x, animation->mPositionKeys[i].mValue.y, animation->mPositionKeys[i].mValue.z));
+	}
+	
+	auto scales = std::vector<TimeKey<Vector3>>(animation->mNumScalingKeys);
+
+	for (UINT i = 0; i < animation->mNumScalingKeys; i++) {
+		scales[i] = TimeKey<Vector3>(animation->mScalingKeys[i].mTime / 1000.0,
+			Vector3(animation->mScalingKeys[i].mValue.x, animation->mScalingKeys[i].mValue.y, animation->mScalingKeys[i].mValue.z));
+	}
+	
+	auto rotations = std::vector<TimeKey<Quaternion>>(animation->mNumRotationKeys);
+
+	for (UINT i = 0; i < animation->mNumRotationKeys; i++) {
+		rotations[i] = TimeKey<Quaternion>(animation->mRotationKeys[i].mTime / 1000.0,
+			Quaternion(animation->mRotationKeys[i].mValue.x, animation->mRotationKeys[i].mValue.y, animation->mRotationKeys[i].mValue.z, animation->mRotationKeys[i].mValue.w));
+	}
+
+	gameObject->AddComponent(new AnimationComponent(positions, scales, rotations));
 }
 
 ID3D11ShaderResourceView* SceneLoader::loadEmbeddedTexture(const aiTexture* embeddedTexture) {

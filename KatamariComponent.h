@@ -4,11 +4,11 @@
 class KatamariComponent : public Component
 {
 public:
-	KatamariComponent(BulletComponent* bullets[10]);
+	KatamariComponent();
 	void Start() override;
 	void Update(float deltaTime) override;
 private:
-	BulletComponent** _bullets;
+	std::vector<BulletComponent*> _bullets;
 	BoundingSphere collider;
 	Vector3 velocity;
 	int currentBullet;
