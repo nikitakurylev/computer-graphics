@@ -10,42 +10,22 @@
 
 namespace AI {
 
-    // ------------------------------------------------------------------------
     // UtilitySelector - выбирает ребенка с максимальной полезностью
-    // 
-    // ИНТЕГРАЦИЯ UTILITY AI С BEHAVIOUR TREE!
-    // 
-    // ЛОГИКА:
-    // 1. Оценивает полезность всех дочерних UtilityAction
-    // 2. Выбирает действие с максимальной полезностью
-    // 3. Выполняет выбранное действие
-    // 
-    // ПРИМЕР ИСПОЛЬЗОВАНИЯ:
-    // UtilitySelector {
-    //     AttackAction (utility: 0.8)   ← выбрано!
-    //     FleeAction (utility: 0.3)
-    //     PatrolAction (utility: 0.5)
-    // }
-    // Выполнит AttackAction, т.к. у него наибольшая полезность
-    // ------------------------------------------------------------------------
     class UtilitySelector : public BTCompositeNode {
     public:
         UtilitySelector(const std::string& name = "UtilitySelector")
             : BTCompositeNode(name), selectedChildIndex(-1), minUtilityThreshold(0.0f) {
         }
 
-        // --------------------------------------------------------------------
         // Установить минимальный порог полезности
         // Действия с полезностью ниже этого порога не будут рассматриваться
-        // --------------------------------------------------------------------
         void SetMinUtilityThreshold(float threshold) {
             minUtilityThreshold = threshold;
         }
 
     protected:
-        // --------------------------------------------------------------------
+
         // При входе - оцениваем и выбираем лучшее действие
-        // --------------------------------------------------------------------
         void OnEnter(GameObject* gameObject, Blackboard* blackboard) override {
             selectedChildIndex = -1;
 
@@ -98,9 +78,7 @@ namespace AI {
 #endif
         }
 
-        // --------------------------------------------------------------------
         // Выполняем выбранное действие
-        // --------------------------------------------------------------------
         BTNodeState Tick(GameObject* gameObject, Blackboard* blackboard, float deltaTime) override {
             // Нет детей
             if (children.empty()) {
@@ -116,9 +94,7 @@ namespace AI {
             return children[selectedChildIndex]->Execute(gameObject, blackboard, deltaTime);
         }
 
-        // --------------------------------------------------------------------
         // При выходе - сбрасываем выбор
-        // --------------------------------------------------------------------
         void OnExit(GameObject* gameObject, Blackboard* blackboard) override {
             if (selectedChildIndex >= 0 && selectedChildIndex < static_cast<int>(children.size())) {
                 children[selectedChildIndex]->Reset();
@@ -126,9 +102,7 @@ namespace AI {
             selectedChildIndex = -1;
         }
 
-        // --------------------------------------------------------------------
         // При прерывании - прерываем выбранного ребенка
-        // --------------------------------------------------------------------
         void OnAbort(GameObject* gameObject, Blackboard* blackboard) override {
             if (selectedChildIndex >= 0 && selectedChildIndex < static_cast<int>(children.size())) {
                 children[selectedChildIndex]->Abort(gameObject, blackboard);
@@ -140,4 +114,4 @@ namespace AI {
         float minUtilityThreshold;   // Минимальный порог полезности
     };
 
-} // namespace AI
+}

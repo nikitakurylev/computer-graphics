@@ -8,25 +8,6 @@
 
 namespace AI {
 
-    // ------------------------------------------------------------------------
-    // BTInverter - инвертирует результат дочернего узла
-    // 
-    // ЛОГИКА:
-    // - Success → Failure
-    // - Failure → Success
-    // - Running → Running (не меняется)
-    // - Aborted → Aborted (не меняется)
-    // 
-    // АНАЛОГ: логическое НЕ (NOT)
-    // 
-    // ПРИМЕР ИСПОЛЬЗОВАНИЯ:
-    // Inverter {
-    //     IsHealthLow()  ← Проверка "Здоровье низкое?"
-    // }
-    // Вернет Success, если здоровье НЕ низкое
-    // 
-    // Полезно для создания условий типа "если НЕ ..."
-    // ------------------------------------------------------------------------
     class BTInverter : public BTDecorator {
     public:
         BTInverter(const std::string& name = "Inverter")
@@ -34,9 +15,7 @@ namespace AI {
         }
 
     protected:
-        // --------------------------------------------------------------------
         // Выполняем ребенка и инвертируем результат
-        // --------------------------------------------------------------------
         BTNodeState Tick(GameObject* gameObject, Blackboard* blackboard, float deltaTime) override {
             // Проверка наличия ребенка
             if (!child) {
@@ -68,4 +47,4 @@ namespace AI {
         }
     };
 
-} // namespace AI
+}

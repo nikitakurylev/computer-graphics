@@ -12,23 +12,6 @@
 
 namespace AI {
 
-    // ------------------------------------------------------------------------
-    // UtilityAction - действие, которое оценивает свою полезность
-    // 
-    // Комбинирует несколько Consideration для расчёта общей полезности
-    // 
-    // ЛОГИКА РАСЧЁТА:
-    // - Каждый Consideration возвращает значение 0-1
-    // - Итоговая полезность = среднее * произведение всех факторов
-    // - Это позволяет учитывать как важность, так и "вето" факторов
-    // 
-    // ПРИМЕР:
-    // Action "Attack":
-    //   - HealthConsideration (0.8) ← здоровье хорошее
-    //   - AmmoConsideration (0.9)   ← патронов много
-    //   - DistanceConsideration (0.3) ← цель далеко
-    //   Итого: ~0.4 (средне-низкая полезность из-за расстояния)
-    // ------------------------------------------------------------------------
     class UtilityAction : public BTAction {
     public:
         UtilityAction(const std::string& name = "UtilityAction")
@@ -37,22 +20,13 @@ namespace AI {
 
         virtual ~UtilityAction() = default;
 
-        // --------------------------------------------------------------------
         // Добавить фактор для оценки полезности
-        // 
-        // Пример:
-        // attackAction->AddConsideration(healthConsideration);
-        // attackAction->AddConsideration(ammoConsideration);
-        // --------------------------------------------------------------------
         void AddConsideration(ConsiderationPtr consideration) {
             considerations.push_back(consideration);
         }
 
-        // --------------------------------------------------------------------
         // Рассчитать полезность этого действия
-        // 
         // Возвращает значение от 0.0 (не полезно) до 1.0+ (очень полезно)
-        // --------------------------------------------------------------------
         float CalculateUtility(GameObject* gameObject, Blackboard* blackboard) {
             if (considerations.empty()) {
                 return baseUtility;
@@ -79,17 +53,14 @@ namespace AI {
             return utility + baseUtility;
         }
 
-        // --------------------------------------------------------------------
         // Установить базовую полезность (бонус/штраф)
         // Полезно для приоритизации определённых действий
-        // --------------------------------------------------------------------
         void SetBaseUtility(float base) {
             baseUtility = base;
         }
 
-        // --------------------------------------------------------------------
+
         // Получить количество факторов
-        // --------------------------------------------------------------------
         size_t GetConsiderationCount() const {
             return considerations.size();
         }
@@ -99,25 +70,10 @@ namespace AI {
         float baseUtility;  // Базовая полезность (модификатор)
     };
 
-    // ------------------------------------------------------------------------
     // Умный указатель на UtilityAction
-    // ------------------------------------------------------------------------
     using UtilityActionPtr = std::shared_ptr<UtilityAction>;
 
-    // ------------------------------------------------------------------------
     // LambdaUtilityAction - UtilityAction с лямбда-функцией для выполнения
-    // 
-    // ПРИМЕР:
-    // auto attackAction = std::make_shared<LambdaUtilityAction>("Attack",
-    //     [](GameObject* go, Blackboard* bb, float dt) {
-    //         // Логика атаки
-    //         std::cout << "Attacking!" << std::endl;
-    //         return BTNodeState::Success;
-    //     }
-    // );
-    // attackAction->AddConsideration(healthConsideration);
-    // attackAction->AddConsideration(distanceConsideration);
-    // ------------------------------------------------------------------------
     class LambdaUtilityAction : public UtilityAction {
     public:
         using ActionFunc = std::function<BTNodeState(GameObject*, Blackboard*, float)>;
@@ -138,4 +94,4 @@ namespace AI {
         ActionFunc actionFunc;
     };
 
-} // namespace AI
+}

@@ -10,24 +10,19 @@ using namespace DirectX::SimpleMath;
 // ============================================================================
 // Blackboard.h
 // Система "черной доски" для обмена данными между узлами Behaviour Tree
-// Совместимо с C++11/14 (не требует std::any)
 // ============================================================================
 
 namespace AI {
 
-    // ------------------------------------------------------------------------
     // BlackboardValue - базовый класс для хранения значений
     // Использует полиморфизм для хранения любых типов
-    // ------------------------------------------------------------------------
     class BlackboardValue {
     public:
         virtual ~BlackboardValue() = default;
         virtual BlackboardValue* Clone() const = 0;
     };
 
-    // ------------------------------------------------------------------------
     // BlackboardValueImpl - шаблонный класс для хранения конкретного типа
-    // ------------------------------------------------------------------------
     template<typename T>
     class BlackboardValueImpl : public BlackboardValue {
     public:
@@ -40,17 +35,7 @@ namespace AI {
         }
     };
 
-    // ------------------------------------------------------------------------
-    // Blackboard - центральное хранилище данных для AI
-    // 
-    // Позволяет узлам дерева поведения обмениваться информацией:
-    // - Позиции целей
-    // - Состояния персонажа (здоровье, патроны и т.д.)
-    // - Флаги (видит ли враг игрока, испуган ли и т.д.)
-    // - Ссылки на GameObject
-    // 
-    // Использует полиморфизм вместо std::any для совместимости с C++11/14
-    // ------------------------------------------------------------------------
+
     class Blackboard {
     public:
         Blackboard() = default;
@@ -77,14 +62,8 @@ namespace AI {
             return *this;
         }
 
-        // --------------------------------------------------------------------
+
         // Установить значение в Blackboard
-        // 
-        // Пример:
-        // blackboard.SetValue("PlayerPosition", Vector3(10, 0, 5));
-        // blackboard.SetValue("Health", 100.0f);
-        // blackboard.SetValue("IsAlerted", true);
-        // --------------------------------------------------------------------
         template<typename T>
         void SetValue(const std::string& key, const T& value) {
             data[key] = std::make_shared<BlackboardValueImpl<T>>(value);
@@ -94,15 +73,8 @@ namespace AI {
 #endif
         }
 
-        // --------------------------------------------------------------------
+
         // Получить значение из Blackboard
-        // 
-        // Пример:
-        // Vector3 playerPos = blackboard.GetValue<Vector3>("PlayerPosition");
-        // float health = blackboard.GetValue<float>("Health");
-        // 
-        // ВАЖНО: Если ключ не найден, вернет значение по умолчанию (defaultValue)
-        // --------------------------------------------------------------------
         template<typename T>
         T GetValue(const std::string& key, const T& defaultValue = T()) const {
             auto it = data.find(key);
@@ -122,15 +94,8 @@ namespace AI {
             return defaultValue;
         }
 
-        // --------------------------------------------------------------------
+
         // Получить указатель на значение (для модификации)
-        // 
-        // Пример:
-        // Vector3* posPtr = blackboard.GetValuePtr<Vector3>("PlayerPosition");
-        // if (posPtr) {
-        //     posPtr->x += 10.0f; // Модифицируем напрямую
-        // }
-        // --------------------------------------------------------------------
         template<typename T>
         T* GetValuePtr(const std::string& key) {
             auto it = data.find(key);
@@ -143,24 +108,14 @@ namespace AI {
             return nullptr;
         }
 
-        // --------------------------------------------------------------------
+
         // Проверить, существует ли ключ в Blackboard
-        // 
-        // Пример:
-        // if (blackboard.HasValue("Target")) {
-        //     // Цель установлена, действуем
-        // }
-        // --------------------------------------------------------------------
         bool HasValue(const std::string& key) const {
             return data.find(key) != data.end();
         }
 
-        // --------------------------------------------------------------------
+
         // Удалить значение из Blackboard
-        // 
-        // Пример:
-        // blackboard.RemoveValue("OldTarget");
-        // --------------------------------------------------------------------
         void RemoveValue(const std::string& key) {
             data.erase(key);
 
@@ -169,10 +124,8 @@ namespace AI {
 #endif
         }
 
-        // --------------------------------------------------------------------
+
         // Очистить весь Blackboard
-        // Полезно при перезапуске AI или смене состояния
-        // --------------------------------------------------------------------
         void Clear() {
             data.clear();
 
@@ -181,9 +134,8 @@ namespace AI {
 #endif
         }
 
-        // --------------------------------------------------------------------
+
         // Вывести все данные в консоль (для отладки)
-        // --------------------------------------------------------------------
         void DebugPrint() const {
             std::cout << "\n=== Blackboard Contents ===" << std::endl;
             std::cout << "Total keys: " << data.size() << std::endl;
@@ -193,9 +145,8 @@ namespace AI {
             std::cout << "==========================\n" << std::endl;
         }
 
-        // --------------------------------------------------------------------
+
         // Получить количество записей
-        // --------------------------------------------------------------------
         size_t GetSize() const {
             return data.size();
         }
@@ -205,4 +156,4 @@ namespace AI {
         std::map<std::string, std::shared_ptr<BlackboardValue>> data;
     };
 
-} // namespace AI
+}

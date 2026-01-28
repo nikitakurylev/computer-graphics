@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AdvancedEnemyAI.cpp" />
     <ClCompile Include="AIComponent.cpp" />
     <ClCompile Include="AnimationComponent.cpp" />
     <ClCompile Include="Blackboard.cpp" />
@@ -53,13 +54,11 @@
     <ClCompile Include="PointLightComponent.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RenderingSystem.cpp" />
+    <ClCompile Include="SimpleFloatingEnemyAI.cpp" />
     <ClCompile Include="SimpleTexturedDirectx11\ModelLoader.cpp" />
     <ClCompile Include="SimpleTexturedDirectx11\SceneLoader.cpp" />
     <ClCompile Include="SimpleTexturedDirectx11\TextureLoader.cpp" />
     <ClCompile Include="BulletComponent.cpp" />
-    <ClCompile Include="TestStage1.cpp" />
-    <ClCompile Include="TestStage2.cpp" />
-    <ClCompile Include="TestStage3.cpp" />
     <ClCompile Include="Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -90,6 +89,7 @@
     <FxCompile Include="SimpleTexturedDirectx11\VertexShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AdvancedEnemyAI.h" />
     <ClInclude Include="AIComponent.h" />
     <ClInclude Include="AnimationComponent.h" />
     <ClInclude Include="Blackboard.h" />
@@ -106,6 +106,7 @@
     <ClInclude Include="BTSelector.h" />
     <ClInclude Include="BTSequence.h" />
     <ClInclude Include="AudioSystem.h" />
+    <ClInclude Include="BTSerializer.h" />
     <ClInclude Include="CascadeData.h" />
     <ClInclude Include="CharacterControllerComponent.h" />
     <ClInclude Include="CubeComponent.h" />
@@ -156,15 +157,13 @@
     <ClInclude Include="ScriptingComponentLayout.hpp" />
     <ClInclude Include="ScriptingTransformComponent.hpp" />
     <ClInclude Include="ScriptingTransformLayout.hpp" />
+    <ClInclude Include="SimpleFloatingEnemyAI.h" />
     <ClInclude Include="SimpleTexturedDirectx11\Mesh.h" />
     <ClInclude Include="SimpleTexturedDirectx11\ModelLoader.h" />
     <ClInclude Include="SimpleTexturedDirectx11\SafeRelease.hpp" />
     <ClInclude Include="SimpleTexturedDirectx11\SceneLoader.h" />
     <ClInclude Include="SimpleTexturedDirectx11\TextureLoader.h" />
     <ClInclude Include="BulletComponent.h" />
-    <ClInclude Include="TestStage1.h" />
-    <ClInclude Include="TestStage2.h" />
-    <ClInclude Include="TestStage3.h" />
     <ClInclude Include="FrustumCulling.h" />
     <ClInclude Include="Transform.h" />
     <ClInclude Include="UtilityAction.h" />

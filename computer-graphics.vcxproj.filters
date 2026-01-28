@@ -1,185 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Исходные файлы">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Файлы заголовков">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="Файлы ресурсов">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="MySuper3DApp.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Game.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="DisplayWin32.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="InputDevice.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Delegates.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="CubeComponent.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="ModelComponent.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="SimpleTexturedDirectx11\ModelLoader.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="SimpleTexturedDirectx11\TextureLoader.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="KatamariComponent.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderingSystem.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="DeferredRenderingSystem.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="ParticleSystemComponent.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="GameObject.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Component.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Transform.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="PointLightComponent.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="BulletComponent.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="SimpleTexturedDirectx11\SceneLoader.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="AnimationComponent.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Blackboard.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="BTNode.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="TestStage1.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="TestStage2.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="AIComponent.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="TestStage3.cpp">
-    <ClCompile Include="ScriptingEngine.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Logger.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="PhysicsComponent.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="PhysicsSystem.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="DynamicPhysicsComponent.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="qu3e\broadphase\q3BroadPhase.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="qu3e\broadphase\q3DynamicAABBTree.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="qu3e\collision\q3Box.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="qu3e\collision\q3Collide.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="qu3e\common\q3Geometry.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="qu3e\common\q3Memory.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="qu3e\dynamics\q3Body.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="qu3e\dynamics\q3Contact.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="qu3e\dynamics\q3ContactManager.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="qu3e\dynamics\q3ContactSolver.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="qu3e\dynamics\q3Island.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="qu3e\math\q3Mat3.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="qu3e\math\q3Quaternion.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="qu3e\math\q3Vec3.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="qu3e\scene\q3Scene.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="AudioSystem.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="miniaudio.c">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="CharacterControllerComponent.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Shaders\MyVeryFirstShader.hlsl">
-      <Filter>Исходные файлы</Filter>
-    </FxCompile>
-    <FxCompile Include="SimpleTexturedDirectx11\PixelShader.hlsl" />
-    <FxCompile Include="SimpleTexturedDirectx11\VertexShader.hlsl" />
-    <FxCompile Include="DepthShader.hlsl" />
     <FxCompile Include="DebugShader.hlsl" />
+    <FxCompile Include="DepthShader.hlsl" />
     <FxCompile Include="Shaders\DeferredPixelShader.hlsl" />
     <FxCompile Include="Shaders\DeferredVertexShader.hlsl" />
     <FxCompile Include="Shaders\DirPixelShader.hlsl" />
     <FxCompile Include="Shaders\DirVertexShader.hlsl" />
-    <FxCompile Include="Shaders\PointPixelShader.hlsl" />
-    <FxCompile Include="Shaders\PointVertexShader.hlsl" />
-    <FxCompile Include="Shaders\SpotPixelShader.hlsl" />
-    <FxCompile Include="Shaders\SpotVertexShader.hlsl" />
+    <FxCompile Include="Shaders\GammaCorrection.hlsl" />
+    <FxCompile Include="Shaders\MyVeryFirstShader.hlsl" />
     <FxCompile Include="Shaders\particles\Emit.hlsl" />
     <FxCompile Include="Shaders\particles\InitSort.hlsl" />
     <FxCompile Include="Shaders\particles\Render.hlsl" />
@@ -189,332 +18,176 @@
     <FxCompile Include="Shaders\particles\Sort512.hlsl" />
     <FxCompile Include="Shaders\particles\SortInner.hlsl" />
     <FxCompile Include="Shaders\particles\SortStep2.hlsl" />
-    <FxCompile Include="Shaders\GammaCorrection.hlsl" />
-    <FxCompile Include="SimpleTexturedDirectx11\DebugLineVertexShader.hlsl">
-      <Filter>Исходные файлы</Filter>
-    </FxCompile>
-    <FxCompile Include="SimpleTexturedDirectx11\DebugLinePixelShader.hlsl">
-      <Filter>Исходные файлы</Filter>
-    </FxCompile>
+    <FxCompile Include="Shaders\PointPixelShader.hlsl" />
+    <FxCompile Include="Shaders\PointVertexShader.hlsl" />
+    <FxCompile Include="Shaders\SpotPixelShader.hlsl" />
+    <FxCompile Include="Shaders\SpotVertexShader.hlsl" />
+    <FxCompile Include="SimpleTexturedDirectx11\DebugLineVertexShader.hlsl" />
+    <FxCompile Include="SimpleTexturedDirectx11\DebugLinePixelShader.hlsl" />
+    <FxCompile Include="SimpleTexturedDirectx11\PixelShader.hlsl" />
+    <FxCompile Include="SimpleTexturedDirectx11\VertexShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Game.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="DisplayWin32.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="InputDevice.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Delegates.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Keys.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="OffsetColor.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="ModelComponent.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="SimpleTexturedDirectx11\Mesh.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="SimpleTexturedDirectx11\ModelLoader.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="SimpleTexturedDirectx11\SafeRelease.hpp">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="SimpleTexturedDirectx11\TextureLoader.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="KatamariComponent.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderingSystem.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="DeferredRenderingSystem.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="ParticleSystemComponent.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="GameObject.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Component.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Transform.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="CascadeData.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="CubeComponent.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="PointLightComponent.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="BulletComponent.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="SimpleTexturedDirectx11\SceneLoader.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="AnimationComponent.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="BTNodeState.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Blackboard.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="BTNode.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="TestStage1.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="BTCompositeNode.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="BTSequence.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="BTSelector.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="BTParallel.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="BTDecorator.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="BTInverter.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="BTRepeat.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="BTRetryUntilSuccess.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="BTAction.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="BTCondition.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="TestStage2.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="UtilityConsideration.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="UtilityAction.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="UtilitySelector.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="AIComponent.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="TestStage3.h">
-    <ClInclude Include="ScriptingEngine.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="ScriptingComponentLayout.hpp">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Logger.hpp">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="PhysicsComponent.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="PhysicsSystem.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="DynamicPhysicsComponent.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="qu3e\broadphase\q3BroadPhase.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="qu3e\broadphase\q3DynamicAABBTree.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="qu3e\collision\q3Box.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="qu3e\collision\q3Collide.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="qu3e\common\q3Geometry.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="qu3e\common\q3Memory.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="qu3e\common\q3Settings.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="qu3e\common\q3Types.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="qu3e\dynamics\q3Body.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="qu3e\dynamics\q3Contact.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="qu3e\dynamics\q3ContactManager.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="qu3e\dynamics\q3ContactSolver.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="qu3e\dynamics\q3Island.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="qu3e\math\q3Mat3.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="qu3e\math\q3Math.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="qu3e\math\q3Quaternion.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="qu3e\math\q3Transform.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="qu3e\math\q3Vec3.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="qu3e\q3.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="qu3e\scene\q3Scene.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="miniaudio.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="AudioSystem.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="CharacterControllerComponent.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="ScriptingTransformLayout.hpp">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="NativeBridge.hpp">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="ScriptingComponent.hpp">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="MarshalledVector3.hpp">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="ScriptingTransformComponent.hpp">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="FrustumCulling.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
+    <ClCompile Include="AIComponent.cpp" />
+    <ClCompile Include="AnimationComponent.cpp" />
+    <ClCompile Include="Blackboard.cpp" />
+    <ClCompile Include="BTNode.cpp" />
+    <ClCompile Include="AudioSystem.cpp" />
+    <ClCompile Include="CharacterControllerComponent.cpp" />
+    <ClCompile Include="CubeComponent.cpp" />
+    <ClCompile Include="Component.cpp" />
+    <ClCompile Include="DeferredRenderingSystem.cpp" />
+    <ClCompile Include="Delegates.cpp" />
+    <ClCompile Include="DisplayWin32.cpp" />
+    <ClCompile Include="DynamicPhysicsComponent.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="GameObject.cpp" />
+    <ClCompile Include="InputDevice.cpp" />
+    <ClCompile Include="KatamariComponent.cpp" />
+    <ClCompile Include="Logger.cpp" />
+    <ClCompile Include="miniaudio.c" />
+    <ClCompile Include="ModelComponent.cpp" />
+    <ClCompile Include="PhysicsComponent.cpp" />
+    <ClCompile Include="PhysicsSystem.cpp" />
+    <ClCompile Include="qu3e\broadphase\q3BroadPhase.cpp" />
+    <ClCompile Include="qu3e\broadphase\q3DynamicAABBTree.cpp" />
+    <ClCompile Include="qu3e\collision\q3Box.cpp" />
+    <ClCompile Include="qu3e\collision\q3Collide.cpp" />
+    <ClCompile Include="qu3e\common\q3Geometry.cpp" />
+    <ClCompile Include="qu3e\common\q3Memory.cpp" />
+    <ClCompile Include="qu3e\dynamics\q3Body.cpp" />
+    <ClCompile Include="qu3e\dynamics\q3Contact.cpp" />
+    <ClCompile Include="qu3e\dynamics\q3ContactManager.cpp" />
+    <ClCompile Include="qu3e\dynamics\q3ContactSolver.cpp" />
+    <ClCompile Include="qu3e\dynamics\q3Island.cpp" />
+    <ClCompile Include="qu3e\math\q3Mat3.cpp" />
+    <ClCompile Include="qu3e\math\q3Quaternion.cpp" />
+    <ClCompile Include="qu3e\math\q3Vec3.cpp" />
+    <ClCompile Include="qu3e\scene\q3Scene.cpp" />
+    <ClCompile Include="ScriptingEngine.cpp" />
+    <ClCompile Include="MySuper3DApp.cpp" />
+    <ClCompile Include="ParticleSystemComponent.cpp" />
+    <ClCompile Include="PointLightComponent.cpp" />
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="RenderingSystem.cpp" />
+    <ClCompile Include="SimpleTexturedDirectx11\ModelLoader.cpp" />
+    <ClCompile Include="SimpleTexturedDirectx11\SceneLoader.cpp" />
+    <ClCompile Include="SimpleTexturedDirectx11\TextureLoader.cpp" />
+    <ClCompile Include="BulletComponent.cpp" />
+    <ClCompile Include="Transform.cpp" />
+    <ClCompile Include="SimpleFloatingEnemyAI.cpp" />
+    <ClCompile Include="AdvancedEnemyAI.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AIComponent.h" />
+    <ClInclude Include="AnimationComponent.h" />
+    <ClInclude Include="Blackboard.h" />
+    <ClInclude Include="BTAction.h" />
+    <ClInclude Include="BTCompositeNode.h" />
+    <ClInclude Include="BTCondition.h" />
+    <ClInclude Include="BTDecorator.h" />
+    <ClInclude Include="BTInverter.h" />
+    <ClInclude Include="BTNode.h" />
+    <ClInclude Include="BTNodeState.h" />
+    <ClInclude Include="BTParallel.h" />
+    <ClInclude Include="BTRepeat.h" />
+    <ClInclude Include="BTRetryUntilSuccess.h" />
+    <ClInclude Include="BTSelector.h" />
+    <ClInclude Include="BTSequence.h" />
+    <ClInclude Include="AudioSystem.h" />
+    <ClInclude Include="CascadeData.h" />
+    <ClInclude Include="CharacterControllerComponent.h" />
+    <ClInclude Include="CubeComponent.h" />
+    <ClInclude Include="Component.h" />
+    <ClInclude Include="DeferredRenderingSystem.h" />
+    <ClInclude Include="Delegates.h" />
+    <ClInclude Include="DisplayWin32.h" />
+    <ClInclude Include="DynamicPhysicsComponent.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="GameObject.h" />
+    <ClInclude Include="InputDevice.h" />
+    <ClInclude Include="KatamariComponent.h" />
+    <ClInclude Include="Keys.h" />
+    <ClInclude Include="Logger.hpp" />
+    <ClInclude Include="miniaudio.h" />
+    <ClInclude Include="MarshalledVector3.hpp" />
+    <ClInclude Include="ModelComponent.h" />
+    <ClInclude Include="NativeBridge.hpp" />
+    <ClInclude Include="ScriptingComponent.hpp" />
+    <ClInclude Include="PhysicsComponent.h" />
+    <ClInclude Include="PhysicsSystem.h" />
+    <ClInclude Include="qu3e\broadphase\q3BroadPhase.h" />
+    <ClInclude Include="qu3e\broadphase\q3DynamicAABBTree.h" />
+    <ClInclude Include="qu3e\collision\q3Box.h" />
+    <ClInclude Include="qu3e\collision\q3Collide.h" />
+    <ClInclude Include="qu3e\common\q3Geometry.h" />
+    <ClInclude Include="qu3e\common\q3Memory.h" />
+    <ClInclude Include="qu3e\common\q3Settings.h" />
+    <ClInclude Include="qu3e\common\q3Types.h" />
+    <ClInclude Include="qu3e\dynamics\q3Body.h" />
+    <ClInclude Include="qu3e\dynamics\q3Contact.h" />
+    <ClInclude Include="qu3e\dynamics\q3ContactManager.h" />
+    <ClInclude Include="qu3e\dynamics\q3ContactSolver.h" />
+    <ClInclude Include="qu3e\dynamics\q3Island.h" />
+    <ClInclude Include="qu3e\math\q3Mat3.h" />
+    <ClInclude Include="qu3e\math\q3Math.h" />
+    <ClInclude Include="qu3e\math\q3Quaternion.h" />
+    <ClInclude Include="qu3e\math\q3Transform.h" />
+    <ClInclude Include="qu3e\math\q3Vec3.h" />
+    <ClInclude Include="qu3e\q3.h" />
+    <ClInclude Include="qu3e\scene\q3Scene.h" />
+    <ClInclude Include="ScriptingEngine.h" />
+    <ClInclude Include="OffsetColor.h" />
+    <ClInclude Include="ParticleSystemComponent.h" />
+    <ClInclude Include="PointLightComponent.h" />
+    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="RenderingSystem.h" />
+    <ClInclude Include="ScriptingComponentLayout.hpp" />
+    <ClInclude Include="ScriptingTransformComponent.hpp" />
+    <ClInclude Include="ScriptingTransformLayout.hpp" />
+    <ClInclude Include="SimpleTexturedDirectx11\Mesh.h" />
+    <ClInclude Include="SimpleTexturedDirectx11\ModelLoader.h" />
+    <ClInclude Include="SimpleTexturedDirectx11\SafeRelease.hpp" />
+    <ClInclude Include="SimpleTexturedDirectx11\SceneLoader.h" />
+    <ClInclude Include="SimpleTexturedDirectx11\TextureLoader.h" />
+    <ClInclude Include="BulletComponent.h" />
+    <ClInclude Include="FrustumCulling.h" />
+    <ClInclude Include="Transform.h" />
+    <ClInclude Include="UtilityAction.h" />
+    <ClInclude Include="UtilityConsideration.h" />
+    <ClInclude Include="UtilitySelector.h" />
+    <ClInclude Include="SimpleFloatingEnemyAI.h" />
+    <ClInclude Include="AdvancedEnemyAI.h" />
+    <ClInclude Include="BTSerializer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="Models\soccer_ball.mtl" />
+    <CopyFileToFolders Include="Models\ground.mtl" />
+    <CopyFileToFolders Include="Models\steve.mtl" />
+    <CopyFileToFolders Include="Models\tree.mtl" />
+    <CopyFileToFolders Include="Models\chair01.mtl" />
+    <CopyFileToFolders Include="Models\untitled.glb" />
+    <CopyFileToFolders Include="Models\chair01.obj" />
+    <CopyFileToFolders Include="Models\soccer_ball.obj" />
+    <CopyFileToFolders Include="Models\chair01_AO.png" />
+    <CopyFileToFolders Include="Models\chair01_BaseColor.png" />
+    <CopyFileToFolders Include="Models\chair01_Metallic.png" />
+    <CopyFileToFolders Include="Models\chair01_Normal.png" />
+    <CopyFileToFolders Include="Models\chair01_Roughness.png" />
+    <CopyFileToFolders Include="Models\soccer_ball_diffuse.bmp" />
+    <CopyFileToFolders Include="Models\ground.obj" />
+    <CopyFileToFolders Include="Models\green-grass-1024x1024.png" />
+    <CopyFileToFolders Include="Models\steve.png" />
+    <CopyFileToFolders Include="Models\steve.obj" />
+    <CopyFileToFolders Include="Models\BARK.jpg" />
+    <CopyFileToFolders Include="Models\Tree_Branch.png" />
+    <CopyFileToFolders Include="Models\tree.obj" />
+    <CopyFileToFolders Include="Models\soccer_ball_diffuse.tif" />
+    <CopyFileToFolders Include="shoot.wav" />
+    <CopyFileToFolders Include="Sounds\jump.wav" />
+    <CopyFileToFolders Include="Sounds\collect.wav" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <CopyFileToFolders Include="Models\chair01.obj">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Models\chair01_AO.png">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Models\chair01_BaseColor.png">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Models\chair01_Metallic.png">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Models\chair01_Normal.png">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Models\chair01_Roughness.png">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Models\soccer_ball.mtl">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Models\soccer_ball.obj">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Models\soccer_ball_diffuse.bmp">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Models\ground.obj">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Models\green-grass-1024x1024.png">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Models\ground.mtl">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Models\steve.png">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Models\steve.obj">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Models\steve.mtl">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Models\BARK.jpg">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Models\Tree_Branch.png">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Models\tree.mtl">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Models\tree.obj">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Models\chair01.mtl">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Models\soccer_ball_diffuse.tif">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Models\untitled.glb">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="shoot.wav">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Sounds\jump.wav">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="Sounds\collect.wav">
-      <Filter>Файлы ресурсов</Filter>
-    </CopyFileToFolders>
   </ItemGroup>
 </Project>

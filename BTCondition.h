@@ -8,18 +8,6 @@
 // ============================================================================
 
 namespace AI {
-
-    // ------------------------------------------------------------------------
-    // BTCondition - листовой узел, проверяющий условие
-    // 
-    // Condition узлы - это проверки, которые возвращают Success/Failure:
-    // - Проверка здоровья
-    // - Проверка расстояния до цели
-    // - Проверка наличия патронов
-    // - Проверка видимости врага
-    // 
-    // Обычно используются в Selector/Sequence для принятия решений
-    // ------------------------------------------------------------------------
     class BTCondition : public BTNode {
     public:
         BTCondition(const std::string& name = "Condition")
@@ -29,23 +17,10 @@ namespace AI {
         virtual ~BTCondition() = default;
 
     protected:
-        // Переопределите Tick() в наследниках для реализации проверки
-        // Должен возвращать только Success или Failure (НЕ Running!)
+
     };
 
-    // ------------------------------------------------------------------------
     // BTLambdaCondition - условие через лямбда-функцию
-    // 
-    // Позволяет создавать условия без создания отдельных классов
-    // 
-    // ПРИМЕР ИСПОЛЬЗОВАНИЯ:
-    // auto healthCheck = std::make_shared<BTLambdaCondition>("CheckHealth",
-    //     [](GameObject* go, Blackboard* bb) {
-    //         float health = bb->GetValue<float>("Health", 100.0f);
-    //         return (health > 50.0f) ? BTNodeState::Success : BTNodeState::Failure;
-    //     }
-    // );
-    // ------------------------------------------------------------------------
     class BTLambdaCondition : public BTCondition {
     public:
         using ConditionFunc = std::function<BTNodeState(GameObject*, Blackboard*)>;
@@ -66,4 +41,4 @@ namespace AI {
         ConditionFunc conditionFunc;
     };
 
-} // namespace AI
+}

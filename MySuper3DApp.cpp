@@ -1,20 +1,14 @@
-// MySuper3DApp.cpp : This file contains the 'main' function. Program execution begins and ends there.
-
+﻿// MySuper3DApp.cpp : This file contains the 'main' function. Program execution begins and ends there.
 
 #include "Game.h"
 #include "ModelComponent.h"
-#include "KatamariComponent.h"
-#include "ParticleSystemComponent.h"
 #include "PointLightComponent.h"
 #include "DeferredRenderingSystem.h"
 #include "SimpleTexturedDirectx11/ModelLoader.h"
 #include "SimpleTexturedDirectx11/SceneLoader.h"
 #include "ScriptingEngine.h"
 #include "Logger.hpp"
-
-#include "TestStage1.h"
-#include "TestStage2.h"
-#include "TestStage3.h"
+#include "AdvancedEnemyAI.h"
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -24,88 +18,89 @@
 
 int main()
 {
-	// ������������ ������
-	AI::RunStage1Tests();
-	AI::RunStage2Tests();
-	AI::RunStage3Tests();
+    srand(static_cast<unsigned int>(time(nullptr)));
 
-	srand(1);
+    auto window = DisplayWin32::Instance();
+    auto inputDevice = InputDevice();
+    auto render = DeferredRenderingSystem(&window);
+    auto logger = ConsoleLogger();
+    auto scriptingEngine = ScriptingEngine(&logger);
+    auto game = Game(&window, &inputDevice, &render, &scriptingEngine);
 
-	auto window = DisplayWin32::Instance();
-	auto inputDevice = InputDevice();
-	auto render = DeferredRenderingSystem(&window);
-	auto logger = ConsoleLogger();
-	auto scriptingEngine = ScriptingEngine(&logger);
-	auto game = Game(&window, &inputDevice, &render, &scriptingEngine);
+    scriptingEngine.Init();
+    scriptingEngine.GatherLayouts();
 
-	scriptingEngine.Init();
-	scriptingEngine.GatherLayouts();
+    auto modelLoader = ModelLoader(window.hWnd, render.Device, render.Context);
+    auto sceneLoader = SceneLoader(&game, &scriptingEngine, window.hWnd, render.Device, render.Context);
 
-//	auto modelLoader = ModelLoader(window.hWnd, render.Device, render.Context);
-	auto sceneLoader = SceneLoader(&game, &scriptingEngine, window.hWnd, render.Device, render.Context);
-	//auto ball = modelLoader.Load("soccer_ball.obj");
-	//auto ground = modelLoader.Load("ground.obj");
-	//auto chair = modelLoader.Load("chair01.obj");
-	//auto steve = modelLoader.Load("steve.obj");
-	//auto tree = modelLoader.Load("tree.obj");
+    // Загружаем сцену
+    auto sceneObjects = sceneLoader.Load("untitled.glb");
+    for (GameObject* gameObject : *sceneObjects) {
+        game.GameObjects.push_back(gameObject);
+    }
 
-	//std::vector<Mesh>* models[3] = {chair, steve, tree};
+    auto enemyModel = modelLoader.Load("soccer_ball.obj");
 
-	//BulletComponent* bullets[10];
-	//for (int i = 0; i < 10; i++) {
-	//	auto bulletGameObject = new GameObject(&game);
-	//	auto bulletComponent = new BulletComponent();
-	//	auto lightComponent = new PointLightComponent(Vector4(1,1,1,1), 20);
-	//	bulletGameObject->AddComponent(bulletComponent);
-	//	bulletGameObject->AddComponent(lightComponent);
-	//	game.GameObjects.push_back(bulletGameObject);
-	//	bullets[i] = bulletComponent;
-	//}
+    // Счётчик UID для врагов
+    static int32_t enemyUidCounter = 10000;
 
-	//auto katamariComponent = KatamariComponent();
-	//auto katamariModel = ModelComponent(ball);
-	//auto katamariLight = PointLightComponent(Vector4(1, 1, 1, 1), 20);
-	//auto katamariGameObject = GameObject(&game);
-	//katamariGameObject.AddComponent(&katamariModel);
-	//katamariGameObject.AddComponent(&katamariComponent);
-	//katamariGameObject.AddComponent(&katamariLight);
-	//auto floorComponent = ModelComponent(ground);
-	//auto floorGameObject = GameObject(&game);
-	//floorGameObject.AddComponent(&floorComponent);
-	//floorGameObject.GetTransform()->immovable = true;
-	
-	//game.GameObjects.push_back(&katamariGameObject);
-	//game.GameObjects.push_back(&floorGameObject);
-	//int count = 10;
-	//int width = sqrt(count * 20);
-	//for (int i = 0; i < count; i++) {
-	//	auto clutterComponent = new ModelComponent(models[rand() % 2]);
-	//	auto clutterGameObject = new GameObject(&game);
-	//	clutterGameObject->AddComponent(clutterComponent);
-	//	clutterGameObject->GetTransform()->position = Vector3(rand() % width - (width / 2), 0, rand() % width - (width / 2));
-	//	game.GameObjects.push_back(clutterGameObject);
-	//}
+    // ------------------------------------------------------------------------
+    // ВРАГ 1: CURIOUS (Красный) - Любопытный
+    // ------------------------------------------------------------------------
+    {
+        int32_t uid = enemyUidCounter++;
+        Vector3 startPos(-15, 5, 0);
+        Vector3 startScale(0.6f, 0.6f, 0.6f);
 
-	//auto hugeComponent = ModelComponent(chair);
-	//auto hugeGameObject = GameObject(&game);
-	//hugeGameObject.AddComponent(&hugeComponent);
-	//hugeGameObject.GetTransform()->scale *= 50;
-	//hugeGameObject.GetTransform()->position = Vector3(-50, 0, 51);
-	//game.GameObjects.push_back(&hugeGameObject);
+        auto scriptingTransform = scriptingEngine.CreateScriptingTransformComponent(uid, startPos, startScale);
+        scriptingEngine.CreateScriptingGameObject(uid, "CuriousEnemy");
 
-	auto sceneObjects = sceneLoader.Load("untitled.glb");
+        auto enemy = new GameObject(uid, &game, scriptingTransform);
+        enemy->GetTransform()->position = startPos;
+        enemy->GetTransform()->scale = startScale;
 
-	for (GameObject* gameObject : *sceneObjects)
-	{
-		game.GameObjects.push_back(gameObject);
-	}
+        // Модель и свет
+        enemy->AddComponent(new ModelComponent(enemyModel));
+        enemy->AddComponent(new PointLightComponent(Vector4(1, 0, 0, 1), 20)); // Красный
 
-	//sceneObjects->at(sceneObjects->size() - 1)->GetTransform()->immovable = true;
+        // AI
+        auto ai = new AI::AdvancedEnemyAI(AI::EnemyType::Curious);
+        ai->SetMoveSpeed(4.0f);
+        ai->SetDetectionRange(25.0f);
+        ai->SetComfortDistance(10.0f);
+        enemy->AddComponent(ai);
 
-	game.Initialize();
+        game.GameObjects.push_back(enemy);
+    }
 
-	//for (int i = 0; i < 10; i++) {
-	//	bullets[i]->texture = ball->at(0).textures_[0].texture;
-	//}
-	game.Run();
+    // ------------------------------------------------------------------------
+    // ВРАГ 2: COLLECTOR (Зелёный) - Собиратель
+    // ------------------------------------------------------------------------
+    {
+        int32_t uid = enemyUidCounter++;
+        Vector3 startPos(15, 5, 0);
+        Vector3 startScale(0.6f, 0.6f, 0.6f);
+
+        auto scriptingTransform = scriptingEngine.CreateScriptingTransformComponent(uid, startPos, startScale);
+        scriptingEngine.CreateScriptingGameObject(uid, "CollectorEnemy");
+
+        auto enemy = new GameObject(uid, &game, scriptingTransform);
+        enemy->GetTransform()->position = startPos;
+        enemy->GetTransform()->scale = startScale;
+
+        // Модель и свет
+        enemy->AddComponent(new ModelComponent(enemyModel));
+        enemy->AddComponent(new PointLightComponent(Vector4(0, 1, 0, 1), 20)); // Зелёный
+
+        // AI
+        auto ai = new AI::AdvancedEnemyAI(AI::EnemyType::Collector);
+        ai->SetMoveSpeed(5.0f);
+        ai->SetDetectionRange(30.0f);
+        enemy->AddComponent(ai);
+
+        game.GameObjects.push_back(enemy);
+    }
+
+    game.Initialize();
+    game.Run();
 }

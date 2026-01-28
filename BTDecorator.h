@@ -8,16 +8,6 @@
 
 namespace AI {
 
-    // ------------------------------------------------------------------------
-    // BTDecorator - узел-обертка с одним дочерним узлом
-    // 
-    // Декораторы модифицируют поведение своего ребенка:
-    // - Изменяют результат (Inverter)
-    // - Повторяют выполнение (Repeat)
-    // - Добавляют условия (UntilSuccess)
-    // 
-    // Наследники: Repeat, Inverter, RetryUntilSuccess
-    // ------------------------------------------------------------------------
     class BTDecorator : public BTNode {
     public:
         BTDecorator(const std::string& name = "Decorator")
@@ -26,34 +16,22 @@ namespace AI {
 
         virtual ~BTDecorator() = default;
 
-        // --------------------------------------------------------------------
         // Установить дочерний узел
-        // 
-        // Пример:
-        // auto inverter = std::make_shared<BTInverter>("InvertHealth");
-        // inverter->SetChild(std::make_shared<CheckHealthAction>());
-        // --------------------------------------------------------------------
         void SetChild(BTNodePtr childNode) {
             child = childNode;
         }
 
-        // --------------------------------------------------------------------
         // Получить дочерний узел
-        // --------------------------------------------------------------------
         BTNodePtr GetChild() const {
             return child;
         }
 
-        // --------------------------------------------------------------------
         // Проверить, есть ли ребенок
-        // --------------------------------------------------------------------
         bool HasChild() const {
             return child != nullptr;
         }
 
-        // --------------------------------------------------------------------
         // Сброс состояния - сбрасываем и ребенка
-        // --------------------------------------------------------------------
         void Reset() override {
             BTNode::Reset();
             if (child) {
@@ -62,9 +40,7 @@ namespace AI {
         }
 
     protected:
-        // --------------------------------------------------------------------
         // При прерывании - прерываем ребенка
-        // --------------------------------------------------------------------
         void OnAbort(GameObject* gameObject, Blackboard* blackboard) override {
             if (child && child->IsRunning()) {
                 child->Abort(gameObject, blackboard);
@@ -75,4 +51,4 @@ namespace AI {
         BTNodePtr child;  // Единственный дочерний узел
     };
 
-} // namespace AI
+}
