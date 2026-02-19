@@ -81,6 +81,7 @@
     <FxCompile Include="Shaders\particles\SortStep2.hlsl" />
     <FxCompile Include="Shaders\PointPixelShader.hlsl" />
     <FxCompile Include="Shaders\PointVertexShader.hlsl" />
+    <FxCompile Include="Shaders\SkinnedVertexShader.hlsl" />
     <FxCompile Include="Shaders\SpotPixelShader.hlsl" />
     <FxCompile Include="Shaders\SpotVertexShader.hlsl" />
     <FxCompile Include="SimpleTexturedDirectx11\DebugLineVertexShader.hlsl" />
@@ -165,6 +166,13 @@
     <ClInclude Include="SimpleTexturedDirectx11\TextureLoader.h" />
     <ClInclude Include="BulletComponent.h" />
     <ClInclude Include="FrustumCulling.h" />
+    <ClInclude Include="SkeletalMesh\AnimationClip.h" />
+    <ClInclude Include="SkeletalMesh\Bone.h" />
+    <ClInclude Include="SkeletalMesh\SkeletalAnimationComponent.h" />
+    <ClInclude Include="SkeletalMesh\Skeleton.h" />
+    <ClInclude Include="SkeletalMesh\SkeletonLoader.h" />
+    <ClInclude Include="SkeletalMesh\SkinnedMesh.h" />
+    <ClInclude Include="SkeletalMesh\SkinnedModelComponent.h" />
     <ClInclude Include="Transform.h" />
     <ClInclude Include="UtilityAction.h" />
     <ClInclude Include="UtilityConsideration.h" />

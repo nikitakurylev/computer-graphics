@@ -11,6 +11,7 @@
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
+#include "SkeletalMesh/SkinnedModelComponent.h"
 
 using namespace DirectX;
 
@@ -230,6 +231,44 @@ void RenderingSystem::BindDefaultMaterialResources() {
 
 void RenderingSystem::Render(GameObject* gameObject, Matrix view, Matrix projection, ID3D11VertexShader* vertex, ID3D11PixelShader* pixel, Vector3 cam_world, bool culling, bool drawDebugAABB)
 {
+	// ========================================================================
+	// [SKELETAL ANIMATION] CHECK IF THIS IS A SKINNED MODEL
+	// ========================================================================
+
+	// Try to get SkinnedModelComponent
+	SkinnedModelComponent* skinnedComp = nullptr;
+
+	for (Component* comp : gameObject->GetComponents()) {
+		skinnedComp = dynamic_cast<SkinnedModelComponent*>(comp);
+		if (skinnedComp) break;
+	}
+
+	if (skinnedComp) {
+		// RENDER SKINNED MODEL
+
+		if (!skinnedVertexShader || !skinnedInputLayout) {
+			printf("[RenderingSystem] ERROR: Skinned shaders not initialized!\n");
+			return;
+		}
+
+		// Set skinned shaders and input layout
+		Context->IASetInputLayout(skinnedInputLayout);
+		Context->VSSetShader(skinnedVertexShader, nullptr, 0);
+		Context->PSSetShader(pixel, nullptr, 0);
+
+		// Set primitive topology
+		Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		// Update world matrix
+		Matrix world = gameObject->GetTransform()->GetMatrix();
+		UpdateTransformBuffer(world, view, projection, cam_world);
+
+		// Draw skinned model (handles bone matrices internally)
+		skinnedComp->Draw(Device, Context);
+
+		return;  // Done, exit early
+	}
+
 	auto world_matrix = gameObject->GetTransform()->GetMatrix();
 	for (Component* gameComponent : gameObject->GetComponents()) {
 		auto renderer = dynamic_cast<Renderer*>(gameComponent);
@@ -503,6 +542,19 @@ RenderingSystem::RenderingSystem(DisplayWin32* Display, LPCWSTR vertexShaderName
 		nullptr, &debugPixelShader);
 }
 
+RenderingSystem::~RenderingSystem() {
+	// Cleanup skeletal animation resources
+	if (skinnedVertexShader) {
+		skinnedVertexShader->Release();
+		skinnedVertexShader = nullptr;
+	}
+
+	if (skinnedInputLayout) {
+		skinnedInputLayout->Release();
+		skinnedInputLayout = nullptr;
+	}
+}
+
 void RenderingSystem::Initialize(std::vector<GameObject*> GameObjects)
 {
 	for (GameObject* gameObject : GameObjects) {
@@ -513,6 +565,76 @@ void RenderingSystem::Initialize(std::vector<GameObject*> GameObjects)
 			renderer->Initialize(Device, Context);
 		}
 	}
+
+	// ========================================================================
+	// [SKELETAL ANIMATION] INITIALIZATION
+	// ========================================================================
+	printf("\n[RenderingSystem] Initializing skeletal animation system...\n");
+
+	ID3DBlob* skinnedVertexBC = nullptr;
+	HRESULT hr = CompileShaderFromFile(
+		L"SkinnedVertexShader.hlsl",
+		nullptr,
+		"main",
+		"vs_5_0",
+		&skinnedVertexBC
+	);
+
+	if (SUCCEEDED(hr)) {
+		printf("[RenderingSystem] SkinnedVertexShader compiled successfully\n");
+
+		// Create vertex shader
+		hr = Device->CreateVertexShader(
+			skinnedVertexBC->GetBufferPointer(),
+			skinnedVertexBC->GetBufferSize(),
+			nullptr,
+			&skinnedVertexShader
+		);
+
+		if (FAILED(hr)) {
+			printf("[RenderingSystem] ERROR: Failed to create skinned vertex shader\n");
+		}
+		else {
+			printf("[RenderingSystem] Skinned vertex shader created\n");
+		}
+
+		// Create input layout for SkinnedVertex
+		D3D11_INPUT_ELEMENT_DESC skinnedLayout[] = {
+			{"POSITION",     0, DXGI_FORMAT_R32G32B32_FLOAT,    0,  0,  D3D11_INPUT_PER_VERTEX_DATA, 0},
+			{"NORMAL",       0, DXGI_FORMAT_R32G32B32_FLOAT,    0,  12, D3D11_INPUT_PER_VERTEX_DATA, 0},
+			{"TEXCOORD",     0, DXGI_FORMAT_R32G32_FLOAT,       0,  24, D3D11_INPUT_PER_VERTEX_DATA, 0},
+			{"TANGENT",      0, DXGI_FORMAT_R32G32B32_FLOAT,    0,  32, D3D11_INPUT_PER_VERTEX_DATA, 0},
+			{"BINORMAL",     0, DXGI_FORMAT_R32G32B32_FLOAT,    0,  44, D3D11_INPUT_PER_VERTEX_DATA, 0},
+			{"BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_UINT,  0,  56, D3D11_INPUT_PER_VERTEX_DATA, 0},
+			{"BLENDWEIGHT",  0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,  72, D3D11_INPUT_PER_VERTEX_DATA, 0}
+		};
+
+		hr = Device->CreateInputLayout(
+			skinnedLayout,
+			ARRAYSIZE(skinnedLayout),
+			skinnedVertexBC->GetBufferPointer(),
+			skinnedVertexBC->GetBufferSize(),
+			&skinnedInputLayout
+		);
+
+		if (FAILED(hr)) {
+			printf("[RenderingSystem] ERROR: Failed to create skinned input layout\n");
+		}
+		else {
+			printf("[RenderingSystem] Skinned input layout created\n");
+		}
+
+		skinnedVertexBC->Release();
+	}
+	else {
+		printf("[RenderingSystem] ERROR: Failed to compile SkinnedVertexShader.hlsl\n");
+		std::cout << (HRESULT_CODE(hr)) << std::endl;
+	}
+
+	// Reuse existing pixel shader for skinned models
+	skinnedPixelShader = pixelShader;
+
+	printf("[RenderingSystem] Skeletal animation system initialized\n\n");
 }
 
 void RenderingSystem::InitDepthMap(int index, float resolution, DisplayWin32* Display)

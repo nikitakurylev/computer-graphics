@@ -26,6 +26,7 @@
     <FxCompile Include="SimpleTexturedDirectx11\DebugLinePixelShader.hlsl" />
     <FxCompile Include="SimpleTexturedDirectx11\PixelShader.hlsl" />
     <FxCompile Include="SimpleTexturedDirectx11\VertexShader.hlsl" />
+    <FxCompile Include="Shaders\SkinnedVertexShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AIComponent.cpp" />
@@ -159,6 +160,13 @@
     <ClInclude Include="SimpleFloatingEnemyAI.h" />
     <ClInclude Include="AdvancedEnemyAI.h" />
     <ClInclude Include="BTSerializer.h" />
+    <ClInclude Include="SkeletalMesh\AnimationClip.h" />
+    <ClInclude Include="SkeletalMesh\Bone.h" />
+    <ClInclude Include="SkeletalMesh\SkeletalAnimationComponent.h" />
+    <ClInclude Include="SkeletalMesh\Skeleton.h" />
+    <ClInclude Include="SkeletalMesh\SkeletonLoader.h" />
+    <ClInclude Include="SkeletalMesh\SkinnedMesh.h" />
+    <ClInclude Include="SkeletalMesh\SkinnedModelComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="Models\soccer_ball.mtl" />

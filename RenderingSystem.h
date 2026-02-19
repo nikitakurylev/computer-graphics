@@ -28,6 +28,7 @@ class RenderingSystem
 {
 public:
 	RenderingSystem(DisplayWin32* Display, LPCWSTR vertexShaderName, LPCWSTR pixelShaderName);
+	~RenderingSystem();
 	virtual void Draw(DisplayWin32* display, std::vector<GameObject*> Components, Matrix view_matrix, Matrix projection_matrix, CascadeData* cascadeData, Vector3 cam_world);
 	virtual void Initialize(std::vector<GameObject*> GameObjects);
 	ID3D11Device* Device;
@@ -41,6 +42,7 @@ public:
 
 	void SetDebugAABBMode(bool enabled) { debugShowAABB = enabled; }
 	bool GetDebugAABBMode() const { return debugShowAABB; }
+
 protected:
 	void RenderDepthMaps(CascadeData* cascadeData, std::vector<GameObject*> Components, const Matrix& view_matrix, Vector3 cam_world);
 	void SetShadowMaps(int offset);
@@ -62,6 +64,15 @@ protected:
 	ID3D11InputLayout* layout;
 	D3D11_VIEWPORT viewport;
 	HRESULT CompileShaderFromFile(LPCWSTR pFileName, const D3D_SHADER_MACRO* pDefines, LPCSTR pEntryPoint, LPCSTR pShaderModel, ID3DBlob** ppBytecodeBlob);
+
+	// ========================================================================
+	// SKELETAL ANIMATION SUPPORT - ADD THESE
+	// ========================================================================
+	ID3D11VertexShader* skinnedVertexShader = nullptr;
+	ID3D11PixelShader* skinnedPixelShader = nullptr;
+	ID3D11InputLayout* skinnedInputLayout = nullptr;
+	// ========================================================================
+
 private:
 	void InitDepthMap(int index, float resolution, DisplayWin32* Display);
 	void RenderDepthMap(int index, CascadeData* cascadeData, std::vector<GameObject*> Components, const Matrix& view_matrix, Vector3 cam_world);
@@ -91,6 +102,7 @@ private:
 	ID3D11ShaderResourceView* defaultNormalTexture_ = nullptr;
 	ID3D11ShaderResourceView* environmentMap_ = nullptr;
 	PointLightData dynamicLights[10];
+
 protected:
 	int debugRenderedCount = 0;
 	int debugCulledCount = 0;
