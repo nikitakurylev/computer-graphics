@@ -77,6 +77,8 @@
     <ClCompile Include="Transform.cpp" />
     <ClCompile Include="SimpleFloatingEnemyAI.cpp" />
     <ClCompile Include="AdvancedEnemyAI.cpp" />
+    <ClCompile Include="SkeletalMesh\SkeletalModelComponent.cpp" />
+    <ClCompile Include="SkeletalMesh\SkeletalModelLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AIComponent.h" />
@@ -159,6 +161,9 @@
     <ClInclude Include="SimpleFloatingEnemyAI.h" />
     <ClInclude Include="AdvancedEnemyAI.h" />
     <ClInclude Include="BTSerializer.h" />
+    <ClInclude Include="SkeletalMesh\SkeletalMesh.h" />
+    <ClInclude Include="SkeletalMesh\SkeletalModelComponent.h" />
+    <ClInclude Include="SkeletalMesh\SkeletalModelLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="Models\soccer_ball.mtl" />

@@ -10,6 +10,10 @@
 #include "Logger.hpp"
 #include "AdvancedEnemyAI.h"
 
+// --- Skeletal model support ---
+#include "SkeletalMesh/SkeletalModelLoader.h"
+#include "SkeletalMesh/SkeletalModelComponent.h"
+
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
@@ -35,18 +39,55 @@ int main()
 
     // Загружаем сцену
     auto sceneObjects = sceneLoader.Load("untitled.glb");
-    for (GameObject* gameObject : *sceneObjects) {
+    for (GameObject* gameObject : *sceneObjects)
         game.GameObjects.push_back(gameObject);
+
+    // ====================================================================
+    //  Y_Bot — скелетная модель в T-pose
+    // ====================================================================
+    // ВАЖНО: skelLoader должен жить всё время работы программы,
+    // т.к. defaultWhite/defaultNormal текстуры из него используются мешами.
+    // Выносим его на уровень main, используем new (или static).
+    SkeletalModelLoader* skelLoader = new SkeletalModelLoader(window.hWnd, render.Device, render.Context);
+    SkeletalModelData* yBotData = skelLoader->Load("Y_Bot.fbx");
+
+    if (yBotData && yBotData->valid)
+    {
+        static int32_t skeletalUidCounter = 20000;
+        int32_t uid = skeletalUidCounter++;
+
+        Vector3 startPos(0.0f, 3.0f, 0.0f);
+        // Y_Bot из Mixamo в FBX хранится в сантиметрах → масштаб 0.01
+        Vector3 startScale(0.01f, 0.01f, 0.01f);
+
+        auto scriptingTransform = scriptingEngine.CreateScriptingTransformComponent(uid, startPos, startScale);
+        scriptingEngine.CreateScriptingGameObject(uid, "YBot");
+
+        auto yBotObject = new GameObject(uid, &game, scriptingTransform);
+        yBotObject->GetTransform()->position = startPos;
+        yBotObject->GetTransform()->scale = startScale;
+
+        auto* skeletalComp = new SkeletalModelComponent(&yBotData->meshes, &yBotData->skeleton);
+        yBotObject->AddComponent(skeletalComp);
+
+        // Свет рядом с моделью
+        yBotObject->AddComponent(new PointLightComponent(Vector4(1.0f, 0.0f, 0.0f, 1.0f), 500.0f));
+
+        game.GameObjects.push_back(yBotObject);
+    }
+    else
+    {
+        MessageBoxA(window.hWnd, "Failed to load Y_Bot.fbx — check that the file is in the exe directory", "Warning", MB_ICONWARNING);
     }
 
+    // ====================================================================
+    //  Враги (прежний код)
+    // ====================================================================
     auto enemyModel = modelLoader.Load("soccer_ball.obj");
 
-    // Счётчик UID для врагов
     static int32_t enemyUidCounter = 10000;
 
-    // ------------------------------------------------------------------------
-    // ВРАГ 1: CURIOUS (Красный) - Любопытный
-    // ------------------------------------------------------------------------
+    // --- ВРАГ 1: CURIOUS (Красный) ---
     {
         int32_t uid = enemyUidCounter++;
         Vector3 startPos(-15, 5, 0);
@@ -59,11 +100,9 @@ int main()
         enemy->GetTransform()->position = startPos;
         enemy->GetTransform()->scale = startScale;
 
-        // Модель и свет
         enemy->AddComponent(new ModelComponent(enemyModel));
-        enemy->AddComponent(new PointLightComponent(Vector4(1, 0, 0, 1), 20)); // Красный
+        enemy->AddComponent(new PointLightComponent(Vector4(1, 0, 0, 1), 20));
 
-        // AI
         auto ai = new AI::AdvancedEnemyAI(AI::EnemyType::Curious);
         ai->SetMoveSpeed(4.0f);
         ai->SetDetectionRange(25.0f);
@@ -73,9 +112,7 @@ int main()
         game.GameObjects.push_back(enemy);
     }
 
-    // ------------------------------------------------------------------------
-    // ВРАГ 2: COLLECTOR (Зелёный) - Собиратель
-    // ------------------------------------------------------------------------
+    // --- ВРАГ 2: COLLECTOR (Зелёный) ---
     {
         int32_t uid = enemyUidCounter++;
         Vector3 startPos(15, 5, 0);
@@ -88,11 +125,9 @@ int main()
         enemy->GetTransform()->position = startPos;
         enemy->GetTransform()->scale = startScale;
 
-        // Модель и свет
         enemy->AddComponent(new ModelComponent(enemyModel));
-        enemy->AddComponent(new PointLightComponent(Vector4(0, 1, 0, 1), 20)); // Зелёный
+        enemy->AddComponent(new PointLightComponent(Vector4(0, 1, 0, 1), 20));
 
-        // AI
         auto ai = new AI::AdvancedEnemyAI(AI::EnemyType::Collector);
         ai->SetMoveSpeed(5.0f);
         ai->SetDetectionRange(30.0f);
