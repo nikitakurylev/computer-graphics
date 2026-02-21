@@ -75,9 +75,9 @@ int main()
 
         // --- Дамп скелета для диагностики ---
         DumpSkeleton(yBotData->skeleton, "skeleton_dump.txt");
-
+        
         // --- Загружаем анимацию Walking ---
-        auto walkClips = SkeletalAnimationLoader::Load("Walking.fbx");
+        auto walkClips = SkeletalAnimationLoader::Load("Standard_Walk.fbx");
         if (!walkClips.empty())
         {
             static std::vector<SkeletalAnimationClip> storedClips = std::move(walkClips);
@@ -95,6 +95,7 @@ int main()
                 "Walking.fbx not found or has no animations — showing T-pose",
                 "Animation Warning", MB_ICONWARNING);
         }
+        
 
         game.GameObjects.push_back(yBotObject);
     }

@@ -20,10 +20,9 @@ SkeletalModelData* SkeletalModelLoader::Load(const std::string& filename)
     auto pos = wbuf.find_last_of(L"\\/");
     SetCurrentDirectory(wbuf.substr(0, pos).c_str());
 
-    // AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS = false:
-    // Запрещает создание вспомогательных узлов $AssimpFbx$_Translation, $AssimpFbx$_PreRotation и т.д.
-    // Все трансформы (Translation, PreRotation, LclRotation, Scale) бакаются в один mTransformation.
-    // Это гарантирует что имена узлов в иерархии совпадают с именами каналов анимации.
+    // PRESERVE_PIVOTS=false: убирает $AssimpFbx$ вспомогательные узлы,
+    // PreRotation бакается в mTransformation и mRotationKeys.
+    // mOffsetMatrix от Assimp при этом ненадёжен — пересчитываем его сами ниже.
     importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
 
     const aiScene* scene = importer.ReadFile(filename,
@@ -31,8 +30,7 @@ SkeletalModelData* SkeletalModelLoader::Load(const std::string& filename)
         aiProcess_ConvertToLeftHanded |
         aiProcess_CalcTangentSpace |
         aiProcess_LimitBoneWeights |
-        aiProcess_JoinIdenticalVertices |
-        aiProcess_PopulateArmatureData);
+        aiProcess_JoinIdenticalVertices);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
@@ -52,18 +50,31 @@ SkeletalModelData* SkeletalModelLoader::Load(const std::string& filename)
     // --- 2. Строим иерархию скелета из узлов сцены ---
     ExtractBoneHierarchy(scene->mRootNode, scene, out->skeleton, -1, Matrix::Identity);
 
-    // Заполняем offset-матрицы
+    // Вычисляем глобальные трансформы в T-pose
+    out->skeleton.ComputeGlobalTransforms();
+
+    // Пересчитываем offsetMatrix самостоятельно как inverse(globalTransform в T-pose).
+    // Assimp с PRESERVE_PIVOTS=false ненадёжно предоставляет mOffsetMatrix для некоторых костей
+    // (например тех у кого PreRotation влияет на систему координат).
+    // Собственный расчёт гарантирует согласованность: offsetMatrix и globalTransform
+    // всегда в одной системе координат.
     for (auto& bone : out->skeleton.bones)
     {
-        auto it = boneOffsets_cache_.find(bone.name);
-        if (it != boneOffsets_cache_.end())
-            bone.offsetMatrix = it->second;
+        // Проверяем что кость имеет реальные skin weights (есть в boneOffsets_cache_)
+        // Для таких костей используем наш пересчитанный offset.
+        // Для костей без весов (чисто иерархические) offset не важен.
+        if (boneOffsets_cache_.count(bone.name))
+        {
+            Matrix inv;
+            bone.globalTransform.Invert(inv);
+            // Invert записывает NaN если матрица вырождена — проверяем через isnan
+            bone.offsetMatrix = std::isnan(inv._11) ? Matrix::Identity : inv;
+        }
         else
+        {
             bone.offsetMatrix = Matrix::Identity;
+        }
     }
-
-    // Вычисляем глобальные трансформы (T-pose)
-    out->skeleton.ComputeGlobalTransforms();
 
     // --- 3. Обрабатываем меши ---
     ProcessNode(scene->mRootNode, scene, out, Matrix::Identity);

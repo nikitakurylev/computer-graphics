@@ -12,13 +12,9 @@ std::vector<SkeletalAnimationClip> SkeletalAnimationLoader::Load(const std::stri
     SetCurrentDirectory(wbuf.substr(0, pos).c_str());
 
     Assimp::Importer importer;
-    // Тот же флаг что и в SkeletalModelLoader — без $AssimpFbx$ узлов,
-    // каналы анимации напрямую соответствуют именам костей в скелете.
     importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
-
     const aiScene* scene = importer.ReadFile(filename,
-        aiProcess_ConvertToLeftHanded |
-        aiProcess_PopulateArmatureData);
+        aiProcess_ConvertToLeftHanded);
 
     if (!scene)
     {

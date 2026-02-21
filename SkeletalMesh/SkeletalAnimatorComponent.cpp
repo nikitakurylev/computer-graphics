@@ -42,42 +42,21 @@ void SkeletalAnimatorComponent::Update(float deltaTime)
 
         const BoneAnimChannel& ch = it->second;
 
-        // Сэмплируем каналы — если кривая пустая, берём из bindPose
-        Vector3    pos;
-        Quaternion rot;
-        Vector3    scale;
-
-        if (!ch.posKeys.empty())
-            pos = SampleVec(ch.posKeys, playbackTime_);
-        else
+        // С PRESERVE_PIVOTS=false Assimp бакает PreRotation в mRotationKeys.
+        // Просто сэмплируем все три канала и строим localTransform.
+        Vector3    bindPos, bindScale; Quaternion bindRot;
         {
-            Vector3 dummyS; Quaternion dummyR;
-            bone.bindPoseLocalTransform.Decompose(dummyS, dummyR, pos);
+            Matrix bpm = bone.bindPoseLocalTransform;
+            bpm.Decompose(bindScale, bindRot, bindPos);
         }
 
-        if (!ch.rotKeys.empty())
-            rot = SampleQuat(ch.rotKeys, playbackTime_);
-        else
-        {
-            Vector3 dummyS, dummyT;
-            bone.bindPoseLocalTransform.Decompose(dummyS, rot, dummyT);
-        }
-
-        if (!ch.scaleKeys.empty())
-            scale = SampleVec(ch.scaleKeys, playbackTime_);
-        else
-        {
-            Quaternion dummyR; Vector3 dummyT;
-            bone.bindPoseLocalTransform.Decompose(scale, dummyR, dummyT);
-        }
-
-        // С AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS=false Assimp бакает PreRotation
-        // прямо в mRotationKeys. Просто применяем анимационный кватернион как есть.
-        Matrix animRotMat = Matrix::CreateFromQuaternion(rot);
+        Vector3    pos = ch.posKeys.empty() ? bindPos : SampleVec(ch.posKeys, playbackTime_);
+        Quaternion rot = ch.rotKeys.empty() ? bindRot : SampleQuat(ch.rotKeys, playbackTime_);
+        Vector3    scale = ch.scaleKeys.empty() ? bindScale : SampleVec(ch.scaleKeys, playbackTime_);
 
         bone.localTransform =
             Matrix::CreateScale(scale) *
-            animRotMat *
+            Matrix::CreateFromQuaternion(rot) *
             Matrix::CreateTranslation(pos);
     }
 }
