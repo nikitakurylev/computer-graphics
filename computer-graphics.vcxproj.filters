@@ -169,6 +169,7 @@
     <ClInclude Include="SkeletalMesh\SkeletalAnimation.h" />
     <ClInclude Include="SkeletalMesh\SkeletalAnimationLoader.h" />
     <ClInclude Include="SkeletalMesh\SkeletalAnimatorComponent.h" />
+    <ClInclude Include="SkeletalMesh\SkeletalDebug.h" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="Models\soccer_ball.mtl" />

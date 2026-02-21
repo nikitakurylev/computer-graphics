@@ -1,4 +1,5 @@
 #include "SkeletalAnimatorComponent.h"
+#include "SkeletalMesh.h"
 #include <algorithm>
 #include <cmath>
 
@@ -50,8 +51,8 @@ void SkeletalAnimatorComponent::Update(float deltaTime)
             pos = SampleVec(ch.posKeys, playbackTime_);
         else
         {
-            // Извлекаем позицию из bindPose
-            bone.bindPoseLocalTransform.Decompose(scale, rot, pos);
+            Vector3 dummyS; Quaternion dummyR;
+            bone.bindPoseLocalTransform.Decompose(dummyS, dummyR, pos);
         }
 
         if (!ch.rotKeys.empty())
@@ -70,11 +71,13 @@ void SkeletalAnimatorComponent::Update(float deltaTime)
             bone.bindPoseLocalTransform.Decompose(scale, dummyR, dummyT);
         }
 
-        // TRS: сначала Scale, потом Rotation, потом Translation
-        // DirectXMath SimpleMath: Matrix::CreateScale * CreateFromQuaternion * CreateTranslation
+        // С AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS=false Assimp бакает PreRotation
+        // прямо в mRotationKeys. Просто применяем анимационный кватернион как есть.
+        Matrix animRotMat = Matrix::CreateFromQuaternion(rot);
+
         bone.localTransform =
             Matrix::CreateScale(scale) *
-            Matrix::CreateFromQuaternion(rot) *
+            animRotMat *
             Matrix::CreateTranslation(pos);
     }
 }

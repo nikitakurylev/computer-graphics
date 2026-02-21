@@ -37,11 +37,17 @@ struct SKELETAL_VERTEX
 struct Bone
 {
     std::string name;
-    int         parentIndex = -1;        // -1 = корневая кость
-    Matrix      offsetMatrix;            // bind-pose inverse (bone -> mesh space)
-    Matrix      localTransform;          // текущий локальный трансформ (меняется аниматором)
-    Matrix      bindPoseLocalTransform;  // T-pose локальный трансформ (неизменная копия)
-    Matrix      globalTransform;         // мировой трансформ (кэш, пересчитывается каждый кадр)
+    int         parentIndex = -1;
+    Matrix      offsetMatrix;
+    Matrix      localTransform;          // текущий (меняется аниматором каждый кадр)
+    Matrix      bindPoseLocalTransform;  // T-pose копия (для костей без анимации)
+    Matrix      globalTransform;
+
+    // PreRotation: хранится в FBX как свойство узла,
+    // НЕ входит в mRotationKeys — аниматор должен применять его вручную.
+    // Формула: localTransform = Translation * preRotation * AnimRotation * Scale
+    Matrix      preRotation = Matrix::Identity;
+    bool        hasPreRotation = false;
 };
 
 // ============================================================

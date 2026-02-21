@@ -1,7 +1,7 @@
 #include "SkeletalModelLoader.h"
 
 #include <Windows.h>
-#include "../SimpleTexturedDirectx11/TextureLoader.h"   // проектный WIC — одна сигнатура, нет амбигвозности
+#include "../SimpleTexturedDirectx11/TextureLoader.h"
 #include <d3d11.h>
 #include <cstdint>
 
@@ -20,12 +20,19 @@ SkeletalModelData* SkeletalModelLoader::Load(const std::string& filename)
     auto pos = wbuf.find_last_of(L"\\/");
     SetCurrentDirectory(wbuf.substr(0, pos).c_str());
 
+    // AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS = false:
+    // Запрещает создание вспомогательных узлов $AssimpFbx$_Translation, $AssimpFbx$_PreRotation и т.д.
+    // Все трансформы (Translation, PreRotation, LclRotation, Scale) бакаются в один mTransformation.
+    // Это гарантирует что имена узлов в иерархии совпадают с именами каналов анимации.
+    importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
+
     const aiScene* scene = importer.ReadFile(filename,
         aiProcess_Triangulate |
         aiProcess_ConvertToLeftHanded |
         aiProcess_CalcTangentSpace |
-        aiProcess_LimitBoneWeights |   // обрезает до 4 весов на вершину
-        aiProcess_JoinIdenticalVertices);
+        aiProcess_LimitBoneWeights |
+        aiProcess_JoinIdenticalVertices |
+        aiProcess_PopulateArmatureData);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
@@ -115,10 +122,8 @@ void SkeletalModelLoader::ExtractBoneHierarchy(
 {
     std::string name = node->mName.C_Str();
 
-    // Пропускаем узлы у которых нет костей ни в себе ни в потомках
     if (!boneOffsets_cache_.count(name) && !SubtreeHasBone(node, boneOffsets_cache_))
     {
-        // Всё равно обходим детей с тем же parentIndex
         for (UINT i = 0; i < node->mNumChildren; ++i)
             ExtractBoneHierarchy(node->mChildren[i], scene, skeleton, parentIndex, Matrix::Identity);
         return;
@@ -126,22 +131,32 @@ void SkeletalModelLoader::ExtractBoneHierarchy(
 
     int currentIndex = parentIndex;
 
-    // Добавляем узел только если его имя ещё не в скелете
     if (skeleton.boneNameToIndex.find(name) == skeleton.boneNameToIndex.end())
     {
-        aiVector3D pos, scale;
-        aiQuaternion rot;
-        node->mTransformation.Decompose(scale, rot, pos);
-
         Bone bone;
         bone.name = name;
         bone.parentIndex = parentIndex;
+
+        // mTransformation = T * PreRotation * LclRotation * S  (для Mixamo)
+        // Разбираем его на компоненты
+        aiVector3D aiPos, aiScale;
+        aiQuaternion aiRot;
+        node->mTransformation.Decompose(aiScale, aiRot, aiPos);
+
+        Vector3    pos(aiPos.x, aiPos.y, aiPos.z);
+        Vector3    scale(aiScale.x, aiScale.y, aiScale.z);
+        Quaternion fullRot(aiRot.x, aiRot.y, aiRot.z, aiRot.w);
+
+        // T-pose localTransform — берём как есть из mTransformation
         bone.localTransform =
-            Matrix::CreateScale(scale.x, scale.y, scale.z) *
-            Matrix::CreateFromQuaternion(Quaternion(rot.x, rot.y, rot.z, rot.w)) *
-            Matrix::CreateTranslation(pos.x, pos.y, pos.z);
-        bone.bindPoseLocalTransform = bone.localTransform; // сохраняем T-pose
-        bone.offsetMatrix = Matrix::Identity; // заполняется позже из boneOffsets
+            Matrix::CreateScale(scale) *
+            Matrix::CreateFromQuaternion(fullRot) *
+            Matrix::CreateTranslation(pos);
+        bone.bindPoseLocalTransform = bone.localTransform;
+        bone.offsetMatrix = Matrix::Identity;
+
+        // С PRESERVE_PIVOTS=false PreRotation уже влит в mTransformation.
+        // Просто берём его как есть — никакой ручной обработки mMetaData не нужно.
 
         currentIndex = (int)skeleton.bones.size();
         skeleton.boneNameToIndex[name] = currentIndex;
@@ -149,7 +164,6 @@ void SkeletalModelLoader::ExtractBoneHierarchy(
     }
     else
     {
-        // Дубль — просто берём уже существующий индекс
         currentIndex = skeleton.boneNameToIndex[name];
     }
 
