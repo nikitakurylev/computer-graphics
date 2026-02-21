@@ -39,18 +39,17 @@ SkeletalModelData* SkeletalModelLoader::Load(const std::string& filename)
     auto* out = new SkeletalModelData();
 
     // --- 1. Собираем все offset-матрицы костей из мешей ---
-    std::unordered_map<std::string, Matrix> boneOffsets;
-    CollectBoneNames(scene, boneOffsets);
+    boneOffsets_cache_.clear();
+    CollectBoneNames(scene, boneOffsets_cache_);
 
     // --- 2. Строим иерархию скелета из узлов сцены ---
-    //        Только те узлы, которые являются костями (есть в boneOffsets)
     ExtractBoneHierarchy(scene->mRootNode, scene, out->skeleton, -1, Matrix::Identity);
 
     // Заполняем offset-матрицы
     for (auto& bone : out->skeleton.bones)
     {
-        auto it = boneOffsets.find(bone.name);
-        if (it != boneOffsets.end())
+        auto it = boneOffsets_cache_.find(bone.name);
+        if (it != boneOffsets_cache_.end())
             bone.offsetMatrix = it->second;
         else
             bone.offsetMatrix = Matrix::Identity;
@@ -82,6 +81,7 @@ void SkeletalModelLoader::CollectBoneNames(
         {
             aiBone* bone = mesh->mBones[b];
             std::string name = bone->mName.C_Str();
+            // Берём offset-матрицу только один раз (первый меш где встретили кость)
             if (boneOffsets.find(name) == boneOffsets.end())
                 boneOffsets[name] = ToMatrix(bone->mOffsetMatrix);
         }
@@ -89,30 +89,45 @@ void SkeletalModelLoader::CollectBoneNames(
 }
 
 // ============================================================
-//  Рекурсивный обход дерева узлов для построения скелета.
-//  Добавляем узел в скелет, только если у него есть потомки-кости
-//  или он сам является костью (есть в boneOffsets сцены).
+//  Вспомогательная: проверяет, есть ли в поддереве узла хотя бы одна кость
+// ============================================================
+static bool SubtreeHasBone(aiNode* node,
+    const std::unordered_map<std::string, Matrix>& boneOffsets)
+{
+    if (boneOffsets.count(node->mName.C_Str()))
+        return true;
+    for (UINT i = 0; i < node->mNumChildren; ++i)
+        if (SubtreeHasBone(node->mChildren[i], boneOffsets))
+            return true;
+    return false;
+}
+
+// ============================================================
+//  Строит иерархию костей:
+//  - Добавляем узел если он сам кость (есть в boneOffsets)
+//    ИЛИ если в его поддереве есть кости (нужен как промежуточный родитель)
+//  - Защита от дублей: если имя уже в skeleton — пропускаем
 // ============================================================
 void SkeletalModelLoader::ExtractBoneHierarchy(
     aiNode* node, const aiScene* scene,
     Skeleton& skeleton, int parentIndex,
-    const Matrix& /*parentTransform — не используем, считаем при ComputeGlobalTransforms*/)
+    const Matrix& /*unused*/)
 {
     std::string name = node->mName.C_Str();
 
-    // Проверяем, является ли этот узел костью в каком-либо меше
-    bool isBone = false;
-    for (UINT m = 0; m < scene->mNumMeshes && !isBone; ++m)
+    // Пропускаем узлы у которых нет костей ни в себе ни в потомках
+    if (!boneOffsets_cache_.count(name) && !SubtreeHasBone(node, boneOffsets_cache_))
     {
-        aiMesh* mesh = scene->mMeshes[m];
-        for (UINT b = 0; b < mesh->mNumBones && !isBone; ++b)
-            if (mesh->mBones[b]->mName == node->mName)
-                isBone = true;
+        // Всё равно обходим детей с тем же parentIndex
+        for (UINT i = 0; i < node->mNumChildren; ++i)
+            ExtractBoneHierarchy(node->mChildren[i], scene, skeleton, parentIndex, Matrix::Identity);
+        return;
     }
 
     int currentIndex = parentIndex;
 
-    if (isBone || parentIndex >= 0) // как только нашли первую кость — добавляем всё поддерево
+    // Добавляем узел только если его имя ещё не в скелете
+    if (skeleton.boneNameToIndex.find(name) == skeleton.boneNameToIndex.end())
     {
         aiVector3D pos, scale;
         aiQuaternion rot;
@@ -121,14 +136,20 @@ void SkeletalModelLoader::ExtractBoneHierarchy(
         Bone bone;
         bone.name = name;
         bone.parentIndex = parentIndex;
-        bone.localTransform = Matrix::CreateScale(scale.x, scale.y, scale.z)
-            * Matrix::CreateFromQuaternion(Quaternion(rot.x, rot.y, rot.z, rot.w))
-            * Matrix::CreateTranslation(pos.x, pos.y, pos.z);
-        bone.offsetMatrix = Matrix::Identity; // заполним позже из boneOffsets
+        bone.localTransform =
+            Matrix::CreateScale(scale.x, scale.y, scale.z) *
+            Matrix::CreateFromQuaternion(Quaternion(rot.x, rot.y, rot.z, rot.w)) *
+            Matrix::CreateTranslation(pos.x, pos.y, pos.z);
+        bone.offsetMatrix = Matrix::Identity; // заполняется позже из boneOffsets
 
         currentIndex = (int)skeleton.bones.size();
         skeleton.boneNameToIndex[name] = currentIndex;
         skeleton.bones.push_back(bone);
+    }
+    else
+    {
+        // Дубль — просто берём уже существующий индекс
+        currentIndex = skeleton.boneNameToIndex[name];
     }
 
     for (UINT i = 0; i < node->mNumChildren; ++i)

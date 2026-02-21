@@ -50,6 +50,9 @@ private:
     ID3D11ShaderResourceView* defaultWhite_ = nullptr;
     ID3D11ShaderResourceView* defaultNormal_ = nullptr;
 
+    // Кэш offset-матриц костей — заполняется в CollectBoneNames, используется в ExtractBoneHierarchy
+    std::unordered_map<std::string, Matrix> boneOffsets_cache_;
+
     // --- helpers ---
     void ProcessNode(aiNode* node, const aiScene* scene,
         SkeletalModelData* out, const Matrix& parentTransform);
