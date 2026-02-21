@@ -10,9 +10,11 @@
 #include "Logger.hpp"
 #include "AdvancedEnemyAI.h"
 
-// --- Skeletal model support ---
+// --- Skeletal model + animation support ---
 #include "SkeletalMesh/SkeletalModelLoader.h"
 #include "SkeletalMesh/SkeletalModelComponent.h"
+#include "SkeletalMesh/SkeletalAnimationLoader.h"
+#include "SkeletalMesh/SkeletalAnimatorComponent.h"
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -56,7 +58,7 @@ int main()
         static int32_t skeletalUidCounter = 20000;
         int32_t uid = skeletalUidCounter++;
 
-        Vector3 startPos(0.0f, 3.0f, 0.0f);
+        Vector3 startPos(0.0f, 0.0f, 0.0f);
         // Y_Bot из Mixamo в FBX хранится в сантиметрах → масштаб 0.01
         Vector3 startScale(0.01f, 0.01f, 0.01f);
 
@@ -70,8 +72,29 @@ int main()
         auto* skeletalComp = new SkeletalModelComponent(&yBotData->meshes, &yBotData->skeleton);
         yBotObject->AddComponent(skeletalComp);
 
+        // --- Загружаем анимацию Walking ---
+        auto walkClips = SkeletalAnimationLoader::Load("Walking.fbx");
+        if (!walkClips.empty())
+        {
+            // Клипы хранятся в heap-памяти рядом с loader'ом — нужно чтобы они жили всё время
+            // Используем static чтобы не удалялись при выходе из scope
+            static std::vector<SkeletalAnimationClip> storedClips = std::move(walkClips);
+
+            auto* animator = new SkeletalAnimatorComponent(&yBotData->skeleton);
+            animator->SetClip(&storedClips[0]);
+            animator->loop = true;
+            animator->speed = 1.0f;
+            yBotObject->AddComponent(animator);
+        }
+        else
+        {
+            MessageBoxA(window.hWnd,
+                "Walking.fbx not found or has no animations — showing T-pose",
+                "Animation Warning", MB_ICONWARNING);
+        }
+
         // Свет рядом с моделью
-        yBotObject->AddComponent(new PointLightComponent(Vector4(1.0f, 0.0f, 0.0f, 1.0f), 500.0f));
+        yBotObject->AddComponent(new PointLightComponent(Vector4(1.0f, 1.0f, 1.0f, 1.0f), 15.0f));
 
         game.GameObjects.push_back(yBotObject);
     }

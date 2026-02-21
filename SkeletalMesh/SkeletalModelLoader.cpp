@@ -140,6 +140,7 @@ void SkeletalModelLoader::ExtractBoneHierarchy(
             Matrix::CreateScale(scale.x, scale.y, scale.z) *
             Matrix::CreateFromQuaternion(Quaternion(rot.x, rot.y, rot.z, rot.w)) *
             Matrix::CreateTranslation(pos.x, pos.y, pos.z);
+        bone.bindPoseLocalTransform = bone.localTransform; // сохраняем T-pose
         bone.offsetMatrix = Matrix::Identity; // заполняется позже из boneOffsets
 
         currentIndex = (int)skeleton.bones.size();

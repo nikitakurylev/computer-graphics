@@ -59,6 +59,8 @@
     <ClCompile Include="SimpleTexturedDirectx11\SceneLoader.cpp" />
     <ClCompile Include="SimpleTexturedDirectx11\TextureLoader.cpp" />
     <ClCompile Include="BulletComponent.cpp" />
+    <ClCompile Include="SkeletalMesh\SkeletalAnimationLoader.cpp" />
+    <ClCompile Include="SkeletalMesh\SkeletalAnimatorComponent.cpp" />
     <ClCompile Include="SkeletalMesh\SkeletalModelComponent.cpp" />
     <ClCompile Include="SkeletalMesh\SkeletalModelLoader.cpp" />
     <ClCompile Include="Transform.cpp" />
@@ -167,6 +169,9 @@
     <ClInclude Include="SimpleTexturedDirectx11\TextureLoader.h" />
     <ClInclude Include="BulletComponent.h" />
     <ClInclude Include="FrustumCulling.h" />
+    <ClInclude Include="SkeletalMesh\SkeletalAnimation.h" />
+    <ClInclude Include="SkeletalMesh\SkeletalAnimationLoader.h" />
+    <ClInclude Include="SkeletalMesh\SkeletalAnimatorComponent.h" />
     <ClInclude Include="SkeletalMesh\SkeletalMesh.h" />
     <ClInclude Include="SkeletalMesh\SkeletalModelComponent.h" />
     <ClInclude Include="SkeletalMesh\SkeletalModelLoader.h" />

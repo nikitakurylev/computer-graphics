@@ -28,7 +28,7 @@ struct SKELETAL_VERTEX
     FLOAT TX, TY, TZ;            // Tangent
     FLOAT BX, BY, BZ;            // Bitangent
     INT   BoneIndices[MAX_BONE_INFLUENCE] = { 0, 0, 0, 0 };
-    FLOAT BoneWeights[4] = { 0, 0, 0, 0 };
+    FLOAT BoneWeights[MAX_BONE_INFLUENCE] = { 0, 0, 0, 0 };
 };
 
 // ============================================================
@@ -39,8 +39,9 @@ struct Bone
     std::string name;
     int         parentIndex = -1;        // -1 = корневая кость
     Matrix      offsetMatrix;            // bind-pose inverse (bone -> mesh space)
-    Matrix      localTransform;          // локальный трансформ в T-pose (из узла сцены)
-    Matrix      globalTransform;         // мировой трансформ в T-pose (кэш)
+    Matrix      localTransform;          // текущий локальный трансформ (меняется аниматором)
+    Matrix      bindPoseLocalTransform;  // T-pose локальный трансформ (неизменная копия)
+    Matrix      globalTransform;         // мировой трансформ (кэш, пересчитывается каждый кадр)
 };
 
 // ============================================================

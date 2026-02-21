@@ -79,6 +79,8 @@
     <ClCompile Include="AdvancedEnemyAI.cpp" />
     <ClCompile Include="SkeletalMesh\SkeletalModelComponent.cpp" />
     <ClCompile Include="SkeletalMesh\SkeletalModelLoader.cpp" />
+    <ClCompile Include="SkeletalMesh\SkeletalAnimationLoader.cpp" />
+    <ClCompile Include="SkeletalMesh\SkeletalAnimatorComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AIComponent.h" />
@@ -164,6 +166,9 @@
     <ClInclude Include="SkeletalMesh\SkeletalMesh.h" />
     <ClInclude Include="SkeletalMesh\SkeletalModelComponent.h" />
     <ClInclude Include="SkeletalMesh\SkeletalModelLoader.h" />
+    <ClInclude Include="SkeletalMesh\SkeletalAnimation.h" />
+    <ClInclude Include="SkeletalMesh\SkeletalAnimationLoader.h" />
+    <ClInclude Include="SkeletalMesh\SkeletalAnimatorComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="Models\soccer_ball.mtl" />
