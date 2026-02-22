@@ -1,4 +1,4 @@
-﻿// MySuper3DApp.cpp : This file contains the 'main' function.
+﻿// MySuper3DApp.cpp
 
 #include "Game.h"
 #include "GameObject.h"
@@ -10,7 +10,6 @@
 #include "BulletComponent.h"
 #include "PlaneComponent.h"
 
-// --- Skeletal model + animation support ---
 #include "SkeletalMesh/SkeletalModelLoader.h"
 #include "SkeletalMesh/SkeletalModelComponent.h"
 #include "SkeletalMesh/SkeletalAnimationLoader.h"
@@ -23,19 +22,12 @@
 #pragma comment(lib, "dxguid.lib")
 
 // ----------------------------------------------------------------
-//  Вспомогательная функция — создаёт GameObject с Transform
-//  Принимает Vector3 по значению, т.к. CreateScriptingTransformComponent
-//  требует Vector3& (не const), поэтому берём non-const локальные копии.
-// ----------------------------------------------------------------
 static int32_t sUidCounter = 1;
 
 static GameObject* MakeObject(Game& game, ScriptingEngine& se,
-    Vector3 pos,
-    Vector3 scale,
-    const char* name = "Object")
+    Vector3 pos, Vector3 scale, const char* name = "Object")
 {
     int32_t uid = sUidCounter++;
-    // CreateScriptingTransformComponent принимает Vector3& (не const) — передаём локальные переменные
     auto st = se.CreateScriptingTransformComponent(uid, pos, scale);
     se.CreateScriptingGameObject(uid, name);
     auto* obj = new GameObject(uid, &game, st);
@@ -60,9 +52,7 @@ int main()
     scriptingEngine.Init();
     scriptingEngine.GatherLayouts();
 
-    // ----------------------------------------------------------------
-    //  Пол — горизонтальная плоскость 40x40 единиц
-    // ----------------------------------------------------------------
+    // ---- Пол -------------------------------------------------------
     {
         auto* obj = MakeObject(game, scriptingEngine,
             Vector3(0.0f, 0.0f, 0.0f), Vector3::One, "Floor");
@@ -70,44 +60,36 @@ int main()
         game.GameObjects.push_back(obj);
     }
 
-    // ----------------------------------------------------------------
-    //  Источники света
-    // ----------------------------------------------------------------
+    // ---- Освещение -------------------------------------------------
     {
-        // Основной тёплый свет сверху-сбоку
         auto* obj = MakeObject(game, scriptingEngine,
             Vector3(5.0f, 8.0f, 5.0f), Vector3::One, "Light_Main");
         obj->AddComponent(new PointLightComponent(Vector4(1.0f, 0.95f, 0.85f, 1.0f), 30.0f));
         game.GameObjects.push_back(obj);
     }
     {
-        // Заполняющий голубоватый свет
         auto* obj = MakeObject(game, scriptingEngine,
             Vector3(-8.0f, 5.0f, -3.0f), Vector3::One, "Light_Fill");
         obj->AddComponent(new PointLightComponent(Vector4(0.3f, 0.5f, 0.9f, 1.0f), 20.0f));
         game.GameObjects.push_back(obj);
     }
 
-    // ----------------------------------------------------------------
-    //  Y_Bot — скелетная модель с анимацией ходьбы
-    //
-    //  ВАЖНО: skelLoader должен жить всё время работы программы —
-    //  его defaultWhite/defaultNormal используются в мешах.
-    // ----------------------------------------------------------------
+    // ---- Y_Bot -----------------------------------------------------
+    // skelLoader живёт до конца программы (текстуры не копируются)
     SkeletalModelLoader* skelLoader = new SkeletalModelLoader(window.hWnd, render.Device, render.Context);
     SkeletalModelData* yBotData = skelLoader->Load("Y_Bot.fbx");
+    SkeletalModelComponent* skelComp = nullptr;  // сохраняем для шариков
 
     if (yBotData && yBotData->valid)
     {
-        // Y_Bot из Mixamo в FBX — сантиметры, поэтому масштаб 0.01
-        auto* yBotObject = MakeObject(game, scriptingEngine,
+        auto* yBotObj = MakeObject(game, scriptingEngine,
             Vector3(0.0f, 0.0f, 0.0f),
             Vector3(0.01f, 0.01f, 0.01f),
             "YBot");
-        yBotObject->GetTransform()->immovable = false;
+        yBotObj->GetTransform()->immovable = false;
 
-        auto* skeletalComp = new SkeletalModelComponent(&yBotData->meshes, &yBotData->skeleton);
-        yBotObject->AddComponent(skeletalComp);
+        skelComp = new SkeletalModelComponent(&yBotData->meshes, &yBotData->skeleton);
+        yBotObj->AddComponent(skelComp);
 
         DumpSkeleton(yBotData->skeleton, "skeleton_dump.txt");
 
@@ -121,16 +103,16 @@ int main()
             animator->SetClip(&storedClips[0]);
             animator->loop = true;
             animator->speed = 1.0f;
-            yBotObject->AddComponent(animator);
+            yBotObj->AddComponent(animator);
         }
         else
         {
             MessageBoxA(window.hWnd,
-                "Standard_Walk.fbx not found — showing T-pose",
-                "Animation Warning", MB_ICONWARNING);
+                "Standard_Walk.fbx not found — T-pose",
+                "Warning", MB_ICONWARNING);
         }
 
-        game.GameObjects.push_back(yBotObject);
+        game.GameObjects.push_back(yBotObj);
     }
     else
     {
@@ -139,10 +121,10 @@ int main()
             "Warning", MB_ICONWARNING);
     }
 
-    // ----------------------------------------------------------------
-    //  Пул шариков (10 штук, переиспользуются по кругу)
-    //  Управление: кнопка X — один выстрел за нажатие
-    // ----------------------------------------------------------------
+    // ---- Пул шариков -----------------------------------------------
+    // Кнопка X — один выстрел за нажатие.
+    // Шарик пролетает сквозь всё, кроме Y_Bot.
+    // При попадании в Y_Bot: деформирует меш, исчезает.
     constexpr int kPoolSize = 10;
     for (int i = 0; i < kPoolSize; ++i)
     {
@@ -152,6 +134,11 @@ int main()
             "Bullet");
 
         auto* bullet = new BulletComponent();
+
+        // Связываем с Y_Bot — только он будет реагировать на удар
+        if (skelComp)
+            bullet->SetDeformTarget(skelComp);
+
         bulletObj->AddComponent(bullet);
         game.GameObjects.push_back(bulletObj);
         game.RegisterProjectile(bullet);

@@ -15,9 +15,9 @@ SkeletalModelComponent::SkeletalModelComponent(
 
 SkeletalModelComponent::~SkeletalModelComponent()
 {
-    if (skinnedVS_)     { skinnedVS_->Release();     skinnedVS_     = nullptr; }
+    if (skinnedVS_) { skinnedVS_->Release();     skinnedVS_ = nullptr; }
     if (skinnedLayout_) { skinnedLayout_->Release(); skinnedLayout_ = nullptr; }
-    if (boneBuffer_)    { boneBuffer_->Release();    boneBuffer_    = nullptr; }
+    if (boneBuffer_) { boneBuffer_->Release();    boneBuffer_ = nullptr; }
 }
 
 // ============================================================
@@ -40,7 +40,7 @@ HRESULT SkeletalModelComponent::CompileShader(
 // ============================================================
 void SkeletalModelComponent::Initialize(ID3D11Device* device, ID3D11DeviceContext* /*context*/)
 {
-    // --- 1. Компилируем skinned vertex shader ---
+    // --- 1. Skinned vertex shader ---
     ID3DBlob* vsBlob = nullptr;
     HRESULT hr = CompileShader(L"SkinnedVertexShader.hlsl", "main", "vs_5_0", &vsBlob);
     if (FAILED(hr)) return;
@@ -50,17 +50,16 @@ void SkeletalModelComponent::Initialize(ID3D11Device* device, ID3D11DeviceContex
         nullptr, &skinnedVS_);
     if (FAILED(hr)) { vsBlob->Release(); return; }
 
-    // --- 2. Input layout для SKELETAL_VERTEX ---
-    //        Порядок должен точно совпадать со структурой SKELETAL_VERTEX
+    // --- 2. Input layout ---
     D3D11_INPUT_ELEMENT_DESC layout[] =
     {
-        { "POSITION",   0, DXGI_FORMAT_R32G32B32_FLOAT,    0, offsetof(SKELETAL_VERTEX, X),           D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "NORMAL",     0, DXGI_FORMAT_R32G32B32_FLOAT,    0, offsetof(SKELETAL_VERTEX, NX),          D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "TEXCOORD",   0, DXGI_FORMAT_R32G32_FLOAT,       0, offsetof(SKELETAL_VERTEX, texcoord),    D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "TANGENT",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0, offsetof(SKELETAL_VERTEX, TX),          D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "BINORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,    0, offsetof(SKELETAL_VERTEX, BX),          D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_SINT,0, offsetof(SKELETAL_VERTEX, BoneIndices), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "BLENDWEIGHT",  0, DXGI_FORMAT_R32G32B32A32_FLOAT,0,offsetof(SKELETAL_VERTEX, BoneWeights), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "POSITION",     0, DXGI_FORMAT_R32G32B32_FLOAT,     0, offsetof(SKELETAL_VERTEX, X),           D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "NORMAL",       0, DXGI_FORMAT_R32G32B32_FLOAT,     0, offsetof(SKELETAL_VERTEX, NX),          D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "TEXCOORD",     0, DXGI_FORMAT_R32G32_FLOAT,        0, offsetof(SKELETAL_VERTEX, texcoord),    D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "TANGENT",      0, DXGI_FORMAT_R32G32B32_FLOAT,     0, offsetof(SKELETAL_VERTEX, TX),          D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "BINORMAL",     0, DXGI_FORMAT_R32G32B32_FLOAT,     0, offsetof(SKELETAL_VERTEX, BX),          D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_SINT,   0, offsetof(SKELETAL_VERTEX, BoneIndices), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "BLENDWEIGHT",  0, DXGI_FORMAT_R32G32B32A32_FLOAT,  0, offsetof(SKELETAL_VERTEX, BoneWeights), D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
 
     hr = device->CreateInputLayout(layout, ARRAYSIZE(layout),
@@ -69,12 +68,11 @@ void SkeletalModelComponent::Initialize(ID3D11Device* device, ID3D11DeviceContex
     vsBlob->Release();
     if (FAILED(hr)) return;
 
-    // --- 3. Constant buffer для bone palette (register b3) ---
-    //        Размер: MAX_BONES * sizeof(Matrix) = 128 * 64 = 8192 байт
+    // --- 3. Bone palette CB ---
     D3D11_BUFFER_DESC bbd = {};
-    bbd.Usage          = D3D11_USAGE_DEFAULT;
-    bbd.ByteWidth      = sizeof(Matrix) * SHADER_MAX_BONES;
-    bbd.BindFlags      = D3D11_BIND_CONSTANT_BUFFER;
+    bbd.Usage = D3D11_USAGE_DEFAULT;
+    bbd.ByteWidth = sizeof(Matrix) * SHADER_MAX_BONES;
+    bbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     bbd.CPUAccessFlags = 0;
     device->CreateBuffer(&bbd, nullptr, &boneBuffer_);
 }
@@ -84,23 +82,48 @@ void SkeletalModelComponent::Draw(ID3D11Device* /*device*/, ID3D11DeviceContext*
 {
     if (!skinnedVS_ || !skinnedLayout_ || !boneBuffer_) return;
 
-    // --- 1. Обновляем bone palette ---
+    // --- 1. Bone palette ---
     skeleton_->ComputeGlobalTransforms();
+    skeleton_->GetFinalBoneMatrices(cachedBonePalette_);
+    cachedBonePalette_.resize(SHADER_MAX_BONES, Matrix::Identity);
 
-    std::vector<Matrix> bonePalette;
-    skeleton_->GetFinalBoneMatrices(bonePalette);
+    context->UpdateSubresource(boneBuffer_, 0, nullptr, cachedBonePalette_.data(), 0, 0);
 
-    // Дополняем до MAX_BONES единичными матрицами
-    bonePalette.resize(SHADER_MAX_BONES, Matrix::Identity);
-
-    context->UpdateSubresource(boneBuffer_, 0, nullptr, bonePalette.data(), 0, 0);
-
-    // --- 2. Устанавливаем skinned shader и layout ---
+    // --- 2. Shader + layout ---
     context->VSSetShader(skinnedVS_, nullptr, 0);
     context->IASetInputLayout(skinnedLayout_);
-    context->VSSetConstantBuffers(3, 1, &boneBuffer_);   // b3 — bone palette
+    context->VSSetConstantBuffers(3, 1, &boneBuffer_);
 
-    // --- 3. Рисуем все submesh'и ---
+    // --- 3. Загружаем деформированные вершины в GPU (если есть изменения) ---
+    for (auto& mesh : *meshes_)
+        mesh.UploadDeformed(context);
+
+    // --- 4. Рисуем ---
     for (auto& mesh : *meshes_)
         mesh.Draw(context);
+}
+
+// ============================================================
+void SkeletalModelComponent::ApplyDent(const Vector3& hitPosWorld,
+    float radius, float depth)
+{
+    if (!gameObject || cachedBonePalette_.empty()) return;
+
+    // Переводим точку попадания из world-space в model-space Y_Bot'а
+    Matrix worldMatrix = gameObject->GetTransform()->GetMatrix();
+    Matrix worldInv;
+    worldMatrix.Invert(worldInv);
+
+    Vector3 hitPosModel = Vector3::Transform(hitPosWorld, worldInv);
+
+    // Радиус тоже нужно масштабировать в model-space.
+    // Y_Bot масштабируется 0.01, значит 1 мировая единица = 100 модельных.
+    // Берём обратный масштаб из матрицы (предполагаем uniform scale).
+    Vector3 scl = gameObject->GetTransform()->scale;
+    float invScale = (scl.x > 1e-6f) ? (1.0f / scl.x) : 1.0f;
+    float radiusModel = radius * invScale;
+    float depthModel = depth * invScale;
+
+    for (auto& mesh : *meshes_)
+        mesh.ApplyDent(hitPosModel, radiusModel, depthModel, cachedBonePalette_);
 }
