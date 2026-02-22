@@ -33,6 +33,7 @@
     <ClCompile Include="ModelComponent.cpp" />
     <ClCompile Include="PhysicsComponent.cpp" />
     <ClCompile Include="PhysicsSystem.cpp" />
+    <ClCompile Include="PlaneComponent.cpp" />
     <ClCompile Include="qu3e\broadphase\q3BroadPhase.cpp" />
     <ClCompile Include="qu3e\broadphase\q3DynamicAABBTree.cpp" />
     <ClCompile Include="qu3e\collision\q3Box.cpp" />
@@ -129,6 +130,7 @@
     <ClInclude Include="MarshalledVector3.hpp" />
     <ClInclude Include="ModelComponent.h" />
     <ClInclude Include="NativeBridge.hpp" />
+    <ClInclude Include="PlaneComponent.h" />
     <ClInclude Include="ScriptingComponent.hpp" />
     <ClInclude Include="PhysicsComponent.h" />
     <ClInclude Include="PhysicsSystem.h" />

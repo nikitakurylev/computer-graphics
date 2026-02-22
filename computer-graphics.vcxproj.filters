@@ -81,6 +81,7 @@
     <ClCompile Include="SkeletalMesh\SkeletalModelLoader.cpp" />
     <ClCompile Include="SkeletalMesh\SkeletalAnimationLoader.cpp" />
     <ClCompile Include="SkeletalMesh\SkeletalAnimatorComponent.cpp" />
+    <ClCompile Include="PlaneComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AIComponent.h" />
@@ -170,6 +171,7 @@
     <ClInclude Include="SkeletalMesh\SkeletalAnimationLoader.h" />
     <ClInclude Include="SkeletalMesh\SkeletalAnimatorComponent.h" />
     <ClInclude Include="SkeletalMesh\SkeletalDebug.h" />
+    <ClInclude Include="PlaneComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="Models\soccer_ball.mtl" />
