@@ -1,23 +1,17 @@
 #pragma once
 #include "Renderer.h"
 
-// Forward declaration — не тянем тяжёлый заголовок в .h
 class SkeletalModelComponent;
-
-using namespace DirectX;
 
 class BulletComponent : public Renderer
 {
 public:
     BulletComponent();
 
-    // Запускает шарик из точки origin в направлении vel, исчезает через maxRange единиц
     void Spawn(const DirectX::SimpleMath::Vector3& origin,
         const DirectX::SimpleMath::Vector3& vel,
         float maxRange);
 
-    // Устанавливает цель для проверки попадания.
-    // Вызывается один раз из MySuper3DApp после создания Y_Bot.
     void SetDeformTarget(SkeletalModelComponent* target) { deformTarget_ = target; }
 
     DirectX::SimpleMath::Vector3 velocity;
@@ -30,9 +24,8 @@ public:
     ID3D11ShaderResourceView* texture = nullptr;
     bool active = false;
 
-    // Параметры деформации при попадании
-    float dentRadius = 0.3f;   // радиус вмятины (мировые единицы)
-    float dentDepth = 0.25f;  // глубина вмятины (мировые единицы)
+    float dentRadius = 0.3f;   // радиус вмятины (world units)
+    float dentDepth = 0.2f;   // глубина вмятины (world units)
 
 private:
     static constexpr float kInactiveY = -1e7f;
@@ -50,14 +43,13 @@ private:
     };
 
     DirectX::SimpleMath::Vector3 spawnPos_;
-    float                         maxRange_ = 100.0f;
+    DirectX::SimpleMath::Vector3 shotDir_;
+    float                        maxRange_ = 100.0f;
 
     BoundingSphere          collider;
     Vertex                  points[420];
     int                     indeces[2400];
 
     SkeletalModelComponent* deformTarget_ = nullptr;
-
-    // Пытается столкнуться с deformTarget_, возвращает true если попал
     bool CheckAndApplyDent();
 };

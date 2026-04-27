@@ -9,9 +9,6 @@
 
 static constexpr int SHADER_MAX_BONES = 128;
 
-// ============================================================
-//  SkeletalModelComponent
-// ============================================================
 class SkeletalModelComponent : public Renderer
 {
 public:
@@ -36,14 +33,14 @@ public:
         return false;
     }
 
-    // --------------------------------------------------------
-    //  ApplyDent — деформирует меш в точке hitPosWorld
-    //
-    //  hitPosWorld — точка попадания в мировом пространстве
-    //  radius      — радиус зоны деформации (мировые единицы)
-    //  depth       — глубина вмятины (мировые единицы)
-    // --------------------------------------------------------
-    void ApplyDent(const Vector3& hitPosWorld, float radius, float depth);
+    // hitPosWorld  — точка попадания в мировых координатах
+    // shotDir      — нормализованный вектор от камеры к цели (направление полёта шара)
+    // radius       — радиус зоны деформации (world units)
+    // depth        — глубина вмятины (world units)
+    void ApplyDent(const Vector3& hitPosWorld,
+        const Vector3& shotDir,
+        float radius,
+        float depth);
 
     Skeleton* GetSkeleton() { return skeleton_; }
 
@@ -51,8 +48,8 @@ private:
     std::vector<SkeletalMesh>* meshes_;
     Skeleton* skeleton_;
 
-    // Последняя bone palette (кешируется после Draw для ApplyDent)
     std::vector<Matrix> cachedBonePalette_;
+    std::vector<Matrix> cachedGlobalTransforms_;
 
     ID3D11VertexShader* skinnedVS_ = nullptr;
     ID3D11InputLayout* skinnedLayout_ = nullptr;

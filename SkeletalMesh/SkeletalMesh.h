@@ -12,28 +12,20 @@
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
 
-// Максимальное количество костей влияющих на одну вершину
 static constexpr int MAX_BONE_INFLUENCE = 4;
-// Максимальное количество костей в скелете (для cbuffer в шейдере)
 static constexpr int MAX_BONES = 128;
 
-// ============================================================
-//  Структура вершины со скелетной привязкой
-// ============================================================
 struct SKELETAL_VERTEX
 {
-    FLOAT X, Y, Z;               // Position
-    FLOAT NX, NY, NZ;            // Normal
-    XMFLOAT2 texcoord;           // UV
-    FLOAT TX, TY, TZ;            // Tangent
-    FLOAT BX, BY, BZ;            // Bitangent
+    FLOAT X, Y, Z;
+    FLOAT NX, NY, NZ;
+    XMFLOAT2 texcoord;
+    FLOAT TX, TY, TZ;
+    FLOAT BX, BY, BZ;
     INT   BoneIndices[MAX_BONE_INFLUENCE] = { 0, 0, 0, 0 };
     FLOAT BoneWeights[MAX_BONE_INFLUENCE] = { 0, 0, 0, 0 };
 };
 
-// ============================================================
-//  Одна кость скелета
-// ============================================================
 struct Bone
 {
     std::string name;
@@ -42,14 +34,10 @@ struct Bone
     Matrix      localTransform;
     Matrix      bindPoseLocalTransform;
     Matrix      globalTransform;
-
     Matrix      preRotation = Matrix::Identity;
     bool        hasPreRotation = false;
 };
 
-// ============================================================
-//  Скелет
-// ============================================================
 struct Skeleton
 {
     std::vector<Bone>                    bones;
@@ -68,7 +56,8 @@ struct Skeleton
             if (bones[i].parentIndex < 0)
                 bones[i].globalTransform = bones[i].localTransform;
             else
-                bones[i].globalTransform = bones[i].localTransform * bones[bones[i].parentIndex].globalTransform;
+                bones[i].globalTransform = bones[i].localTransform
+                * bones[bones[i].parentIndex].globalTransform;
         }
     }
 
@@ -81,31 +70,29 @@ struct Skeleton
 };
 
 // ============================================================
-//  Скелетный меш с поддержкой CPU-деформации
-// ============================================================
 class SkeletalMesh
 {
 public:
-    std::vector<SKELETAL_VERTEX> vertices;     // оригинальные вершины (bind-pose + bone weights)
+    // vertices[] — деформированные координаты (меняются при каждом ударе)
+    // originalVertices[] — неизменяемые bind-pose координаты загрузки
+    //   используются ТОЛЬКО для CPU-skinning и поиска вершин в радиусе
+    std::vector<SKELETAL_VERTEX> vertices;
+    std::vector<SKELETAL_VERTEX> originalVertices; // копия из SetupGPU, не меняется
     std::vector<UINT>            indices;
     Material                     material;
     BoundingBox                  aabb;
-
-    // Накопленные смещения вершин в model-space (добавляются к X,Y,Z при Upload)
-    std::vector<Vector3>         displacements;
-    bool                         isDirty = false; // есть несгруженные изменения
+    bool                         dirty = false;
 
     SkeletalMesh() = default;
     ~SkeletalMesh() { Close(); }
 
-    // --------------------------------------------------------
-    //  SetupGPU — создаёт DYNAMIC VBO для поддержки деформации
-    // --------------------------------------------------------
     void SetupGPU(ID3D11Device* dev)
     {
         dev_ = dev;
 
-        // Вершины — DYNAMIC + CPU_WRITE, чтобы обновлять смещения
+        // Сохраняем оригинальные вершины — они никогда не изменятся
+        originalVertices = vertices;
+
         {
             D3D11_BUFFER_DESC vbd = {};
             vbd.Usage = D3D11_USAGE_DYNAMIC;
@@ -113,24 +100,20 @@ public:
             vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
             vbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-            D3D11_SUBRESOURCE_DATA initData = {};
-            initData.pSysMem = vertices.data();
-            dev->CreateBuffer(&vbd, &initData, &vertexBuffer_);
+            D3D11_SUBRESOURCE_DATA init = {};
+            init.pSysMem = vertices.data();
+            dev->CreateBuffer(&vbd, &init, &vertexBuffer_);
         }
-
-        // Индексы — IMMUTABLE
         {
             D3D11_BUFFER_DESC ibd = {};
             ibd.Usage = D3D11_USAGE_IMMUTABLE;
             ibd.ByteWidth = (UINT)(sizeof(UINT) * indices.size());
             ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 
-            D3D11_SUBRESOURCE_DATA initData = {};
-            initData.pSysMem = indices.data();
-            dev->CreateBuffer(&ibd, &initData, &indexBuffer_);
+            D3D11_SUBRESOURCE_DATA init = {};
+            init.pSysMem = indices.data();
+            dev->CreateBuffer(&ibd, &init, &indexBuffer_);
         }
-
-        // Material CB
         {
             D3D11_BUFFER_DESC mbd = {};
             mbd.Usage = D3D11_USAGE_DEFAULT;
@@ -139,98 +122,118 @@ public:
             dev->CreateBuffer(&mbd, nullptr, &materialBuffer_);
         }
 
-        // AABB по bind-pose
         if (!vertices.empty())
             BoundingBox::CreateFromPoints(aabb, vertices.size(),
-                reinterpret_cast<const XMFLOAT3*>(&vertices[0].X), sizeof(SKELETAL_VERTEX));
-
-        // Инициализируем массив смещений нулями
-        displacements.assign(vertices.size(), Vector3::Zero);
+                reinterpret_cast<const XMFLOAT3*>(&vertices[0].X),
+                sizeof(SKELETAL_VERTEX));
     }
 
     // --------------------------------------------------------
-    //  ApplyDent — добавляет вмятину в точке hitPosModel (model space)
+    //  ApplyDent
     //
-    //  Алгоритм: для каждой вершины вычисляем её скиннированную
-    //  позицию в model-space через упрощённый CPU-skinning,
-    //  если расстояние до hitPosModel < radius — смещаем вершину
-    //  внутрь (по инвертированной нормали) с плавным спадом.
+    //  Все входные параметры — в model space (World убран снаружи).
+    //
+    //  Ключевые исправления относительно предыдущей версии:
+    //
+    //  1. CPU-skinning считается по originalVertices (оригинальный bind-pose),
+    //     а НЕ по vertices (которые уже деформированы). Это гарантирует что
+    //     радиус удара всегда проверяется по реальной анатомической позиции
+    //     вершины, независимо от накопленных деформаций. Без этого после
+    //     нескольких ударов вершины уходят из-под точки попадания и
+    //     деформация прекращается.
+    //
+    //  2. Смещение применяется как +shotDir (а не -shotDir). shotDir
+    //     указывает ОТ камеры К цели — то есть это и есть направление
+    //     «внутрь» от точки зрения стрелка. Вмятина продавливается
+    //     в ту сторону, куда летел шар.
+    //
+    //  3. Смещение в model space переводится в bind-pose space через
+    //     inverse(globalTransform) доминирующей кости. Это нужно потому что
+    //     vertices[] хранят координаты ДО применения globalTransform,
+    //     а после удара шейдер снова применит globalTransform —
+    //     без этого шага деформация была бы двойной или перевёрнутой.
     // --------------------------------------------------------
     void ApplyDent(const Vector3& hitPosModel,
-        float radius,
-        float depth,
-        const std::vector<Matrix>& bonePalette)
+        const Vector3& shotDirModel,
+        float          radius,
+        float          depth,
+        const std::vector<Matrix>& bonePalette,
+        const std::vector<Matrix>& globalTransforms)
     {
         const float r2 = radius * radius;
 
-        for (size_t i = 0; i < vertices.size(); ++i)
+        for (size_t i = 0; i < originalVertices.size(); ++i)
         {
-            const SKELETAL_VERTEX& v = vertices[i];
+            const SKELETAL_VERTEX& orig = originalVertices[i]; // только для поиска
+            SKELETAL_VERTEX& vert = vertices[i];         // сюда пишем
 
-            // CPU skinning — вычисляем текущую позицию вершины
-            Vector4 skinnedPos(0, 0, 0, 0);
+            // 1. CPU-skinning по ОРИГИНАЛЬНЫМ вершинам → текущая model-pos
+            Vector4 modelPos4(0, 0, 0, 0);
             for (int b = 0; b < MAX_BONE_INFLUENCE; ++b)
             {
-                float w = v.BoneWeights[b];
-                if (w < 1e-5f) continue;
-                int   idx = v.BoneIndices[b];
+                float w = orig.BoneWeights[b];
+                if (w < 1e-6f) continue;
+                int idx = orig.BoneIndices[b];
                 if (idx < 0 || idx >= (int)bonePalette.size()) continue;
 
-                Vector4 localPos(v.X + displacements[i].x,
-                    v.Y + displacements[i].y,
-                    v.Z + displacements[i].z, 1.0f);
-                skinnedPos += Vector4::Transform(localPos, bonePalette[idx]) * w;
+                Vector4 lp(orig.X, orig.Y, orig.Z, 1.0f);
+                modelPos4 += Vector4::Transform(lp, bonePalette[idx]) * w;
             }
+            Vector3 modelPos(modelPos4.x, modelPos4.y, modelPos4.z);
 
-            Vector3 pos3(skinnedPos.x, skinnedPos.y, skinnedPos.z);
-            float dist2 = Vector3::DistanceSquared(pos3, hitPosModel);
+            // 2. Проверяем попадание в радиус
+            float dist2 = Vector3::DistanceSquared(modelPos, hitPosModel);
             if (dist2 >= r2) continue;
 
-            // Плавный спад по расстоянию (smoothstep-like)
-            float t = 1.0f - sqrtf(dist2) / radius;
-            float magnitude = depth * t * t;
+            float dist = sqrtf(dist2);
 
-            // Направление смещения — от точки удара к вершине (но внутрь)
-            Vector3 dir = pos3 - hitPosModel;
-            if (dir.LengthSquared() < 1e-8f)
-                dir = Vector3(-v.NX, -v.NY, -v.NZ); // если прямо в точке — по нормали внутрь
-            else
-                dir.Normalize();
+            // Квадратичный спад: 1 в центре, 0 на краю
+            float t = 1.0f - (dist / radius);
+            float push = depth * t * t;
 
-            // Смещаем в model-space (инвертируем skinning примерно через нормаль)
-            // Проще: смещаем bind-pose позицию по нормали вершины внутрь
-            Vector3 dentDir(-v.NX, -v.NY, -v.NZ);
-            if (dentDir.LengthSquared() < 1e-8f) dentDir = -dir;
+            // 3. Смещение в model space: +shotDir = вдоль направления полёта шара
+            Vector3 deltaModel = shotDirModel * push;
 
-            displacements[i] += dentDir * magnitude;
+            // 4. Доминирующая кость
+            int   domBone = 0;
+            float domWeight = -1.0f;
+            for (int b = 0; b < MAX_BONE_INFLUENCE; ++b)
+            {
+                if (orig.BoneWeights[b] > domWeight)
+                {
+                    domWeight = orig.BoneWeights[b];
+                    domBone = orig.BoneIndices[b];
+                }
+            }
+            if (domBone < 0 || domBone >= (int)globalTransforms.size()) continue;
+
+            // 5. Переводим delta из model space в bind-pose space кости
+            //    vertices хранятся в пространстве ДО globalTransform,
+            //    поэтому отменяем globalTransform доминирующей кости
+            Matrix invGlobal;
+            globalTransforms[domBone].Invert(invGlobal);
+            Vector3 deltaLocal = Vector3::TransformNormal(deltaModel, invGlobal);
+
+            // 6. Запекаем в деформированные вершины
+            vert.X += deltaLocal.x;
+            vert.Y += deltaLocal.y;
+            vert.Z += deltaLocal.z;
         }
 
-        isDirty = true;
+        dirty = true;
     }
 
-    // --------------------------------------------------------
-    //  UploadDeformed — если есть изменения, загружает
-    //  деформированные вершины в DYNAMIC VBO
-    // --------------------------------------------------------
-    void UploadDeformed(ID3D11DeviceContext* ctx)
+    void UploadToGPU(ID3D11DeviceContext* ctx)
     {
-        if (!isDirty || !vertexBuffer_) return;
+        if (!dirty || !vertexBuffer_) return;
 
         D3D11_MAPPED_SUBRESOURCE mapped = {};
         if (FAILED(ctx->Map(vertexBuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
             return;
 
-        SKELETAL_VERTEX* dst = static_cast<SKELETAL_VERTEX*>(mapped.pData);
-        for (size_t i = 0; i < vertices.size(); ++i)
-        {
-            dst[i] = vertices[i];
-            dst[i].X += displacements[i].x;
-            dst[i].Y += displacements[i].y;
-            dst[i].Z += displacements[i].z;
-        }
-
+        memcpy(mapped.pData, vertices.data(), sizeof(SKELETAL_VERTEX) * vertices.size());
         ctx->Unmap(vertexBuffer_, 0);
-        isDirty = false;
+        dirty = false;
     }
 
     void Draw(ID3D11DeviceContext* ctx)

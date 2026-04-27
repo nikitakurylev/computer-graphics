@@ -2,11 +2,8 @@
 #include "../GameObject.h"
 #include "../Transform.h"
 #include "../Game.h"
-
 #include <d3dcompiler.h>
-#include <stdexcept>
 
-// ============================================================
 SkeletalModelComponent::SkeletalModelComponent(
     std::vector<SkeletalMesh>* meshes, Skeleton* skeleton)
     : meshes_(meshes), skeleton_(skeleton)
@@ -20,7 +17,6 @@ SkeletalModelComponent::~SkeletalModelComponent()
     if (boneBuffer_) { boneBuffer_->Release();    boneBuffer_ = nullptr; }
 }
 
-// ============================================================
 HRESULT SkeletalModelComponent::CompileShader(
     LPCWSTR file, LPCSTR entry, LPCSTR model, ID3DBlob** blob)
 {
@@ -37,93 +33,99 @@ HRESULT SkeletalModelComponent::CompileShader(
     return hr;
 }
 
-// ============================================================
-void SkeletalModelComponent::Initialize(ID3D11Device* device, ID3D11DeviceContext* /*context*/)
+void SkeletalModelComponent::Initialize(ID3D11Device* device, ID3D11DeviceContext*)
 {
-    // --- 1. Skinned vertex shader ---
     ID3DBlob* vsBlob = nullptr;
-    HRESULT hr = CompileShader(L"SkinnedVertexShader.hlsl", "main", "vs_5_0", &vsBlob);
-    if (FAILED(hr)) return;
+    if (FAILED(CompileShader(L"SkinnedVertexShader.hlsl", "main", "vs_5_0", &vsBlob))) return;
 
-    hr = device->CreateVertexShader(
-        vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
-        nullptr, &skinnedVS_);
-    if (FAILED(hr)) { vsBlob->Release(); return; }
+    if (FAILED(device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
+        nullptr, &skinnedVS_))) {
+        vsBlob->Release(); return;
+    }
 
-    // --- 2. Input layout ---
     D3D11_INPUT_ELEMENT_DESC layout[] =
     {
-        { "POSITION",     0, DXGI_FORMAT_R32G32B32_FLOAT,     0, offsetof(SKELETAL_VERTEX, X),           D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "NORMAL",       0, DXGI_FORMAT_R32G32B32_FLOAT,     0, offsetof(SKELETAL_VERTEX, NX),          D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "TEXCOORD",     0, DXGI_FORMAT_R32G32_FLOAT,        0, offsetof(SKELETAL_VERTEX, texcoord),    D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "TANGENT",      0, DXGI_FORMAT_R32G32B32_FLOAT,     0, offsetof(SKELETAL_VERTEX, TX),          D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "BINORMAL",     0, DXGI_FORMAT_R32G32B32_FLOAT,     0, offsetof(SKELETAL_VERTEX, BX),          D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_SINT,   0, offsetof(SKELETAL_VERTEX, BoneIndices), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "BLENDWEIGHT",  0, DXGI_FORMAT_R32G32B32A32_FLOAT,  0, offsetof(SKELETAL_VERTEX, BoneWeights), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "POSITION",     0, DXGI_FORMAT_R32G32B32_FLOAT,    0, offsetof(SKELETAL_VERTEX, X),           D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "NORMAL",       0, DXGI_FORMAT_R32G32B32_FLOAT,    0, offsetof(SKELETAL_VERTEX, NX),          D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "TEXCOORD",     0, DXGI_FORMAT_R32G32_FLOAT,       0, offsetof(SKELETAL_VERTEX, texcoord),    D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "TANGENT",      0, DXGI_FORMAT_R32G32B32_FLOAT,    0, offsetof(SKELETAL_VERTEX, TX),          D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "BINORMAL",     0, DXGI_FORMAT_R32G32B32_FLOAT,    0, offsetof(SKELETAL_VERTEX, BX),          D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_SINT,  0, offsetof(SKELETAL_VERTEX, BoneIndices), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "BLENDWEIGHT",  0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(SKELETAL_VERTEX, BoneWeights), D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
-
-    hr = device->CreateInputLayout(layout, ARRAYSIZE(layout),
-        vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
-        &skinnedLayout_);
+    if (FAILED(device->CreateInputLayout(layout, ARRAYSIZE(layout),
+        vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &skinnedLayout_)))
+    {
+        vsBlob->Release(); return;
+    }
     vsBlob->Release();
-    if (FAILED(hr)) return;
 
-    // --- 3. Bone palette CB ---
     D3D11_BUFFER_DESC bbd = {};
     bbd.Usage = D3D11_USAGE_DEFAULT;
     bbd.ByteWidth = sizeof(Matrix) * SHADER_MAX_BONES;
     bbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    bbd.CPUAccessFlags = 0;
     device->CreateBuffer(&bbd, nullptr, &boneBuffer_);
 }
 
-// ============================================================
-void SkeletalModelComponent::Draw(ID3D11Device* /*device*/, ID3D11DeviceContext* context)
+void SkeletalModelComponent::Draw(ID3D11Device*, ID3D11DeviceContext* context)
 {
     if (!skinnedVS_ || !skinnedLayout_ || !boneBuffer_) return;
 
-    // --- 1. Bone palette ---
     skeleton_->ComputeGlobalTransforms();
+
+    // Кешируем bone palette для CPU-skinning в ApplyDent
     skeleton_->GetFinalBoneMatrices(cachedBonePalette_);
     cachedBonePalette_.resize(SHADER_MAX_BONES, Matrix::Identity);
 
-    context->UpdateSubresource(boneBuffer_, 0, nullptr, cachedBonePalette_.data(), 0, 0);
+    // Кешируем globalTransforms для обратного преобразования смещений
+    const int boneCount = (int)skeleton_->bones.size();
+    cachedGlobalTransforms_.resize(boneCount);
+    for (int i = 0; i < boneCount; ++i)
+        cachedGlobalTransforms_[i] = skeleton_->bones[i].globalTransform;
 
-    // --- 2. Shader + layout ---
+    context->UpdateSubresource(boneBuffer_, 0, nullptr, cachedBonePalette_.data(), 0, 0);
     context->VSSetShader(skinnedVS_, nullptr, 0);
     context->IASetInputLayout(skinnedLayout_);
     context->VSSetConstantBuffers(3, 1, &boneBuffer_);
 
-    // --- 3. Загружаем деформированные вершины в GPU (если есть изменения) ---
     for (auto& mesh : *meshes_)
-        mesh.UploadDeformed(context);
+        mesh.UploadToGPU(context);
 
-    // --- 4. Рисуем ---
     for (auto& mesh : *meshes_)
         mesh.Draw(context);
 }
 
-// ============================================================
 void SkeletalModelComponent::ApplyDent(const Vector3& hitPosWorld,
+    const Vector3& shotDir,
     float radius, float depth)
 {
-    if (!gameObject || cachedBonePalette_.empty()) return;
+    if (cachedBonePalette_.empty() || cachedGlobalTransforms_.empty()) return;
+    if (!gameObject) return;
 
-    // Переводим точку попадания из world-space в model-space Y_Bot'а
+    // Переводим из world space в model space.
+    // bonePalette (offsetMatrix * globalTransform) работает в model space —
+    // поэтому hitPos и shotDir тоже нужно туда перевести.
     Matrix worldMatrix = gameObject->GetTransform()->GetMatrix();
     Matrix worldInv;
     worldMatrix.Invert(worldInv);
 
     Vector3 hitPosModel = Vector3::Transform(hitPosWorld, worldInv);
 
-    // Радиус тоже нужно масштабировать в model-space.
-    // Y_Bot масштабируется 0.01, значит 1 мировая единица = 100 модельных.
-    // Берём обратный масштаб из матрицы (предполагаем uniform scale).
-    Vector3 scl = gameObject->GetTransform()->scale;
-    float invScale = (scl.x > 1e-6f) ? (1.0f / scl.x) : 1.0f;
+    // TransformNormal для направления: убираем трансляцию, но оставляем вращение/масштаб.
+    // После инверсии матрицы масштаб становится 1/scale = 100 для Y_Bot.
+    // Нормализуем — длина не важна, важно направление.
+    Vector3 shotDirModel = Vector3::TransformNormal(shotDir, worldInv);
+    shotDirModel.Normalize();
+
+    // Масштабируем радиус и глубину из world units в model units.
+    // Y_Bot: scale = 0.01, значит 1 world unit = 100 model units.
+    float invScale = 1.0f / gameObject->GetTransform()->scale.x;
     float radiusModel = radius * invScale;
     float depthModel = depth * invScale;
 
     for (auto& mesh : *meshes_)
-        mesh.ApplyDent(hitPosModel, radiusModel, depthModel, cachedBonePalette_);
+        mesh.ApplyDent(hitPosModel, shotDirModel,
+            radiusModel, depthModel,
+            cachedBonePalette_,
+            cachedGlobalTransforms_);
 }
