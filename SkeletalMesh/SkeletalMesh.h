@@ -8,6 +8,8 @@
 #include "SimpleMath.h"
 #include "../SimpleTexturedDirectx11/SafeRelease.hpp"
 #include "../SimpleTexturedDirectx11/Mesh.h"
+#include "../BenchmarkLogger.h"
+#include <chrono>
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
@@ -160,6 +162,7 @@ public:
         const std::vector<Matrix>& bonePalette,
         const std::vector<Matrix>& globalTransforms)
     {
+        BENCH_SCOPE("ApplyDent_ms");
         const float r2 = radius * radius;
 
         for (size_t i = 0; i < originalVertices.size(); ++i)
@@ -221,18 +224,33 @@ public:
         }
 
         dirty = true;
+        // Считаем максимальное смещение вершины (глубина кратера)
+        float maxDelta2 = 0.0f;
+        for (size_t i = 0; i < vertices.size(); ++i)
+        {
+            float dx = vertices[i].X - originalVertices[i].X;
+            float dy = vertices[i].Y - originalVertices[i].Y;
+            float dz = vertices[i].Z - originalVertices[i].Z;
+            float d2 = dx * dx + dy * dy + dz * dz;
+            if (d2 > maxDelta2) maxDelta2 = d2;
+        }
+        BenchmarkLogger::Instance().LogValue("CraterDepth_modelUnits",
+            sqrtf(maxDelta2));
     }
 
     void UploadToGPU(ID3D11DeviceContext* ctx)
     {
         if (!dirty || !vertexBuffer_) return;
 
+        auto t0 = std::chrono::high_resolution_clock::now();
         D3D11_MAPPED_SUBRESOURCE mapped = {};
         if (FAILED(ctx->Map(vertexBuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
             return;
-
         memcpy(mapped.pData, vertices.data(), sizeof(SKELETAL_VERTEX) * vertices.size());
         ctx->Unmap(vertexBuffer_, 0);
+        auto t1 = std::chrono::high_resolution_clock::now();
+        double ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
+        BenchmarkLogger::Instance().LogValue("UploadToGPU_ms", ms);
         dirty = false;
     }
 

@@ -33,6 +33,7 @@ class Game
 {
 public:
 	Game(DisplayWin32* display, InputDevice* input, RenderingSystem* render, ScriptingEngine* scriptingEngine);
+	~Game();
 	std::vector<GameObject*> GameObjects;
 	DisplayWin32* Display;
 	InputDevice* Input;

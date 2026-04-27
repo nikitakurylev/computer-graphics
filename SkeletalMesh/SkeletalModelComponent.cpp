@@ -3,6 +3,7 @@
 #include "../Transform.h"
 #include "../Game.h"
 #include <d3dcompiler.h>
+#include "../BenchmarkLogger.h"
 
 SkeletalModelComponent::SkeletalModelComponent(
     std::vector<SkeletalMesh>* meshes, Skeleton* skeleton)
@@ -99,6 +100,11 @@ void SkeletalModelComponent::ApplyDent(const Vector3& hitPosWorld,
     const Vector3& shotDir,
     float radius, float depth)
 {
+    // Увеличиваем счётчик ударов, под которым будут идти все замеры
+    // от вызовов внутри этого ApplyDent (включая вложенные mesh.ApplyDent).
+    int newIdx = BenchmarkLogger::Instance().GetCurrentHitIndex() + 1;
+    BenchmarkLogger::Instance().SetCurrentHitIndex(newIdx);
+
     if (cachedBonePalette_.empty() || cachedGlobalTransforms_.empty()) return;
     if (!gameObject) return;
 

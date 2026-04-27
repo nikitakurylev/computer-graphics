@@ -9,11 +9,17 @@
 #include "SimpleMath.h"
 #include "RenderingSystem.h"
 #include "DeferredRenderingSystem.h"
+#include "BenchmarkLogger.h"
 
 using namespace DirectX::SimpleMath;
 
 Game::Game(DisplayWin32* display, InputDevice* input, RenderingSystem* render, ScriptingEngine* scriptingEngine)
 	: Display(display), Input(input), Render(render), scripting_engine(scriptingEngine), Physics(), Audio() {
+}
+
+Game::~Game()
+{
+	BenchmarkLogger::Instance().Flush("benchmark.csv");
 }
 
 // ============================================================

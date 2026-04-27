@@ -97,6 +97,7 @@
     <ClInclude Include="AdvancedEnemyAI.h" />
     <ClInclude Include="AIComponent.h" />
     <ClInclude Include="AnimationComponent.h" />
+    <ClInclude Include="BenchmarkLogger.h" />
     <ClInclude Include="Blackboard.h" />
     <ClInclude Include="BTAction.h" />
     <ClInclude Include="BTCompositeNode.h" />
